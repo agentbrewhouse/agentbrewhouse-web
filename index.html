@@ -192,18 +192,40 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
     </div>
     <p style="text-align:center;font-size:10px;color:var(--muted);letter-spacing:0.1em;">No payment required to reserve. You will receive wallet payment instructions when your spot is confirmed.</p>
 <script>
+const DISPOSABLE_DOMAINS = ['mailinator.com','guerrillamail.com','temp-mail.org','throwam.com','yopmail.com','sharklasers.com','guerrillamailblock.com','grr.la','guerrillamail.info','spam4.me','trashmail.com','trashmail.me','trashmail.at','trashmail.io','dispostable.com','maildrop.cc','spamgourmet.com','spamgourmet.org','spamgourmet.net','discard.email','mailnull.com','spamspot.com','spamthisplease.com','tempr.email','discard.email','fakeinbox.com','mailnesia.com','mailnull.com','spamfree24.org','0-mail.com','0815.ru','0clickemail.com','tempmail.com','tempmail.net','tempmail.de','tempinbox.com','tempinbox.co.uk','getonemail.com','getonemail.net','nospam.ze.tc','hulapla.de','mega.zik.dj','speed.1s.fr','uroid.com','spamevader.com'];
+
+async function getIP() {
+  try {
+    const r = await fetch('https://api.ipify.org?format=json');
+    const d = await r.json();
+    return d.ip;
+  } catch(e) { return 'unknown'; }
+}
+
 async function claimBeanzSpot() {
-  const email = document.getElementById('beanz-email').value.trim();
+  const email = document.getElementById('beanz-email').value.trim().toLowerCase();
   const btn = document.getElementById('beanz-btn');
   const msg = document.getElementById('beanz-msg');
+
   if (!email || !email.includes('@')) {
     msg.style.color = '#e05c5c';
     msg.textContent = 'Please enter a valid email address.';
     return;
   }
+
+  const domain = email.split('@')[1];
+  if (DISPOSABLE_DOMAINS.includes(domain)) {
+    msg.style.color = '#e05c5c';
+    msg.textContent = 'Disposable email addresses are not accepted.';
+    return;
+  }
+
   btn.textContent = 'SAVING...';
   btn.style.opacity = '0.7';
   btn.disabled = true;
+
+  const ip = await getIP();
+
   try {
     const res = await fetch('https://vzoillfhilpvqxfkozbt.supabase.co/rest/v1/beanz_vip', {
       method: 'POST',
@@ -213,7 +235,7 @@ async function claimBeanzSpot() {
         'Authorization': 'Bearer sb_publishable_W-aqyGXIqqaK53IMeRADTA_D5Ff34an',
         'Prefer': 'return=minimal'
       },
-      body: JSON.stringify({ email: email, tier: 'reserved' })
+      body: JSON.stringify({ email: email, tier: 'reserved', ip_address: ip })
     });
     if (res.status === 201) {
       msg.style.color = 'var(--amber-light)';
