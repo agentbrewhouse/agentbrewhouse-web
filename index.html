@@ -85,9 +85,21 @@ body { background: var(--bg); color: var(--cream); font-family: 'DM Mono', monos
 .chain-icon { font-size: 16px; }
 footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing: 0.25em; color: var(--muted); text-transform: uppercase; border-top: 1px solid rgba(200,131,42,0.08); }
 @keyframes fadeup { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+nav { display: flex; align-items: center; justify-content: space-between; padding: 20px 32px; border-bottom: 1px solid var(--border); position: fixed; top: 0; left: 0; right: 0; background: rgba(10,8,6,0.92); backdrop-filter: blur(8px); z-index: 100; }
+.nav-wordmark { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--cream); text-decoration: none; }
+.nav-wordmark em { font-style: italic; color: var(--amber-light); }
+.nav-links { display: flex; gap: 28px; align-items: center; }
+.nav-links a { font-size: 9px; letter-spacing: 0.22em; color: var(--muted); text-transform: uppercase; text-decoration: none; transition: color 0.2s; }
+.nav-links a:hover { color: var(--amber-light); }
 </style>
 </head>
 <body>
+<nav>
+  <a href="/" class="nav-wordmark">Agent<em>BrewHouse</em></a>
+  <div class="nav-links">
+    <a href="/marketplace">Marketplace</a>
+  </div>
+</nav>
 <section class="hero">
   <div class="hero-bg"></div><div class="hero-fade"></div>
   <div class="hero-content">
@@ -105,7 +117,7 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
       <div class="badge"><div class="dot"></div>Opening 2026</div>
     </div>
   </div>
-  <div class="scroll-cue"><span>Our menu</span></div>
+  <a href="/marketplace" style="text-decoration:none;"><div class="scroll-cue"><span>Our menu</span></div></a>
 </section>
 <section class="explainer">
   <div class="explainer-inner">
