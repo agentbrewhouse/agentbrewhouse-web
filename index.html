@@ -21,9 +21,9 @@ body { background: var(--bg); color: var(--cream); font-family: 'DM Mono', monos
 @keyframes steam { 0%{opacity:0;transform:translateY(6px)} 30%{opacity:0.85} 70%{opacity:0.25;transform:translateY(-20px) scaleX(1.5)} 100%{opacity:0;transform:translateY(-40px)} }
 .wordmark { font-family: 'Playfair Display', serif; font-size: clamp(54px, 9.5vw, 116px); font-weight: 700; line-height: 0.9; color: var(--cream); margin-bottom: 14px; opacity: 0; animation: fadeup 1s ease forwards 0.4s; }
 .wordmark em { font-style: italic; color: var(--amber-light); display: block; }
-.tagline { font-size: 12px; letter-spacing: 0.18em; color: rgba(240,230,208,0.55); margin-bottom: 44px; text-transform: uppercase; opacity: 0; animation: fadeup 1s ease forwards 0.6s; }
+.tagline { font-size: 14px; letter-spacing: 0.18em; color: rgba(240,230,208,0.55); margin-bottom: 44px; text-transform: uppercase; opacity: 0; animation: fadeup 1s ease forwards 0.6s; }
 .capture { width: 100%; max-width: 400px; opacity: 0; animation: fadeup 1s ease forwards 0.8s; }
-.capture-label { font-size: 9px; letter-spacing: 0.28em; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+.capture-label { font-size: 12px; letter-spacing: 0.28em; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
 .capture-row { display: flex; border: 1px solid var(--border); }
 .capture-row input { flex: 1; background: rgba(10,8,6,0.75); border: none; padding: 14px; color: var(--cream); font-family: 'DM Mono', monospace; font-size: 12px; outline: none; }
 .capture-row input::placeholder { color: var(--muted); }
@@ -34,12 +34,12 @@ body { background: var(--bg); color: var(--cream); font-family: 'DM Mono', monos
 .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber); animation: blink 2.4s ease-in-out infinite; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
 .scroll-cue { position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.scroll-cue span { font-size: 8px; letter-spacing: 0.3em; color: var(--muted); text-transform: uppercase; }
+.scroll-cue span { font-size: 11px; letter-spacing: 0.3em; color: var(--muted); text-transform: uppercase; }
 .scroll-cue::after { content: ''; width: 1px; height: 40px; background: linear-gradient(to bottom, var(--amber), transparent); animation: drip 2s ease-in-out infinite; }
 @keyframes drip { 0%,100%{transform:scaleY(1)} 50%{transform:scaleY(0.6)} }
 .explainer { padding: 72px 20px; border-bottom: 1px solid var(--border); }
 .explainer-inner { max-width: 780px; margin: 0 auto; text-align: center; }
-.explainer-eyebrow { font-size: 9px; letter-spacing: 0.35em; color: var(--amber); text-transform: uppercase; margin-bottom: 18px; }
+.explainer-eyebrow { font-size: 12px; letter-spacing: 0.35em; color: var(--amber); text-transform: uppercase; margin-bottom: 18px; }
 .explainer-title { font-family: 'Playfair Display', serif; font-size: clamp(24px, 3.5vw, 38px); color: var(--cream); margin-bottom: 24px; line-height: 1.25; }
 .explainer-title em { font-style: italic; color: var(--amber-light); }
 .explainer-body { font-size: 13px; color: rgba(240,230,208,0.6); line-height: 1.9; letter-spacing: 0.04em; margin-bottom: 36px; max-width: 620px; margin-left: auto; margin-right: auto; }
@@ -49,7 +49,7 @@ body { background: var(--bg); color: var(--cream); font-family: 'DM Mono', monos
 .section { padding: 90px 20px; }
 .inner { max-width: 1080px; margin: 0 auto; }
 .rule { width: 50px; height: 1px; margin: 0 auto 18px; background: linear-gradient(to right, transparent, var(--amber), transparent); }
-.sec-eyebrow { font-size: 9px; letter-spacing: 0.35em; color: var(--amber); text-transform: uppercase; text-align: center; margin-bottom: 14px; }
+.sec-eyebrow { font-size: 12px; letter-spacing: 0.35em; color: var(--amber); text-transform: uppercase; text-align: center; margin-bottom: 14px; }
 .sec-title { font-family: 'Playfair Display', serif; font-size: clamp(30px, 4.5vw, 52px); text-align: center; margin-bottom: 10px; }
 .sec-title em { font-style: italic; color: var(--amber-light); }
 .sec-sub { font-size: 11px; letter-spacing: 0.08em; color: var(--muted); text-align: center; margin-bottom: 56px; }
@@ -62,7 +62,7 @@ body { background: var(--bg); color: var(--cream); font-family: 'DM Mono', monos
 .menu-card-info { position: absolute; inset: 0; background: linear-gradient(to top, rgba(10,8,6,0.92) 0%, rgba(10,8,6,0.2) 60%, transparent 100%); display: flex; flex-direction: column; justify-content: flex-end; padding: 22px; }
 .card-emoji { font-size: 24px; margin-bottom: 6px; }
 .card-name { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--cream); margin-bottom: 3px; }
-.card-desc { font-size: 9px; letter-spacing: 0.12em; color: rgba(240,230,208,0.45); margin-bottom: 8px; text-transform: uppercase; }
+.card-desc { font-size: 12px; letter-spacing: 0.12em; color: rgba(240,230,208,0.45); margin-bottom: 8px; text-transform: uppercase; }
 .card-price { font-size: 11px; letter-spacing: 0.1em; color: var(--amber); }
 .card-price strong { font-size: 15px; }
 .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 2px; }
@@ -89,7 +89,7 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .nav-wordmark { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--cream); text-decoration: none; }
 .nav-wordmark em { font-style: italic; color: var(--amber-light); }
 .nav-links { display: flex; gap: 28px; align-items: center; }
-.nav-links a { font-size: 9px; letter-spacing: 0.22em; color: var(--muted); text-transform: uppercase; text-decoration: none; transition: color 0.2s; }
+.nav-links a { font-size: 11px; letter-spacing: 0.22em; color: var(--muted); text-transform: uppercase; text-decoration: none; transition: color 0.2s; }
 .nav-links a:hover { color: var(--amber-light); }
 </style>
 </head>
