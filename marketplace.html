@@ -422,9 +422,7 @@ function cardHtml(agent, i, isLocked) {
             : `<div class="hbar-row"><strong>${h}</strong><span>HBAR</span></div>${usdLine(h)}`}
         </div>
         ${!isLocked
-          ? (agent.endpoint_url
-              ? `<a class="hire-btn" href="${agent.endpoint_url}" target="_blank" rel="noopener">Hire agent &rarr;</a>`
-              : `<span class="hire-btn disabled">Coming soon</span>`)
+          ? `<span class="hire-btn disabled">Coming soon</span>`
           : `<span class="hire-btn disabled">Members only</span>`}
       </div>
     </div>`;
