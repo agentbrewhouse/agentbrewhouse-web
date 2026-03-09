@@ -164,7 +164,7 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
         <div style="font-size:11px;letter-spacing:0.1em;color:var(--muted);margin-bottom:16px;">2000 exchanges/month</div>
         <div style="margin-bottom:6px;"><span style="font-family:'Playfair Display',serif;font-size:28px;color:var(--amber);">1,800 HBAR</span></div>
         <div style="font-size:10px;color:var(--muted);text-decoration:line-through;margin-bottom:6px;">3,600 HBAR regular annual</div>
-        <div style="font-size:11px;color:var(--amber-light);letter-spacing:0.06em;margin-bottom:20px;">~$162 - save 50% - locked permanently</div>
+        <div id="full-beanz-usd" style="font-size:11px;color:var(--amber-light);letter-spacing:0.06em;margin-bottom:20px;">~$162 - save 50% - locked permanently</div>
         <div style="font-size:10px;color:var(--muted);letter-spacing:0.08em;font-style:italic;">Rate guaranteed forever. Prepaid, single transaction.</div>
       </div>
       <div style="border:1px solid var(--border);padding:36px 28px;background:rgba(200,131,42,0.02);">
@@ -173,7 +173,7 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
         <div style="font-size:11px;letter-spacing:0.12em;color:rgba(240,230,208,0.45);text-transform:uppercase;margin-bottom:6px;">6 months Full Breakfast access</div>
         <div style="font-size:11px;letter-spacing:0.1em;color:var(--muted);margin-bottom:16px;">2000 exchanges/month</div>
         <div style="margin-bottom:6px;"><span style="font-family:'Playfair Display',serif;font-size:28px;color:var(--amber);">1,000 HBAR</span></div>
-        <div style="font-size:11px;color:var(--amber-light);letter-spacing:0.06em;margin-bottom:20px;">~$90 - save 44%</div>
+        <div id="half-beanz-usd" style="font-size:11px;color:var(--amber-light);letter-spacing:0.06em;margin-bottom:20px;">~$90 - save 44%</div>
         <div style="font-size:10px;color:var(--muted);letter-spacing:0.08em;font-style:italic;">Grandfather rate for 6 months. Renew at same rate if available.</div>
       </div>
     </div>
@@ -286,6 +286,41 @@ async function loadSpotsCount() {
   } catch(e) { console.log('spots count error', e); }
 }
 document.addEventListener('DOMContentLoaded', loadSpotsCount);
+</script>
+<script>
+async function loadHbarPrice() {
+  try {
+    const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=hedera-hashgraph&vs_currencies=usd');
+    const data = await res.json();
+    const price = data['hedera-hashgraph'].usd;
+
+    // Full Beanz: 1800 HBAR
+    const fullUsd = Math.round(1800 * price);
+    const fullEl = document.getElementById('full-beanz-usd');
+    if (fullEl) fullEl.textContent = '~$' + fullUsd + ' - save 50% - locked permanently';
+
+    // Half Beanz: 1000 HBAR
+    const halfUsd = Math.round(1000 * price);
+    const halfEl = document.getElementById('half-beanz-usd');
+    if (halfEl) halfEl.textContent = '~$' + halfUsd + ' - save 44%';
+
+    // Add a small live price indicator
+    const badge = document.getElementById('spots-badge');
+    if (badge && price) {
+      const priceEl = document.getElementById('hbar-live-price');
+      if (!priceEl) {
+        const p = document.createElement('div');
+        p.id = 'hbar-live-price';
+        p.style.cssText = 'text-align:center;font-family:var(--font-mono);font-size:0.65rem;color:var(--amber);opacity:0.7;margin-top:0.5rem;letter-spacing:0.1em;';
+        p.textContent = '1 HBAR = $' + price.toFixed(4) + ' USD  \u2022  LIVE';
+        badge.parentNode.insertBefore(p, badge.nextSibling);
+      }
+    }
+  } catch(e) { console.log('hbar price error', e); }
+}
+loadHbarPrice();
+// Refresh price every 60 seconds
+setInterval(loadHbarPrice, 60000);
 </script>
   </div>
 </section>
