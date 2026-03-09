@@ -180,7 +180,7 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
     <div style="text-align:center;margin-bottom:32px;">
       <span style="display:inline-flex;align-items:center;gap:8px;border:1px solid var(--border);padding:10px 22px;font-size:11px;letter-spacing:0.18em;color:var(--amber);font-family:'DM Mono',monospace;">
         <span style="width:8px;height:8px;border-radius:50%;background:var(--amber);display:inline-block;animation:blink 2.4s ease-in-out infinite;"></span>
-        37 OF 50 FOUNDING SPOTS REMAINING
+        <span id="spots-badge">37 OF 50 FOUNDING SPOTS REMAINING</span>
       </span>
     </div>
     <div style="max-width:400px;margin:0 auto 16px;" id="beanz-form-wrap">
@@ -261,6 +261,29 @@ async function claimBeanzSpot() {
     btn.disabled = false;
   }
 }
+</script>
+<script>
+async function loadSpotsCount() {
+  try {
+    const res = await fetch('https://vzoillfhilpvqxfkozbt.supabase.co/rest/v1/beanz_vip?select=id', {
+      headers: {
+        'apikey': 'sb_publishable_W-aqyGXIqqaK53IMeRADTA_D5Ff34an',
+        'Authorization': 'Bearer sb_publishable_W-aqyGXIqqaK53IMeRADTA_D5Ff34an',
+        'Prefer': 'count=exact',
+        'Range-Unit': 'items',
+        'Range': '0-0'
+      }
+    });
+    const contentRange = res.headers.get('content-range');
+    if (contentRange) {
+      const total = parseInt(contentRange.split('/')[1]);
+      const remaining = Math.max(0, 50 - total);
+      const badge = document.getElementById('spots-badge');
+      if (badge) badge.textContent = remaining + ' OF 50 FOUNDING SPOTS REMAINING';
+    }
+  } catch(e) { console.log('spots count error', e); }
+}
+loadSpotsCount();
 </script>
   </div>
 </section>
