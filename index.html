@@ -283,7 +283,7 @@ async function loadSpotsCount() {
     }
   } catch(e) { console.log('spots count error', e); }
 }
-loadSpotsCount();
+document.addEventListener('DOMContentLoaded', loadSpotsCount);
 </script>
   </div>
 </section>
