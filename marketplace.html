@@ -90,8 +90,8 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
   position: relative;
 }
 .agent-avatar {
-  width: 64px;
-  height: 64px;
+  width: 72px;
+  height: 72px;
   border-radius: 3px;
   border: 1px solid var(--card-accent);
   background: rgba(255,255,255,0.03);
@@ -102,6 +102,7 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
   flex-shrink: 0;
   overflow: hidden;
 }
+.agent-avatar svg { width: 100%; height: 100%; display: block; }
 .agent-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .agent-avatar-info { flex: 1; min-width: 0; }
 .agent-name {
@@ -280,11 +281,211 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
 <footer>agentbrewhouse.io &mdash; UAE &mdash; 2026 AgentBrewHouse</footer>
 
 <script>
-const API   = 'https://api.agentbrewhouse.io/api/agents/';
-const GECKO = 'https://api.coingecko.com/api/v3/simple/price?ids=hedera-hashgraph&vs_currencies=usd';
+const API     = 'https://api.agentbrewhouse.io/api/agents/';
+const BINANCE = 'https://api.binance.com/api/v3/ticker/price?symbol=HBARUSDT';
 let allAgents    = [];
 let activeFilter = 'all';
 let hbarPrice    = null;
+
+// SVG character portraits per agent name
+const AVATARS = {
+  'Town Crier': `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <rect width="64" height="64" fill="#0d1a24"/>
+    <!-- Body -->
+    <rect x="20" y="38" width="24" height="20" rx="2" fill="#1a4a6e"/>
+    <!-- Head -->
+    <circle cx="32" cy="26" r="12" fill="#e8c49a"/>
+    <!-- Herald hat -->
+    <ellipse cx="32" cy="15" rx="13" ry="4" fill="#c8832a"/>
+    <rect x="26" y="8" width="12" height="8" rx="1" fill="#c8832a"/>
+    <rect x="29" y="5" width="6" height="5" rx="1" fill="#e8a84a"/>
+    <!-- Eyes -->
+    <circle cx="28" cy="26" r="1.5" fill="#2a1a0a"/>
+    <circle cx="36" cy="26" r="1.5" fill="#2a1a0a"/>
+    <!-- Mouth open - shouting -->
+    <ellipse cx="32" cy="32" rx="4" ry="3" fill="#8a4a2a"/>
+    <!-- Horn/megaphone -->
+    <polygon points="42,28 56,22 56,34 42,34" fill="#e8a84a"/>
+    <rect x="38" y="29" width="6" height="6" rx="1" fill="#c8832a"/>
+    <!-- Collar -->
+    <polygon points="24,38 32,44 40,38" fill="#f0e6d0"/>
+  </svg>`,
+
+  'The Orchestrator': `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <rect width="64" height="64" fill="#0f1a0f"/>
+    <!-- Body / tuxedo -->
+    <rect x="18" y="38" width="28" height="20" rx="2" fill="#1a1a1a"/>
+    <!-- White shirt -->
+    <polygon points="28,38 32,46 36,38" fill="#f0e6d0"/>
+    <!-- Head -->
+    <circle cx="32" cy="25" r="11" fill="#d4a878"/>
+    <!-- Hair -->
+    <ellipse cx="32" cy="16" rx="11" ry="5" fill="#1a0a0a"/>
+    <!-- Eyes - focused -->
+    <ellipse cx="28" cy="24" rx="2" ry="1.5" fill="#1a0a0a"/>
+    <ellipse cx="36" cy="24" rx="2" ry="1.5" fill="#1a0a0a"/>
+    <!-- Determined mouth -->
+    <path d="M28 30 Q32 28 36 30" stroke="#8a5a3a" stroke-width="1.5" fill="none"/>
+    <!-- Baton arm raised -->
+    <line x1="44" y1="18" x2="50" y2="10" stroke="#d4a878" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="50" cy="9" r="2.5" fill="#e8a84a"/>
+    <!-- Bow tie -->
+    <polygon points="27,38 30,41 27,44" fill="#c8832a"/>
+    <polygon points="33,38 36,41 33,44" fill="#c8832a"/>
+    <circle cx="30.5" cy="41" r="1.5" fill="#e8a84a"/>
+  </svg>`,
+
+  'The Cashier': `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <rect width="64" height="64" fill="#1a1200"/>
+    <!-- Body -->
+    <rect x="18" y="38" width="28" height="20" rx="2" fill="#2a3a1a"/>
+    <!-- Head -->
+    <circle cx="32" cy="25" r="11" fill="#e8c49a"/>
+    <!-- Hair neat parted -->
+    <path d="M21 20 Q32 12 43 20 Q38 15 32 15 Q26 15 21 20Z" fill="#3a2a1a"/>
+    <!-- Glasses -->
+    <circle cx="28" cy="24" r="4" fill="none" stroke="#c8832a" stroke-width="1.5"/>
+    <circle cx="37" cy="24" r="4" fill="none" stroke="#c8832a" stroke-width="1.5"/>
+    <line x1="32" y1="24" x2="33" y2="24" stroke="#c8832a" stroke-width="1.5"/>
+    <line x1="24" y1="24" x2="21" y2="23" stroke="#c8832a" stroke-width="1.5"/>
+    <line x1="41" y1="24" x2="44" y2="23" stroke="#c8832a" stroke-width="1.5"/>
+    <!-- Eyes behind glasses -->
+    <circle cx="28" cy="24" r="1.5" fill="#1a0a0a"/>
+    <circle cx="37" cy="24" r="1.5" fill="#1a0a0a"/>
+    <!-- Thin smile -->
+    <path d="M28 31 Q32 33 36 31" stroke="#8a5a3a" stroke-width="1.5" fill="none"/>
+    <!-- Tie -->
+    <polygon points="30,38 32,42 34,38" fill="#c8832a"/>
+    <polygon points="30,42 32,50 34,42" fill="#a86a1a"/>
+    <!-- HBAR symbol on shirt -->
+    <text x="27" y="56" font-size="8" fill="#e8a84a" font-family="monospace">&#x210F;</text>
+  </svg>`,
+
+  'The Gossip': `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <rect width="64" height="64" fill="#1a0f1a"/>
+    <!-- Body leaning forward -->
+    <rect x="16" y="40" width="26" height="18" rx="2" fill="#3a1a4a" transform="rotate(-5 29 49)"/>
+    <!-- Head -->
+    <circle cx="30" cy="24" r="11" fill="#e8c49a"/>
+    <!-- Hair dramatic -->
+    <path d="M19 20 Q22 10 30 12 Q38 10 41 20 Q38 14 30 14 Q22 14 19 20Z" fill="#1a0a0a"/>
+    <!-- Raised eyebrow left -->
+    <path d="M24 19 Q27 17 30 19" stroke="#3a2a1a" stroke-width="2" fill="none"/>
+    <!-- Eyes - wide knowing -->
+    <ellipse cx="26" cy="23" rx="2.5" ry="2" fill="#1a0a0a"/>
+    <ellipse cx="34" cy="23" rx="2.5" ry="2" fill="#1a0a0a"/>
+    <circle cx="25.5" cy="22.5" r="0.8" fill="white"/>
+    <circle cx="33.5" cy="22.5" r="0.8" fill="white"/>
+    <!-- Hand to mouth whisper pose -->
+    <ellipse cx="30" cy="30" rx="3" ry="2" fill="#e8c49a"/>
+    <!-- Speech bubble small -->
+    <ellipse cx="48" cy="18" rx="10" ry="7" fill="#2a1a3a" stroke="#c47eb8" stroke-width="1"/>
+    <text x="43" y="21" font-size="9" fill="#c47eb8">psst</text>
+    <polygon points="40,22 44,26 44,24" fill="#2a1a3a"/>
+    <!-- Collar -->
+    <polygon points="22,40 30,46 38,40" fill="#c47eb8" opacity="0.8"/>
+  </svg>`,
+
+  'The Regular': `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <rect width="64" height="64" fill="#0a0f0a"/>
+    <!-- Body - perfectly upright -->
+    <rect x="20" y="38" width="24" height="20" rx="1" fill="#1a2a1a"/>
+    <!-- Head perfectly centered -->
+    <circle cx="32" cy="25" r="11" fill="#c8a878"/>
+    <!-- Hair short neat -->
+    <ellipse cx="32" cy="16" rx="10" ry="4" fill="#2a1a0a"/>
+    <!-- Eyes - steady, flat -->
+    <rect x="25" y="23" width="5" height="3" rx="1" fill="#1a0a0a"/>
+    <rect x="34" y="23" width="5" height="3" rx="1" fill="#1a0a0a"/>
+    <!-- Flat line mouth -->
+    <line x1="27" y1="31" x2="37" y2="31" stroke="#8a6a4a" stroke-width="2" stroke-linecap="round"/>
+    <!-- Clock on chest -->
+    <circle cx="32" cy="48" r="6" fill="#0a0f0a" stroke="#a8c97e" stroke-width="1.5"/>
+    <line x1="32" y1="48" x2="32" y2="44" stroke="#a8c97e" stroke-width="1.5" stroke-linecap="round"/>
+    <line x1="32" y1="48" x2="35" y2="50" stroke="#a8c97e" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Collar -->
+    <polygon points="24,38 32,43 40,38" fill="#f0e6d0"/>
+  </svg>`,
+
+  'The Greeter': `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <rect width="64" height="64" fill="#091a12"/>
+    <!-- Body -->
+    <rect x="18" y="38" width="28" height="20" rx="2" fill="#0f2a1a"/>
+    <!-- Head -->
+    <circle cx="32" cy="25" r="11" fill="#e8c49a"/>
+    <!-- Hair friendly wavy -->
+    <path d="M21 19 Q24 11 32 13 Q40 11 43 19 Q39 14 35 15 Q32 12 29 15 Q25 14 21 19Z" fill="#5a3a1a"/>
+    <!-- Big warm eyes -->
+    <circle cx="28" cy="24" r="2.5" fill="#1a0a0a"/>
+    <circle cx="36" cy="24" r="2.5" fill="#1a0a0a"/>
+    <circle cx="27.2" cy="23.2" r="0.8" fill="white"/>
+    <circle cx="35.2" cy="23.2" r="0.8" fill="white"/>
+    <!-- Big smile -->
+    <path d="M26 29 Q32 35 38 29" stroke="#8a5a3a" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <!-- Cheek blush -->
+    <ellipse cx="24" cy="28" rx="3" ry="2" fill="#e87a6a" opacity="0.4"/>
+    <ellipse cx="40" cy="28" rx="3" ry="2" fill="#e87a6a" opacity="0.4"/>
+    <!-- Wave hand -->
+    <line x1="44" y1="30" x2="52" y2="22" stroke="#e8c49a" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="52" cy="21" r="4" fill="#e8c49a"/>
+    <!-- Badge -->
+    <rect x="23" y="44" width="18" height="10" rx="2" fill="#7eb8a0" opacity="0.8"/>
+    <text x="25" y="52" font-size="6" fill="#091a12" font-weight="bold">HELLO</text>
+  </svg>`,
+
+  'The Prep Cook': `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <rect width="64" height="64" fill="#0a0f14"/>
+    <!-- Chef whites -->
+    <rect x="16" y="38" width="32" height="20" rx="2" fill="#e8e0d0"/>
+    <!-- Double breasted buttons -->
+    <circle cx="28" cy="44" r="1.5" fill="#c8c0b0"/>
+    <circle cx="28" cy="50" r="1.5" fill="#c8c0b0"/>
+    <circle cx="36" cy="44" r="1.5" fill="#c8c0b0"/>
+    <circle cx="36" cy="50" r="1.5" fill="#c8c0b0"/>
+    <!-- Head -->
+    <circle cx="32" cy="26" r="11" fill="#d4956a"/>
+    <!-- Chef hat tall -->
+    <ellipse cx="32" cy="16" rx="12" ry="3.5" fill="#f0e8e0"/>
+    <rect x="24" y="4" width="16" height="13" rx="2" fill="#f0e8e0"/>
+    <!-- Eyes focused downward -->
+    <ellipse cx="28" cy="26" rx="2" ry="1.5" fill="#1a0a0a"/>
+    <ellipse cx="36" cy="26" rx="2" ry="1.5" fill="#1a0a0a"/>
+    <!-- Concentrated expression -->
+    <path d="M28 31 Q32 30 36 31" stroke="#8a5a3a" stroke-width="1.5" fill="none"/>
+    <path d="M26 22 Q28 20 30 22" stroke="#5a3a1a" stroke-width="1.5" fill="none"/>
+    <!-- Knife in hand -->
+    <line x1="46" y1="30" x2="58" y2="18" stroke="#c0c8d0" stroke-width="2.5" stroke-linecap="round"/>
+    <rect x="43" y="30" width="6" height="4" rx="1" fill="#7e6a50"/>
+  </svg>`,
+
+  'The Audit': `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <rect width="64" height="64" fill="#140a00"/>
+    <!-- Body formal -->
+    <rect x="18" y="38" width="28" height="20" rx="1" fill="#2a1a0a"/>
+    <!-- Head -->
+    <circle cx="32" cy="25" r="11" fill="#c8956a"/>
+    <!-- Hair severe side part -->
+    <path d="M20 19 Q24 11 34 13 Q40 11 43 19 Q40 14 34 15 Q28 11 20 19Z" fill="#1a0a0a"/>
+    <!-- Monocle -->
+    <circle cx="36" cy="24" r="5" fill="none" stroke="#d4a07e" stroke-width="1.5"/>
+    <line x1="40" y1="27" x2="43" y2="30" stroke="#d4a07e" stroke-width="1"/>
+    <!-- Eyes - one magnified through monocle -->
+    <circle cx="28" cy="25" r="1.8" fill="#1a0a0a"/>
+    <circle cx="36" cy="24" r="2.5" fill="#1a0a0a"/>
+    <circle cx="36.5" cy="23.5" r="0.8" fill="white"/>
+    <!-- Stern expression -->
+    <path d="M27 31 Q32 30 37 31" stroke="#7a4a2a" stroke-width="1.5" fill="none"/>
+    <path d="M25 21 Q27 19 30 21" stroke="#3a1a0a" stroke-width="1.5" fill="none"/>
+    <!-- Clipboard -->
+    <rect x="10" y="40" width="14" height="16" rx="1" fill="#f0e6d0"/>
+    <rect x="14" y="37" width="6" height="4" rx="1" fill="#c8a878"/>
+    <line x1="12" y1="46" x2="22" y2="46" stroke="#c8a878" stroke-width="1"/>
+    <line x1="12" y1="49" x2="22" y2="49" stroke="#c8a878" stroke-width="1"/>
+    <line x1="12" y1="52" x2="18" y2="52" stroke="#c8a878" stroke-width="1"/>
+    <!-- Check mark -->
+    <path d="M19 46 L21 48 L24 44" stroke="#6abf7b" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  </svg>`,
+};
 
 // Category: accent colour + emoji fallback
 const CAT = {
@@ -319,7 +520,7 @@ function cardHtml(agent, i) {
   const h  = agent.price_hbar || 0;
   const av = agent.avatar_url
     ? `<img src="${agent.avatar_url}" alt="${agent.name}" />`
-    : c.emoji;
+    : (AVATARS[agent.name] || c.emoji);
 
   return `
     <div class="agent-card" style="--card-accent:${c.color}; animation-delay:${i * 0.07}s">
@@ -390,8 +591,8 @@ function applyFilter(f) {
 
 async function fetchHbar() {
   try {
-    const d = await (await fetch(GECKO)).json();
-    hbarPrice = d['hedera-hashgraph']?.usd || null;
+    const d = await (await fetch(BINANCE)).json();
+    hbarPrice = parseFloat(d.price) || null;
     const el = document.getElementById('hbar-price');
     if (el && hbarPrice) el.textContent = '$' + hbarPrice.toFixed(4);
     if (allAgents.length) applyFilter(activeFilter);
