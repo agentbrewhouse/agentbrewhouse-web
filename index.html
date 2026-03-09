@@ -265,22 +265,19 @@ async function claimBeanzSpot() {
 <script>
 async function loadSpotsCount() {
   try {
-    const res = await fetch('https://vzoillfhilpvqxfkozbt.supabase.co/rest/v1/beanz_vip?select=id', {
+    const res = await fetch('https://vzoillfhilpvqxfkozbt.supabase.co/rest/v1/rpc/get_beanz_vip_count', {
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         'apikey': 'sb_publishable_W-aqyGXIqqaK53IMeRADTA_D5Ff34an',
-        'Authorization': 'Bearer sb_publishable_W-aqyGXIqqaK53IMeRADTA_D5Ff34an',
-        'Prefer': 'count=exact',
-        'Range-Unit': 'items',
-        'Range': '0-0'
-      }
+        'Authorization': 'Bearer sb_publishable_W-aqyGXIqqaK53IMeRADTA_D5Ff34an'
+      },
+      body: '{}'
     });
-    const contentRange = res.headers.get('content-range');
-    if (contentRange) {
-      const total = parseInt(contentRange.split('/')[1]);
-      const remaining = Math.max(0, 50 - total);
-      const badge = document.getElementById('spots-badge');
-      if (badge) badge.textContent = remaining + ' OF 50 FOUNDING SPOTS REMAINING';
-    }
+    const count = await res.json();
+    const remaining = Math.max(0, 50 - count);
+    const badge = document.getElementById('spots-badge');
+    if (badge) badge.textContent = remaining + ' OF 50 FOUNDING SPOTS REMAINING';
   } catch(e) { console.log('spots count error', e); }
 }
 document.addEventListener('DOMContentLoaded', loadSpotsCount);
