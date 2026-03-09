@@ -238,7 +238,7 @@ async function claimBeanzSpot() {
       },
       body: JSON.stringify({ email: email, tier: 'reserved', ip_address: ip })
     });
-    if (res.status === 201) {
+    if (res.status === 201 || res.status === 204) {
       msg.style.color = 'var(--amber-light)';
       msg.textContent = 'Spot reserved. Watch your inbox for confirmation.';
       document.getElementById('beanz-email').value = '';
