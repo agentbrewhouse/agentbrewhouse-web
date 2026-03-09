@@ -244,6 +244,11 @@ async function claimBeanzSpot() {
       document.getElementById('beanz-email').value = '';
       btn.textContent = 'CLAIMED';
       btn.style.background = '#2a6a2a';
+      fetch('https://api.agentbrewhouse.io/welcome', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email })
+      }).catch(e => console.log('welcome email error', e));
     } else if (res.status === 409) {
       msg.style.color = 'var(--amber)';
       msg.textContent = 'That email is already reserved. You are on the list.';
