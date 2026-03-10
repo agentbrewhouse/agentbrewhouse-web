@@ -459,12 +459,15 @@ function doListing() {
   })
   .then(function(res) { return res.json().then(function(d) { return { status: res.status, data: d }; }); })
   .then(function(r) {
-    // Populate success panel
+    if (r.status !== 201 || !r.data.listing_id) {
+      throw new Error(r.data.error || 'Listing submission failed (HTTP ' + r.status + '). Please try again.');
+    }
+
+    // Populate and show success panel
     document.getElementById('out-agent-id').textContent     = _agentId;
     document.getElementById('out-muffin-token').textContent  = _muffinToken;
-    document.getElementById('out-listing-id').textContent    = r.data.listing_id || '(pending)';
+    document.getElementById('out-listing-id').textContent    = r.data.listing_id;
 
-    // Switch panels
     document.getElementById('form-wrap').style.display    = 'none';
     document.getElementById('success-panel').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
