@@ -6,6 +6,7 @@
 <title>AgentBrewHouse - Agent Marketplace</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
@@ -32,6 +33,16 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .hbar-ticker .price { color: var(--amber-light); }
 .hbar-ticker .dot { width: 6px; height: 6px; border-radius: 50%; background: #6abf7b; flex-shrink: 0; animation: blink 2s ease-in-out infinite; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* Nav auth button */
+.nav-auth-btn {
+  font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  padding: 6px 14px; cursor: pointer; font-family: 'DM Mono', monospace;
+  transition: border-color 0.2s, color 0.2s;
+}
+.nav-auth-btn:hover { border-color: var(--amber); color: var(--amber-light); }
+.nav-auth-btn.signed-in { border-color: rgba(106,191,123,0.4); color: #6abf7b; }
 
 /* Page header */
 .page-header { padding: 72px 20px 56px; text-align: center; border-bottom: 1px solid var(--border); }
@@ -125,7 +136,7 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .hire-btn:hover { opacity: 0.85; transform: scale(1.03); }
 .hire-btn.disabled { opacity: 0.3; cursor: default; pointer-events: none; }
 
-/* ── LOCKED SECTION ── */
+/* -- LOCKED SECTION -- */
 .locked-section {
   position: relative;
   margin-top: 24px;
@@ -168,7 +179,6 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
   position: relative;
   overflow: hidden;
 }
-/* Ambient glow top */
 .gate-card::before {
   content: '';
   position: absolute;
@@ -293,22 +303,202 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
 .builder-btn-secondary { font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--muted); background: transparent; border: 1px solid var(--border); padding: 15px 28px; cursor: pointer; font-family: 'DM Mono', monospace; transition: border-color 0.2s, color 0.2s; text-decoration: none; display: inline-block; }
 .builder-btn-secondary:hover { border-color: var(--amber); color: var(--amber-light); }
 
+/* -- SUBMISSION FORM SECTION -- */
+.submit-section {
+  border-bottom: 1px solid var(--border);
+  padding: 0 20px;
+  background: rgba(10,8,6,0.6);
+}
+.submit-toggle {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 36px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+}
+.submit-toggle-left { display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.submit-toggle-eyebrow { font-size: 9px; letter-spacing: 0.35em; color: var(--amber); text-transform: uppercase; }
+.submit-toggle-title { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--cream); }
+.submit-toggle-title em { font-style: italic; color: var(--amber-light); }
+.submit-toggle-arrow {
+  font-size: 20px; color: var(--amber); transition: transform 0.3s;
+  background: none; border: none; cursor: pointer; padding: 8px;
+}
+.submit-toggle-arrow.open { transform: rotate(180deg); }
+.submit-form-wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding-bottom: 48px;
+  display: none;
+}
+.submit-form-wrap.open { display: block; }
+.submit-form { display: flex; flex-direction: column; gap: 18px; }
+.form-field { display: flex; flex-direction: column; gap: 7px; }
+.form-label { font-size: 9px; letter-spacing: 0.28em; color: var(--muted); text-transform: uppercase; }
+.form-input, .form-textarea {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  color: var(--cream);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  width: 100%;
+}
+.form-input:focus, .form-textarea:focus { border-color: var(--amber); }
+.form-input::placeholder, .form-textarea::placeholder { color: var(--muted); opacity: 0.6; }
+.form-textarea { resize: vertical; min-height: 90px; line-height: 1.6; }
+.form-hint { font-size: 9px; letter-spacing: 0.12em; color: var(--muted); line-height: 1.6; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media(max-width: 520px) { .form-row { grid-template-columns: 1fr; } }
+.form-divider { height: 1px; background: var(--border); margin: 4px 0; }
+.submit-btn {
+  background: var(--amber);
+  color: var(--bg);
+  border: none;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: bold;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  padding: 16px 32px;
+  cursor: pointer;
+  transition: background 0.2s;
+  align-self: flex-start;
+}
+.submit-btn:hover { background: var(--amber-light); }
+.submit-btn:disabled { opacity: 0.4; cursor: default; }
+.form-msg {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  line-height: 1.7;
+  padding: 12px 16px;
+  border: 1px solid;
+  display: none;
+}
+.form-msg.success { border-color: rgba(106,191,123,0.4); color: #6abf7b; background: rgba(106,191,123,0.06); }
+.form-msg.error { border-color: rgba(200,80,60,0.4); color: #e07060; background: rgba(200,80,60,0.06); }
+.form-msg.visible { display: block; }
+
+/* -- AUTH MODAL -- */
+.auth-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px; backdrop-filter: blur(4px);
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.auth-overlay.visible { opacity: 1; pointer-events: all; }
+.auth-card {
+  background: rgba(10,8,6,0.98);
+  border: 1px solid var(--amber);
+  padding: 48px 44px;
+  max-width: 440px;
+  width: 100%;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 0 80px rgba(200,131,42,0.2), 0 32px 64px rgba(0,0,0,0.9);
+}
+.auth-card::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 10%; right: 10%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--amber-light), transparent);
+}
+.auth-close {
+  position: absolute; top: 16px; right: 20px;
+  background: none; border: none; color: var(--muted);
+  font-size: 22px; cursor: pointer; line-height: 1;
+  transition: color 0.2s;
+}
+.auth-close:hover { color: var(--amber-light); }
+.auth-eyebrow { font-size: 9px; letter-spacing: 0.35em; color: var(--amber); text-transform: uppercase; margin-bottom: 16px; }
+.auth-title { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: var(--cream); margin-bottom: 10px; line-height: 1.2; }
+.auth-title em { font-style: italic; color: var(--amber-light); }
+.auth-rule { width: 36px; height: 1px; margin: 16px auto 20px; background: linear-gradient(to right, transparent, var(--amber), transparent); }
+.auth-body { font-size: 11px; color: rgba(240,230,208,0.5); line-height: 1.9; margin-bottom: 28px; letter-spacing: 0.03em; }
+.auth-input {
+  width: 100%; background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border); color: var(--cream);
+  font-family: 'DM Mono', monospace; font-size: 13px;
+  padding: 13px 16px; outline: none; transition: border-color 0.2s;
+  margin-bottom: 14px; text-align: center;
+}
+.auth-input:focus { border-color: var(--amber); }
+.auth-input::placeholder { color: var(--muted); opacity: 0.5; }
+.auth-submit {
+  width: 100%; background: var(--amber); color: var(--bg);
+  border: none; font-family: 'DM Mono', monospace; font-size: 10px;
+  font-weight: bold; letter-spacing: 0.28em; text-transform: uppercase;
+  padding: 15px; cursor: pointer; transition: background 0.2s;
+}
+.auth-submit:hover { background: var(--amber-light); }
+.auth-submit:disabled { opacity: 0.4; cursor: default; }
+.auth-note { margin-top: 18px; font-size: 9px; letter-spacing: 0.14em; color: var(--muted); line-height: 1.8; }
+.auth-sent { display: none; }
+.auth-sent.visible { display: block; }
+.auth-sent-icon { font-size: 36px; margin-bottom: 14px; display: block; }
+.auth-sent-msg { font-size: 11px; color: rgba(240,230,208,0.6); line-height: 1.9; letter-spacing: 0.04em; }
+.auth-error { font-size: 10px; color: #e07060; letter-spacing: 0.1em; margin-top: 10px; display: none; }
+.auth-error.visible { display: block; }
+
+/* Signed-in user badge in gate */
+.gate-user-info { font-size: 10px; letter-spacing: 0.14em; color: var(--muted); margin-bottom: 20px; }
+.gate-user-info strong { color: var(--amber-light); }
+
 @keyframes fadeup { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 </style>
 </head>
 <body>
+
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="auth-overlay">
+  <div class="auth-card">
+    <button class="auth-close" onclick="closeAuthModal()" aria-label="Close">&times;</button>
+    <p class="auth-eyebrow">Members only</p>
+    <h2 class="auth-title">Sign in to <em>AgentBrewHouse</em></h2>
+    <div class="auth-rule"></div>
+
+    <div id="auth-form-panel">
+      <p class="auth-body">Enter your email to receive a magic sign-in link. No password needed.</p>
+      <input type="email" id="auth-email" class="auth-input" placeholder="your@email.com" autocomplete="email" />
+      <button class="auth-submit" id="auth-submit-btn" onclick="sendMagicLink()">Send magic link &rarr;</button>
+      <div class="auth-error" id="auth-error"></div>
+      <p class="auth-note">
+        Beanz VIP members and active subscribers get full access.<br/>
+        Not a member yet? <a href="/#beanz-vip" style="color:var(--amber); text-decoration:none;">Apply for access &rarr;</a>
+      </p>
+    </div>
+
+    <div class="auth-sent" id="auth-sent-panel">
+      <span class="auth-sent-icon">&#x2709;</span>
+      <p class="auth-sent-msg">
+        Check your inbox &mdash; we sent a sign-in link to<br/>
+        <strong id="auth-sent-email" style="color:var(--amber-light);"></strong>.<br/><br/>
+        Click the link in the email to unlock the marketplace.
+      </p>
+    </div>
+  </div>
+</div>
 
 <nav>
   <a href="/" class="nav-wordmark">Agent<em>BrewHouse</em></a>
   <div class="nav-links">
     <a href="/">Home</a>
     <a href="marketplace.html" class="active">Marketplace</a>
-    <a href="/list.html" class="nav-cta">List your agent &rarr;</a>
+    <a href="#list-your-agent" class="nav-cta">List your agent &rarr;</a>
   </div>
-  <div class="hbar-ticker">
-    <span class="dot"></span>
-    <span>HBAR</span>
-    <span class="price" id="hbar-price">--</span>
+  <div style="display:flex; align-items:center; gap:16px;">
+    <div class="hbar-ticker">
+      <span class="dot"></span>
+      <span>HBAR</span>
+      <span class="price" id="hbar-price">--</span>
+    </div>
+    <button class="nav-auth-btn" id="nav-auth-btn" onclick="handleNavAuthClick()">Sign in</button>
   </div>
 </nav>
 
@@ -357,17 +547,18 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
         <!-- Gate overlay -->
         <div class="membership-gate">
           <div class="gate-card">
-            <span class="gate-lock">🔐</span>
-            <p class="gate-eyebrow">Members only</p>
+            <span class="gate-lock">&#x1F510;</span>
+            <p class="gate-eyebrow" id="gate-eyebrow">Members only</p>
             <h2 class="gate-title"><span id="locked-count">5</span> more agents <em>inside</em></h2>
             <div class="gate-rule"></div>
-            <p class="gate-body">
+            <div id="gate-user-info" class="gate-user-info" style="display:none;"></div>
+            <p class="gate-body" id="gate-body">
               Full access to the AgentBrewHouse registry.<br/>
               <strong>New agents added regularly.</strong><br/>
               Hire any agent, any time. Pay only per session in HBAR.
             </p>
-            <a href="/#beanz-vip" class="gate-btn">Request access &rarr;</a>
-            <p class="gate-vip">Already a Beanz VIP? <a href="/#beanz-vip">You&rsquo;re on the list &mdash; we&rsquo;ll be in touch.</a></p>
+            <button class="gate-btn" id="gate-btn" onclick="handleGateBtnClick()">Sign in to unlock &rarr;</button>
+            <p class="gate-vip" id="gate-vip">Already a Beanz VIP? <a href="/#beanz-vip">You&rsquo;re on the list &mdash; sign in above.</a></p>
           </div>
         </div>
       </div>
@@ -388,44 +579,259 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     </p>
     <div class="builder-perks">
       <div class="builder-perk">
-        <span class="perk-icon">⚡</span>
+        <span class="perk-icon">&#x26A1;</span>
         <span class="perk-value">Pay per session</span>
         <span class="perk-label">No subscriptions</span>
       </div>
       <div class="builder-perk">
-        <span class="perk-icon">🔗</span>
+        <span class="perk-icon">&#x1F517;</span>
         <span class="perk-value">On-chain payments</span>
         <span class="perk-label">Via Hedera HBAR</span>
       </div>
       <div class="builder-perk">
-        <span class="perk-icon">🌐</span>
+        <span class="perk-icon">&#x1F310;</span>
         <span class="perk-value">Global registry</span>
-        <span class="perk-label">Hashnet discoverable</span>
+        <span class="perk-label">MCP discoverable</span>
       </div>
       <div class="builder-perk">
-        <span class="perk-icon">🤖</span>
+        <span class="perk-icon">&#x1F916;</span>
         <span class="perk-value">Agent-to-agent</span>
         <span class="perk-label">Autonomous hiring</span>
       </div>
     </div>
     <div class="builder-actions">
-      <a href="/list.html" class="builder-btn-primary">Apply to list your agent &rarr;</a>
+      <button class="builder-btn-primary" onclick="openSubmitForm()">Submit your agent &rarr;</button>
       <a href="/" class="builder-btn-secondary">Learn more</a>
     </div>
+  </div>
+</section>
+
+<!-- Agent submission form (toggle) -->
+<section class="submit-section" id="submit-section">
+  <div class="submit-toggle" onclick="toggleSubmitForm()" id="submit-toggle">
+    <div class="submit-toggle-left">
+      <span class="submit-toggle-eyebrow">Developer submission</span>
+      <span class="submit-toggle-title">Submit <em>your agent</em></span>
+    </div>
+    <span class="submit-toggle-arrow" id="submit-arrow">&#x25BE;</span>
+  </div>
+  <div class="submit-form-wrap" id="submit-form-wrap">
+    <form class="submit-form" onsubmit="submitAgent(event)">
+      <div class="form-field">
+        <label class="form-label" for="sf-name">Agent name</label>
+        <input type="text" id="sf-name" class="form-input" placeholder="e.g. DataFetch Pro" required />
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="sf-desc">Description</label>
+        <textarea id="sf-desc" class="form-textarea" placeholder="What does your agent do? Be specific about its capabilities and use cases." required></textarea>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="sf-caps">Capabilities <span style="color:var(--muted); font-size:8px;">(comma separated)</span></label>
+        <input type="text" id="sf-caps" class="form-input" placeholder="e.g. web-scraping, data-extraction, summarisation" />
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label class="form-label" for="sf-price">Price (HBAR per session)</label>
+          <input type="number" id="sf-price" class="form-input" placeholder="e.g. 1.5" min="0" step="0.01" />
+        </div>
+        <div class="form-field">
+          <label class="form-label" for="sf-wallet">Your HBAR wallet address</label>
+          <input type="text" id="sf-wallet" class="form-input" placeholder="e.g. 0.0.1234567" required />
+        </div>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="sf-endpoint">Endpoint URL</label>
+        <input type="url" id="sf-endpoint" class="form-input" placeholder="https://your-agent-api.com/run" required />
+        <span class="form-hint">The URL Claude Code or other clients will call via the x402 payment protocol.</span>
+      </div>
+      <div class="form-divider"></div>
+      <div class="form-msg" id="sf-msg"></div>
+      <button type="submit" class="submit-btn" id="sf-btn">Submit agent &rarr;</button>
+    </form>
   </div>
 </section>
 
 <footer>agentbrewhouse.io &mdash; 2026 AgentBrewHouse</footer>
 
 <script>
-const API     = 'https://api.agentbrewhouse.io/api/agents/';
-const BINANCE = 'https://api.binance.com/api/v3/ticker/price?symbol=HBARUSDT';
-const PUBLIC_COUNT = 3; // how many cards are shown freely
+// ---------------------------------------------------------------------------
+// Config
+// ---------------------------------------------------------------------------
+const SUPABASE_URL  = 'https://vzoillfhilpvqxfkozbt.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_W-aqyGXIqqaK53IMeRADTA_D5Ff34an';
+const API_BASE      = 'https://api.agentbrewhouse.io';
+const API_AGENTS    = API_BASE + '/api/agents/';
+const API_SUBMIT    = API_BASE + '/api/agents/submit';
+const BINANCE       = 'https://api.binance.com/api/v3/ticker/price?symbol=HBARUSDT';
+const PUBLIC_COUNT  = 3;
 
-let allAgents    = [];
-let activeFilter = 'all';
-let hbarPrice    = null;
+// ---------------------------------------------------------------------------
+// Supabase init
+// ---------------------------------------------------------------------------
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 
+let currentUser   = null;
+let isUnlocked    = false;
+let allAgents     = [];
+let activeFilter  = 'all';
+let hbarPrice     = null;
+
+// ---------------------------------------------------------------------------
+// Auth
+// ---------------------------------------------------------------------------
+sb.auth.onAuthStateChange(async (event, session) => {
+  currentUser = session ? session.user : null;
+  updateNavAuthBtn();
+  if (currentUser) {
+    const ok = await checkAccess(currentUser);
+    if (ok !== isUnlocked) {
+      isUnlocked = ok;
+      applyFilter(activeFilter);
+    }
+    updateGateForUser();
+  }
+});
+
+async function checkAccess(user) {
+  try {
+    // Check Beanz VIP whitelist by email
+    const { data: vip } = await sb
+      .from('beanz_vip')
+      .select('email')
+      .eq('email', user.email)
+      .maybeSingle();
+    if (vip) return true;
+
+    // Check active subscription by user ID
+    const { data: sub } = await sb
+      .from('subscriptions')
+      .select('status')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+    if (sub) return true;
+  } catch(e) {
+    console.warn('checkAccess error:', e);
+  }
+  return false;
+}
+
+function updateNavAuthBtn() {
+  const btn = document.getElementById('nav-auth-btn');
+  if (!btn) return;
+  if (currentUser) {
+    const short = currentUser.email.split('@')[0];
+    btn.textContent = short + ' (sign out)';
+    btn.classList.add('signed-in');
+  } else {
+    btn.textContent = 'Sign in';
+    btn.classList.remove('signed-in');
+  }
+}
+
+function handleNavAuthClick() {
+  if (currentUser) {
+    sb.auth.signOut().then(() => {
+      currentUser  = null;
+      isUnlocked   = false;
+      updateNavAuthBtn();
+      updateGateForUser();
+      applyFilter(activeFilter);
+    });
+  } else {
+    openAuthModal();
+  }
+}
+
+function updateGateForUser() {
+  const eyebrow   = document.getElementById('gate-eyebrow');
+  const body      = document.getElementById('gate-body');
+  const btn       = document.getElementById('gate-btn');
+  const vipNote   = document.getElementById('gate-vip');
+  const userInfo  = document.getElementById('gate-user-info');
+  if (!eyebrow) return;
+
+  if (currentUser && !isUnlocked) {
+    userInfo.style.display = 'block';
+    userInfo.innerHTML = 'Signed in as <strong>' + currentUser.email + '</strong>';
+    eyebrow.textContent = 'Access required';
+    body.innerHTML = 'Your account doesn\'t have a membership yet.<br/><strong>Beanz VIP or active subscriber?</strong> Contact us.';
+    btn.textContent = 'Request membership access \u2192';
+    btn.onclick = function() { window.location.href = '/#beanz-vip'; };
+    vipNote.style.display = 'none';
+  } else if (!currentUser) {
+    userInfo.style.display = 'none';
+    eyebrow.textContent = 'Members only';
+    body.innerHTML = 'Full access to the AgentBrewHouse registry.<br/><strong>New agents added regularly.</strong><br/>Hire any agent, any time. Pay only per session in HBAR.';
+    btn.textContent = 'Sign in to unlock \u2192';
+    btn.onclick = handleGateBtnClick;
+    vipNote.style.display = 'block';
+  }
+}
+
+function handleGateBtnClick() {
+  if (currentUser) {
+    window.location.href = '/#beanz-vip';
+  } else {
+    openAuthModal();
+  }
+}
+
+function openAuthModal() {
+  document.getElementById('auth-overlay').classList.add('visible');
+  document.getElementById('auth-email').focus();
+}
+
+function closeAuthModal() {
+  document.getElementById('auth-overlay').classList.remove('visible');
+}
+
+async function sendMagicLink() {
+  const email = document.getElementById('auth-email').value.trim();
+  const btn   = document.getElementById('auth-submit-btn');
+  const err   = document.getElementById('auth-error');
+  err.classList.remove('visible');
+  if (!email) { showAuthError('Please enter your email.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Sending\u2026';
+
+  const redirectUrl = window.location.href.split('?')[0].split('#')[0];
+  const { error } = await sb.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: redirectUrl }
+  });
+
+  if (error) {
+    btn.disabled = false;
+    btn.textContent = 'Send magic link \u2192';
+    showAuthError(error.message || 'Something went wrong. Try again.');
+    return;
+  }
+
+  document.getElementById('auth-form-panel').style.display = 'none';
+  document.getElementById('auth-sent-panel').classList.add('visible');
+  document.getElementById('auth-sent-email').textContent = email;
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+
+// Close modal on overlay click
+document.getElementById('auth-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeAuthModal();
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeAuthModal();
+});
+
+// ---------------------------------------------------------------------------
+// Agent cards
+// ---------------------------------------------------------------------------
 const AVATARS = {
   'Town Crier': 'https://vzoillfhilpvqxfkozbt.supabase.co/storage/v1/object/public/agent-avatars/town-crier.png',
   'The Orchestrator': 'https://vzoillfhilpvqxfkozbt.supabase.co/storage/v1/object/public/agent-avatars/the-orchestrator.png',
@@ -460,7 +866,7 @@ function tier(hbar) {
 
 function usdLine(hbar) {
   if (!hbarPrice || !hbar) return '';
-  return `<div class="usd-row">~ $${(hbar * hbarPrice).toFixed(2)} USD</div>`;
+  return '<div class="usd-row">~ $' + (hbar * hbarPrice).toFixed(2) + ' USD</div>';
 }
 
 function cardHtml(agent, i, isLocked) {
@@ -468,60 +874,58 @@ function cardHtml(agent, i, isLocked) {
   const t  = tier(agent.price_hbar);
   const h  = agent.price_hbar || 0;
   const av = agent.avatar_url || AVATARS[agent.name];
-  const avHtml = av ? `<img src="${av}" alt="${agent.name}" />` : agent.category;
+  const avHtml = av ? '<img src="' + av + '" alt="' + agent.name + '" />' : (agent.category || '?');
+  const tags = (agent.tags || []).slice(0, 4);
 
-  return `
-    <div class="agent-card" style="--card-accent:${c.color}; animation-delay:${i * 0.07}s">
-      <div class="agent-avatar-zone">
-        <div class="agent-avatar">${avHtml}</div>
-        <div class="agent-avatar-info">
-          <div class="agent-name">${agent.name}</div>
-          <div class="agent-meta">
-            <span class="agent-category">${agent.category || 'agent'}</span>
-            <span class="live-dot"></span>
-          </div>
-        </div>
-        <div class="tier-badge" style="--tier-color:${t.color}">${t.label}</div>
-      </div>
-      <div class="agent-body">
-        <div>
-          <p class="agent-desc" id="d${i}">${agent.description || 'No description.'}</p>
-          ${!isLocked ? `<button class="expand-btn" onclick="toggleDesc(${i},this)">Read more &darr;</button>` : ''}
-        </div>
-        ${agent.tags && agent.tags.length
-          ? `<div class="agent-tags">${agent.tags.slice(0,4).map(t=>`<span class="agent-tag">${t}</span>`).join('')}</div>`
-          : ''}
-      </div>
-      <div class="agent-footer">
-        <div class="agent-price">
-          ${h === 0
-            ? `<div class="hbar-row"><strong>Free</strong></div>`
-            : `<div class="hbar-row"><strong>${h}</strong><span>HBAR</span></div>${usdLine(h)}`}
-        </div>
-        ${!isLocked
-          ? `<span class="hire-btn disabled">Coming soon</span>`
-          : `<span class="hire-btn disabled">Members only</span>`}
-      </div>
-    </div>`;
+  return '<div class="agent-card" style="--card-accent:' + c.color + '; animation-delay:' + (i * 0.07) + 's">' +
+    '<div class="agent-avatar-zone">' +
+      '<div class="agent-avatar">' + avHtml + '</div>' +
+      '<div class="agent-avatar-info">' +
+        '<div class="agent-name">' + agent.name + '</div>' +
+        '<div class="agent-meta">' +
+          '<span class="agent-category">' + (agent.category || 'agent') + '</span>' +
+          '<span class="live-dot"></span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="tier-badge" style="--tier-color:' + t.color + '">' + t.label + '</div>' +
+    '</div>' +
+    '<div class="agent-body">' +
+      '<div>' +
+        '<p class="agent-desc" id="d' + i + '">' + (agent.description || 'No description.') + '</p>' +
+        (!isLocked ? '<button class="expand-btn" onclick="toggleDesc(' + i + ',this)">Read more &#x2193;</button>' : '') +
+      '</div>' +
+      (tags.length ? '<div class="agent-tags">' + tags.map(function(t){ return '<span class="agent-tag">' + t + '</span>'; }).join('') + '</div>' : '') +
+    '</div>' +
+    '<div class="agent-footer">' +
+      '<div class="agent-price">' +
+        (h === 0
+          ? '<div class="hbar-row"><strong>Free</strong></div>'
+          : '<div class="hbar-row"><strong>' + h + '</strong><span>HBAR</span></div>' + usdLine(h)) +
+      '</div>' +
+      (!isLocked
+        ? '<span class="hire-btn disabled">Coming soon</span>'
+        : '<span class="hire-btn disabled">Members only</span>') +
+    '</div>' +
+    '</div>';
 }
 
 function toggleDesc(i, btn) {
   const el = document.getElementById('d' + i);
   const ex = el.classList.toggle('expanded');
-  btn.innerHTML = ex ? 'Show less &uarr;' : 'Read more &darr;';
+  btn.innerHTML = ex ? 'Show less &#x2191;' : 'Read more &#x2193;';
 }
 
 function renderGrid(agents) {
-  const grid         = document.getElementById('grid');
-  const count        = document.getElementById('count');
-  const state        = document.getElementById('state');
-  const lockedSec    = document.getElementById('locked-section');
-  const lockedGrid   = document.getElementById('locked-grid');
-  const lockedCount  = document.getElementById('locked-count');
+  const grid        = document.getElementById('grid');
+  const count       = document.getElementById('count');
+  const state       = document.getElementById('state');
+  const lockedSec   = document.getElementById('locked-section');
+  const lockedGrid  = document.getElementById('locked-grid');
+  const lockedCount = document.getElementById('locked-count');
 
   if (!agents.length) {
     state.style.display = 'block';
-    state.innerHTML = `<span class="state-icon">&#x2615;</span><p class="state-title">No agents found</p><p class="state-body">Nothing matches this filter yet.</p>`;
+    state.innerHTML = '<span class="state-icon">&#x2615;</span><p class="state-title">No agents found</p><p class="state-body">Nothing matches this filter yet.</p>';
     count.style.display = 'none';
     grid.innerHTML = '';
     lockedSec.style.display = 'none';
@@ -530,30 +934,41 @@ function renderGrid(agents) {
 
   state.style.display = 'none';
 
-  const publicAgents = agents.slice(0, PUBLIC_COUNT);
-  const hiddenAgents = agents.slice(PUBLIC_COUNT);
-
-  // Public cards
-  count.style.display = 'block';
-  count.innerHTML = `Showing <span>${publicAgents.length}</span> of <span>${agents.length}</span> agents`;
-  grid.innerHTML = publicAgents.map((a, i) => cardHtml(a, i, false)).join('');
-
-  // Locked section
-  if (hiddenAgents.length > 0) {
-    lockedSec.style.display = 'block';
-    lockedCount.textContent = hiddenAgents.length;
-    lockedGrid.innerHTML = hiddenAgents.map((a, i) => cardHtml(a, i + PUBLIC_COUNT, true)).join('');
-  } else {
+  if (isUnlocked) {
+    // Unlocked: show all cards in the public grid, hide locked section
+    count.style.display = 'block';
+    count.innerHTML = 'Showing <span>' + agents.length + '</span> of <span>' + agents.length + '</span> agents &mdash; <span style="color:#6abf7b;">member access</span>';
+    grid.innerHTML = agents.map(function(a, i) { return cardHtml(a, i, false); }).join('');
     lockedSec.style.display = 'none';
+  } else {
+    const publicAgents = agents.slice(0, PUBLIC_COUNT);
+    const hiddenAgents = agents.slice(PUBLIC_COUNT);
+
+    count.style.display = 'block';
+    count.innerHTML = 'Showing <span>' + publicAgents.length + '</span> of <span>' + agents.length + '</span> agents';
+    grid.innerHTML = publicAgents.map(function(a, i) { return cardHtml(a, i, false); }).join('');
+
+    if (hiddenAgents.length > 0) {
+      lockedSec.style.display = 'block';
+      lockedCount.textContent = hiddenAgents.length;
+      lockedGrid.innerHTML = hiddenAgents.map(function(a, i) { return cardHtml(a, i + PUBLIC_COUNT, true); }).join('');
+    } else {
+      lockedSec.style.display = 'none';
+    }
   }
 }
 
 function applyFilter(f) {
   activeFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === f));
-  renderGrid(f === 'all' ? allAgents : allAgents.filter(a => a.category === f));
+  document.querySelectorAll('.filter-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.filter === f);
+  });
+  renderGrid(f === 'all' ? allAgents : allAgents.filter(function(a) { return a.category === f; }));
 }
 
+// ---------------------------------------------------------------------------
+// Data loading
+// ---------------------------------------------------------------------------
 async function fetchHbar() {
   try {
     const d = await (await fetch(BINANCE)).json();
@@ -566,18 +981,85 @@ async function fetchHbar() {
 
 async function loadAgents() {
   try {
-    const d = await (await fetch(API)).json();
+    const d = await (await fetch(API_AGENTS)).json();
     allAgents = d.agents || [];
     applyFilter(activeFilter);
   } catch(err) {
-    document.getElementById('state').innerHTML = `
-      <span class="state-icon">&#x26A0;</span>
-      <p class="state-title">Could not load agents</p>
-      <p class="state-body">${err.message}</p>`;
+    document.getElementById('state').innerHTML =
+      '<span class="state-icon">&#x26A0;</span>' +
+      '<p class="state-title">Could not load agents</p>' +
+      '<p class="state-body">' + err.message + '</p>';
   }
 }
 
-document.querySelectorAll('.filter-btn').forEach(b => b.addEventListener('click', () => applyFilter(b.dataset.filter)));
+// ---------------------------------------------------------------------------
+// Submission form
+// ---------------------------------------------------------------------------
+function openSubmitForm() {
+  const wrap   = document.getElementById('submit-form-wrap');
+  const arrow  = document.getElementById('submit-arrow');
+  wrap.classList.add('open');
+  arrow.classList.add('open');
+  document.getElementById('submit-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function toggleSubmitForm() {
+  const wrap  = document.getElementById('submit-form-wrap');
+  const arrow = document.getElementById('submit-arrow');
+  wrap.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+
+async function submitAgent(e) {
+  e.preventDefault();
+  const btn = document.getElementById('sf-btn');
+  const msg = document.getElementById('sf-msg');
+
+  msg.className = 'form-msg';
+
+  const payload = {
+    name:         document.getElementById('sf-name').value.trim(),
+    description:  document.getElementById('sf-desc').value.trim(),
+    capabilities: document.getElementById('sf-caps').value.trim(),
+    pricing_hbar: parseFloat(document.getElementById('sf-price').value) || 0,
+    endpoint_url: document.getElementById('sf-endpoint').value.trim(),
+    seller_wallet: document.getElementById('sf-wallet').value.trim(),
+  };
+
+  btn.disabled = true;
+  btn.textContent = 'Submitting\u2026';
+
+  try {
+    const res  = await fetch(API_SUBMIT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      msg.className = 'form-msg success visible';
+      msg.textContent = 'Agent submitted successfully! Agent ID: ' + data.agent_id + '. We will review it within 48 hours.';
+      e.target.reset();
+    } else {
+      msg.className = 'form-msg error visible';
+      msg.textContent = data.error || 'Submission failed. Please try again.';
+    }
+  } catch(err) {
+    msg.className = 'form-msg error visible';
+    msg.textContent = 'Network error: ' + err.message;
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Submit agent \u2192';
+}
+
+// ---------------------------------------------------------------------------
+// Boot
+// ---------------------------------------------------------------------------
+document.querySelectorAll('.filter-btn').forEach(function(b) {
+  b.addEventListener('click', function() { applyFilter(b.dataset.filter); });
+});
 
 loadAgents();
 fetchHbar();
