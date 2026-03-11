@@ -945,6 +945,65 @@
       </div>
     </div>
 
+    <!-- INTELLIGENCE CENTRE -->
+    <div class="section-header">Intelligence Centre</div>
+    <div class="two-col" style="margin-bottom:16px;">
+
+      <!-- RECENT SIGNUPS -->
+      <div class="panel">
+        <div class="panel-title">
+          Recent Signups
+          <span id="signup-count" style="font-size:11px;color:var(--cream-dim);font-weight:400;">—</span>
+        </div>
+        <div id="signup-feed" style="max-height:280px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;">
+          <div class="loading">Loading signups...</div>
+        </div>
+      </div>
+
+      <!-- SCOUT TARGETS -->
+      <div class="panel">
+        <div class="panel-title">
+          Scout Targets
+          <span id="scout-count" style="font-size:11px;color:var(--cream-dim);font-weight:400;">—</span>
+        </div>
+        <div class="feed-filters" style="margin-bottom:10px;">
+          <span class="feed-filter active" onclick="filterScout('all',this)">All</span>
+          <span class="feed-filter" onclick="filterScout('new',this)">New</span>
+          <span class="feed-filter" onclick="filterScout('contacted',this)">Contacted</span>
+        </div>
+        <div id="scout-feed" style="max-height:240px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;">
+          <div class="loading">Loading targets...</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- LIVE SESSIONS TABLE -->
+    <div class="section-header">Live Sessions</div>
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-title">
+        All Sessions
+        <span id="sessions-total-label" style="font-size:11px;color:var(--cream-dim);font-weight:400;">—</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:11px;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);color:var(--cream-dim);text-transform:uppercase;letter-spacing:0.5px;">
+              <th style="padding:6px 8px;text-align:left;">Agent</th>
+              <th style="padding:6px 8px;text-align:left;">Task</th>
+              <th style="padding:6px 8px;text-align:left;">Status</th>
+              <th style="padding:6px 8px;text-align:right;">HBAR</th>
+              <th style="padding:6px 8px;text-align:right;">Buyer</th>
+              <th style="padding:6px 8px;text-align:right;">Time</th>
+            </tr>
+          </thead>
+          <tbody id="sessions-table-body">
+            <tr><td colspan="6" class="loading">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- AUTO REFRESH COUNTDOWN -->
     <div class="countdown">
       Auto-refreshing in <span id="countdown-seconds">30</span>s
@@ -1006,7 +1065,10 @@ async function loadAll() {
     loadSecurity(),
     loadComms(),
     loadMarketplace(),
-    loadWallet()
+    loadWallet(),
+    loadSignups(),
+    loadScoutTargets(),
+    loadSessionsTable()
   ]);
 }
 
@@ -1315,7 +1377,101 @@ async function runAudit() {
   btn.disabled = false;
 }
 
-// ── COUNTDOWN ──
+// ── SIGNUPS ──
+let allSignups = [];
+async function loadSignups() {
+  try {
+    const res = await fetch('https://vzoillfhilpvqxfkozbt.supabase.co/rest/v1/beanz_vip?select=email,created_at&order=created_at.desc&limit=50', {
+      headers: {
+        'apikey': 'sb_publishable_W-aqyGXIqqaK53IMeRADTA_D5Ff34an',
+        'Authorization': 'Bearer sb_publishable_W-aqyGXIqqaK53IMeRADTA_D5Ff34an'
+      }
+    });
+    const data = await res.json();
+    allSignups = data || [];
+    const feed = document.getElementById('signup-feed');
+    const countEl = document.getElementById('signup-count');
+    countEl.textContent = allSignups.length + ' total';
+    if (!allSignups.length) { feed.innerHTML = '<div class="empty">No signups yet</div>'; return; }
+    feed.innerHTML = allSignups.map(s => {
+      const ago = timeAgo(s.created_at);
+      const email = s.email || 'unknown';
+      const domain = email.includes('@') ? email.split('@')[1] : '';
+      return `<div class="session-item">
+        <div class="session-dot success"></div>
+        <div class="session-agent" style="width:180px;">${email}</div>
+        <div class="session-task" style="color:var(--cream-dim);font-size:10px;">${domain}</div>
+        <div class="session-time">${ago}</div>
+      </div>`;
+    }).join('');
+  } catch(e) { document.getElementById('signup-feed').innerHTML = '<div class="empty">Error loading signups</div>'; }
+}
+
+// ── SCOUT TARGETS ──
+let allScoutTargets = [];
+async function loadScoutTargets() {
+  try {
+    const res = await fetch('https://vzoillfhilpvqxfkozbt.supabase.co/rest/v1/scout_targets?select=name,platform,tagline,status,created_at,url&order=created_at.desc&limit=50', {
+      headers: {
+        'apikey': 'sb_publishable_W-aqyGXIqqaK53IMeRADTA_D5Ff34an',
+        'Authorization': 'Bearer sb_publishable_W-aqyGXIqqaK53IMeRADTA_D5Ff34an'
+      }
+    });
+    allScoutTargets = await res.json() || [];
+    document.getElementById('scout-count').textContent = allScoutTargets.length + ' found';
+    renderScoutTargets(allScoutTargets);
+  } catch(e) { document.getElementById('scout-feed').innerHTML = '<div class="empty">Error loading targets</div>'; }
+}
+
+function renderScoutTargets(targets) {
+  const feed = document.getElementById('scout-feed');
+  if (!targets.length) { feed.innerHTML = '<div class="empty">No targets yet — run The Scout</div>'; return; }
+  const platformColor = { moltbook: '#c8872a', x_twitter: '#4a8fe8', github: '#6abf7b' };
+  feed.innerHTML = targets.map(t => {
+    const color = platformColor[t.platform] || 'var(--cream-dim)';
+    const statusColor = t.status === 'contacted' ? 'var(--green)' : t.status === 'converted' ? 'var(--amber)' : 'var(--cream-dim)';
+    return `<div class="session-item">
+      <div class="session-dot" style="background:${color}"></div>
+      <div style="flex:1;overflow:hidden;">
+        <div style="font-size:11px;font-weight:600;color:var(--cream);">${t.name || 'Unknown'}</div>
+        <div style="font-size:10px;color:var(--cream-dim);">${t.tagline || t.platform}</div>
+      </div>
+      <div style="font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid ${statusColor};color:${statusColor};flex-shrink:0;">${t.status || 'new'}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterScout(status, el) {
+  document.querySelectorAll('.feed-filter').forEach(f => f.classList.remove('active'));
+  el.classList.add('active');
+  if (status === 'all') renderScoutTargets(allScoutTargets);
+  else renderScoutTargets(allScoutTargets.filter(t => t.status === status));
+}
+
+// ── SESSIONS TABLE ──
+async function loadSessionsTable() {
+  try {
+    const d = await fetchJson('/api/admin/stats/sessions?limit=20');
+    if (d.error || !d.sessions) return;
+    const tbody = document.getElementById('sessions-table-body');
+    document.getElementById('sessions-total-label').textContent = d.sessions.length + ' recent';
+    if (!d.sessions.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">No sessions yet</td></tr>'; return; }
+    tbody.innerHTML = d.sessions.map(s => {
+      const statusColor = s.status === 'success' ? 'var(--green)' : s.status === 'replay' ? 'var(--red)' : 'var(--amber)';
+      const buyer = s.buyer_wallet ? s.buyer_wallet.slice(0,12) + '...' : '—';
+      return `<tr style="border-bottom:1px solid var(--border);">
+        <td style="padding:6px 8px;color:var(--cream);font-weight:600;">${agentLabel(s.agent_id)}</td>
+        <td style="padding:6px 8px;color:var(--cream-dim);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.task_summary || '—'}</td>
+        <td style="padding:6px 8px;"><span style="color:${statusColor};font-size:10px;text-transform:uppercase;">${s.status}</span></td>
+        <td style="padding:6px 8px;text-align:right;color:var(--amber);font-weight:600;">${s.hbar_amount || '—'}</td>
+        <td style="padding:6px 8px;text-align:right;color:var(--cream-dim);font-size:10px;font-family:monospace;">${buyer}</td>
+        <td style="padding:6px 8px;text-align:right;color:var(--cream-dim);">${timeAgo(s.created_at)}</td>
+      </tr>`;
+    }).join('');
+  } catch(e) { console.warn('[sessions table]', e); }
+}
+
+
 function startCountdown() {
   countdownInterval = setInterval(() => {
     countdownVal--;
