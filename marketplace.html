@@ -463,10 +463,11 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     <h2 class="auth-title">Sign in to <em>AgentBrewHouse</em></h2>
     <div class="auth-rule"></div>
 
-    <div id="auth-form-panel">
-      <p class="auth-body">Enter your email to receive a magic sign-in link. No password needed.</p>
+    <!-- Step 1: email -->
+    <div id="auth-email-panel">
+      <p class="auth-body">Enter your email and we'll send a 6-digit code. No redirects, no passwords.</p>
       <input type="email" id="auth-email" class="auth-input" placeholder="your@email.com" autocomplete="email" />
-      <button class="auth-submit" id="auth-submit-btn" onclick="sendMagicLink()">Send magic link &rarr;</button>
+      <button class="auth-submit" id="auth-email-btn" onclick="sendOtp()">Send code &rarr;</button>
       <div class="auth-error" id="auth-error"></div>
       <p class="auth-note">
         Beanz VIP members and active subscribers get full access.<br/>
@@ -474,13 +475,21 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
       </p>
     </div>
 
-    <div class="auth-sent" id="auth-sent-panel">
+    <!-- Step 2: 6-digit code -->
+    <div id="auth-code-panel" style="display:none;">
       <span class="auth-sent-icon">&#x2709;</span>
-      <p class="auth-sent-msg">
-        Check your inbox &mdash; we sent a sign-in link to<br/>
-        <strong id="auth-sent-email" style="color:var(--amber-light);"></strong>.<br/><br/>
-        Click the link in the email to unlock the marketplace.
+      <p class="auth-body" style="margin-bottom:20px;">
+        Code sent to <strong id="auth-sent-email" style="color:var(--amber-light);"></strong>.<br/>
+        Enter the 6-digit code from your email.
       </p>
+      <input type="text" id="auth-code" class="auth-input" placeholder="123456"
+             autocomplete="one-time-code" inputmode="numeric" maxlength="6"
+             style="letter-spacing:0.3em; font-size:20px; text-align:center;" />
+      <button class="auth-submit" id="auth-code-btn" onclick="verifyOtp()">Verify &rarr;</button>
+      <div class="auth-error" id="auth-code-error"></div>
+      <button onclick="resetAuthModal()" style="background:none;border:none;color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.14em;cursor:pointer;margin-top:12px;text-transform:uppercase;">
+        &larr; Use a different email
+      </button>
     </div>
   </div>
 </div>
@@ -669,12 +678,7 @@ const PUBLIC_COUNT  = 3;
 // Supabase init
 // ---------------------------------------------------------------------------
 const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON, {
-  auth: {
-    flowType: 'pkce',          // code in query param (?code=xxx) — Safari-safe, hash not used
-    detectSessionInUrl: true,  // auto-exchange the code on page load
-  }
-});
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 let currentUser   = null;
 let isUnlocked    = false;
@@ -700,20 +704,6 @@ sb.auth.onAuthStateChange(async (event, session) => {
   }
 });
 
-// Belt-and-suspenders: explicitly pick up any session already present on page load
-// (covers cases where onAuthStateChange fires before agents are loaded)
-sb.auth.getSession().then(async ({ data: { session } }) => {
-  console.log('[auth] getSession result:', session?.user?.email ?? null);
-  if (session && !currentUser) {
-    currentUser = session.user;
-    updateNavAuthBtn();
-    const ok = await checkAccess(currentUser);
-    console.log('[auth] getSession checkAccess result:', ok);
-    isUnlocked = ok;
-    updateGateForUser();
-    applyFilter(activeFilter);
-  }
-});
 
 async function checkAccess(user) {
   console.log('[checkAccess] checking user:', user.email, 'id:', user.id);
@@ -805,6 +795,7 @@ function handleGateBtnClick() {
 }
 
 function openAuthModal() {
+  resetAuthModal();
   document.getElementById('auth-overlay').classList.add('visible');
   document.getElementById('auth-email').focus();
 }
@@ -813,9 +804,23 @@ function closeAuthModal() {
   document.getElementById('auth-overlay').classList.remove('visible');
 }
 
-async function sendMagicLink() {
-  const email = document.getElementById('auth-email').value.trim();
-  const btn   = document.getElementById('auth-submit-btn');
+function resetAuthModal() {
+  document.getElementById('auth-email-panel').style.display = 'block';
+  document.getElementById('auth-code-panel').style.display  = 'none';
+  document.getElementById('auth-email').value = '';
+  document.getElementById('auth-code') && (document.getElementById('auth-code').value = '');
+  document.getElementById('auth-error').classList.remove('visible');
+  document.getElementById('auth-code-error').classList.remove('visible');
+  const btn = document.getElementById('auth-email-btn');
+  btn.disabled = false;
+  btn.textContent = 'Send code \u2192';
+}
+
+let _otpEmail = '';
+
+async function sendOtp() {
+  const email = document.getElementById('auth-email').value.trim().toLowerCase();
+  const btn   = document.getElementById('auth-email-btn');
   const err   = document.getElementById('auth-error');
   err.classList.remove('visible');
   if (!email) { showAuthError('Please enter your email.'); return; }
@@ -823,26 +828,60 @@ async function sendMagicLink() {
   btn.disabled = true;
   btn.textContent = 'Sending\u2026';
 
-  const redirectUrl = window.location.origin + '/marketplace.html';
   const { error } = await sb.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: redirectUrl }
+    options: { shouldCreateUser: false }
   });
 
   if (error) {
     btn.disabled = false;
-    btn.textContent = 'Send magic link \u2192';
+    btn.textContent = 'Send code \u2192';
     showAuthError(error.message || 'Something went wrong. Try again.');
     return;
   }
 
-  document.getElementById('auth-form-panel').style.display = 'none';
-  document.getElementById('auth-sent-panel').classList.add('visible');
+  _otpEmail = email;
   document.getElementById('auth-sent-email').textContent = email;
+  document.getElementById('auth-email-panel').style.display = 'none';
+  document.getElementById('auth-code-panel').style.display  = 'block';
+  setTimeout(() => document.getElementById('auth-code').focus(), 50);
+}
+
+async function verifyOtp() {
+  const token = document.getElementById('auth-code').value.trim();
+  const btn   = document.getElementById('auth-code-btn');
+  const err   = document.getElementById('auth-code-error');
+  err.classList.remove('visible');
+  if (!token) { showCodeError('Please enter the 6-digit code.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Verifying\u2026';
+
+  const { error } = await sb.auth.verifyOtp({
+    email: _otpEmail,
+    token,
+    type: 'email',
+  });
+
+  if (error) {
+    btn.disabled = false;
+    btn.textContent = 'Verify \u2192';
+    showCodeError(error.message || 'Invalid code. Please try again.');
+    return;
+  }
+
+  // onAuthStateChange fires automatically with SIGNED_IN — just close the modal
+  closeAuthModal();
 }
 
 function showAuthError(msg) {
   const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+
+function showCodeError(msg) {
+  const el = document.getElementById('auth-code-error');
   el.textContent = msg;
   el.classList.add('visible');
 }
