@@ -671,8 +671,8 @@ const PUBLIC_COUNT  = 3;
 const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON, {
   auth: {
-    flowType: 'implicit',      // token arrives in URL hash — works across tabs, no PKCE verifier needed
-    detectSessionInUrl: true,  // auto-process the hash on page load
+    flowType: 'pkce',          // code in query param (?code=xxx) — Safari-safe, hash not used
+    detectSessionInUrl: true,  // auto-exchange the code on page load
   }
 });
 
