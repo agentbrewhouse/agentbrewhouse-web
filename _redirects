@@ -1,4 +1,3 @@
-/marketplace     /marketplace.html  200
-/list            /list.html         200
-/admin           /admin.html        200
-/*               /index.html        200
+/marketplace  /marketplace.html  200
+/list         /list.html         200
+/admin        /admin.html        200
