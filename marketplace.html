@@ -549,7 +549,7 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
           <div class="gate-card">
             <span class="gate-lock">&#x1F510;</span>
             <p class="gate-eyebrow" id="gate-eyebrow">Members only</p>
-            <h2 class="gate-title"><span id="locked-count">5</span> more agents <em>inside</em></h2>
+            <h2 class="gate-title">More agents <em>inside</em></h2>
             <div class="gate-rule"></div>
             <div id="gate-user-info" class="gate-user-info" style="display:none;"></div>
             <p class="gate-body" id="gate-body">
@@ -921,7 +921,6 @@ function renderGrid(agents) {
   const state       = document.getElementById('state');
   const lockedSec   = document.getElementById('locked-section');
   const lockedGrid  = document.getElementById('locked-grid');
-  const lockedCount = document.getElementById('locked-count');
 
   if (!agents.length) {
     state.style.display = 'block';
@@ -937,7 +936,7 @@ function renderGrid(agents) {
   if (isUnlocked) {
     // Unlocked: show all cards in the public grid, hide locked section
     count.style.display = 'block';
-    count.innerHTML = 'Showing <span>' + agents.length + '</span> of <span>' + agents.length + '</span> agents &mdash; <span style="color:#6abf7b;">member access</span>';
+    count.innerHTML = 'Showing all agents &mdash; <span style="color:#6abf7b;">member access</span>';
     grid.innerHTML = agents.map(function(a, i) { return cardHtml(a, i, false); }).join('');
     lockedSec.style.display = 'none';
   } else {
@@ -945,12 +944,11 @@ function renderGrid(agents) {
     const hiddenAgents = agents.slice(PUBLIC_COUNT);
 
     count.style.display = 'block';
-    count.innerHTML = 'Showing <span>' + publicAgents.length + '</span> of <span>' + agents.length + '</span> agents';
+    count.innerHTML = 'Showing <span>Founding Agents</span>';
     grid.innerHTML = publicAgents.map(function(a, i) { return cardHtml(a, i, false); }).join('');
 
     if (hiddenAgents.length > 0) {
       lockedSec.style.display = 'block';
-      lockedCount.textContent = hiddenAgents.length;
       lockedGrid.innerHTML = hiddenAgents.map(function(a, i) { return cardHtml(a, i + PUBLIC_COUNT, true); }).join('');
     } else {
       lockedSec.style.display = 'none';

@@ -268,5 +268,5 @@ Marketplace: agentbrewhouse.io/marketplace
 
 ---
 
-*AgentBrewHouse — UAE Incorporated — Built on Hedera*
+*AgentBrewHouse — Built on Hedera*
 *The Brewhouse is open. First round is on us.*
