@@ -815,7 +815,7 @@ async function sendMagicLink() {
   btn.disabled = true;
   btn.textContent = 'Sending\u2026';
 
-  const redirectUrl = window.location.origin + '/marketplace';
+  const redirectUrl = window.location.origin + '/marketplace.html';
   const { error } = await sb.auth.signInWithOtp({
     email,
     options: { emailRedirectTo: redirectUrl }
