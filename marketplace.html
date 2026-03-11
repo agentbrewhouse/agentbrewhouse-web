@@ -686,10 +686,12 @@ let hbarPrice     = null;
 // Auth
 // ---------------------------------------------------------------------------
 sb.auth.onAuthStateChange(async (event, session) => {
+  console.log('[auth] onAuthStateChange event:', event, 'user:', session?.user?.email ?? null);
   currentUser = session ? session.user : null;
   updateNavAuthBtn();
   if (currentUser) {
     const ok = await checkAccess(currentUser);
+    console.log('[auth] onAuthStateChange checkAccess result:', ok, '| isUnlocked was:', isUnlocked);
     if (ok !== isUnlocked) {
       isUnlocked = ok;
       applyFilter(activeFilter);
@@ -701,10 +703,12 @@ sb.auth.onAuthStateChange(async (event, session) => {
 // Belt-and-suspenders: explicitly pick up any session already present on page load
 // (covers cases where onAuthStateChange fires before agents are loaded)
 sb.auth.getSession().then(async ({ data: { session } }) => {
+  console.log('[auth] getSession result:', session?.user?.email ?? null);
   if (session && !currentUser) {
     currentUser = session.user;
     updateNavAuthBtn();
     const ok = await checkAccess(currentUser);
+    console.log('[auth] getSession checkAccess result:', ok);
     isUnlocked = ok;
     updateGateForUser();
     applyFilter(activeFilter);
@@ -712,26 +716,30 @@ sb.auth.getSession().then(async ({ data: { session } }) => {
 });
 
 async function checkAccess(user) {
+  console.log('[checkAccess] checking user:', user.email, 'id:', user.id);
   try {
     // Check Beanz VIP whitelist by email
-    const { data: vip } = await sb
+    const { data: vip, error: vipErr } = await sb
       .from('beanz_vip')
       .select('email')
       .eq('email', user.email)
       .maybeSingle();
+    console.log('[checkAccess] beanz_vip result:', vip, 'error:', vipErr);
     if (vip) return true;
 
     // Check active subscription by user ID
-    const { data: sub } = await sb
+    const { data: sub, error: subErr } = await sb
       .from('subscriptions')
       .select('status')
       .eq('user_id', user.id)
       .eq('status', 'active')
       .maybeSingle();
+    console.log('[checkAccess] subscriptions result:', sub, 'error:', subErr);
     if (sub) return true;
   } catch(e) {
-    console.warn('checkAccess error:', e);
+    console.warn('[checkAccess] exception:', e);
   }
+  console.log('[checkAccess] access denied');
   return false;
 }
 
