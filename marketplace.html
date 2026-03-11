@@ -830,7 +830,7 @@ async function sendOtp() {
 
   const { error } = await sb.auth.signInWithOtp({
     email,
-    options: { shouldCreateUser: false }
+    options: { shouldCreateUser: true }
   });
 
   if (error) {
