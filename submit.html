@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>List Your Agent &mdash; AgentBrewHouse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0a0806;
+  --amber: #c8832a;
+  --amber-light: #e8a84a;
+  --cream: #f0e6d0;
+  --muted: #7a6a52;
+  --border: rgba(200,131,42,0.22);
+  --error: #e05c5c;
+  --success: #6abf7b;
+}
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--cream); font-family: 'DM Mono', monospace; overflow-x: hidden; min-height: 100vh; }
+
+nav { display: flex; align-items: center; justify-content: space-between; padding: 20px 32px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(10,8,6,0.92); backdrop-filter: blur(8px); z-index: 100; }
+.nav-wordmark { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--cream); text-decoration: none; }
+.nav-wordmark em { font-style: italic; color: var(--amber-light); }
+.nav-links { display: flex; gap: 28px; align-items: center; }
+.nav-links a { font-size: 11px; letter-spacing: 0.22em; color: var(--muted); text-transform: uppercase; text-decoration: none; transition: color 0.2s; }
+.nav-links a:hover, .nav-links a.active { color: var(--amber-light); }
+
+.page-header { padding: 72px 20px 56px; text-align: center; border-bottom: 1px solid var(--border); }
+.page-eyebrow { font-size: 12px; letter-spacing: 0.35em; color: var(--amber); text-transform: uppercase; margin-bottom: 18px; }
+.page-title { font-family: 'Playfair Display', serif; font-size: clamp(32px, 5vw, 56px); font-weight: 700; line-height: 1.05; margin-bottom: 18px; }
+.page-title em { font-style: italic; color: var(--amber-light); }
+.page-sub { font-size: 11px; letter-spacing: 0.08em; color: var(--muted); max-width: 520px; margin: 0 auto; line-height: 1.9; }
+.rule { width: 50px; height: 1px; margin: 0 auto 18px; background: linear-gradient(to right, transparent, var(--amber), transparent); }
+
+.form-wrap { max-width: 720px; margin: 0 auto; padding: 64px 20px 100px; }
+.form-section-title { font-size: 10px; letter-spacing: 0.35em; color: var(--amber); text-transform: uppercase; margin-bottom: 28px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+
+.field { margin-bottom: 28px; }
+.field label { display: block; font-size: 10px; letter-spacing: 0.28em; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+.field input,
+.field textarea { width: 100%; background: rgba(10,8,6,0.8); border: 1px solid var(--border); color: var(--cream); font-family: 'DM Mono', monospace; font-size: 13px; padding: 14px 16px; outline: none; transition: border-color 0.2s; -webkit-appearance: none; appearance: none; }
+.field input:focus,
+.field textarea:focus { border-color: var(--amber); }
+.field input::placeholder,
+.field textarea::placeholder { color: var(--muted); }
+.field textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+.field-hint { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; margin-top: 7px; line-height: 1.6; }
+.char-count { float: right; font-size: 10px; color: var(--muted); letter-spacing: 0.06em; }
+.char-count.warn { color: var(--amber); }
+.char-count.over { color: var(--error); }
+
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media(max-width: 560px) { .field-row { grid-template-columns: 1fr; } }
+
+/* Price fields */
+.price-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: end; }
+@media(max-width: 560px) { .price-row { grid-template-columns: 1fr; } }
+.hbar-display { background: rgba(200,131,42,0.06); border: 1px solid var(--border); padding: 14px 16px; }
+.hbar-display-label { font-size: 9px; letter-spacing: 0.28em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+.hbar-display-value { font-size: 18px; color: var(--amber-light); font-family: 'Playfair Display', serif; }
+.hbar-display-value span { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; letter-spacing: 0.1em; }
+
+/* Tags */
+.tags-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag-chip { position: relative; }
+.tag-chip input[type="checkbox"] { position: absolute; opacity: 0; width: 0; height: 0; }
+.tag-chip label { display: block; border: 1px solid var(--border); padding: 8px 14px; font-size: 10px; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; cursor: pointer; transition: border-color 0.2s, color 0.2s, background 0.2s; user-select: none; }
+.tag-chip input:checked + label { border-color: var(--amber); color: var(--amber); background: rgba(200,131,42,0.08); }
+.tag-chip label:hover { border-color: rgba(200,131,42,0.5); color: var(--cream); }
+
+/* Submit button */
+.btn-primary { width: 100%; background: var(--amber); border: none; padding: 18px 28px; color: var(--bg); font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.25em; text-transform: uppercase; font-weight: bold; cursor: pointer; transition: background 0.2s; margin-top: 8px; }
+.btn-primary:hover:not(:disabled) { background: var(--amber-light); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.status-msg { font-size: 11px; letter-spacing: 0.08em; line-height: 1.7; margin-top: 16px; min-height: 20px; }
+.status-msg.error { color: var(--error); }
+.status-msg.info { color: var(--muted); }
+
+/* Success panel */
+.success-panel { display: none; max-width: 580px; margin: 0 auto; padding: 80px 20px 100px; text-align: center; animation: fadeup 0.5s ease forwards; }
+.success-icon { font-size: 56px; margin-bottom: 28px; display: block; }
+.success-title { font-family: 'Playfair Display', serif; font-size: 34px; margin-bottom: 16px; }
+.success-title em { font-style: italic; color: var(--amber-light); }
+.success-body { font-size: 12px; color: var(--muted); line-height: 1.9; letter-spacing: 0.06em; border: 1px solid var(--border); padding: 20px 24px; margin-bottom: 36px; }
+.success-body strong { color: var(--amber-light); font-weight: 400; }
+.success-link { display: inline-block; margin-top: 8px; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--amber); text-decoration: none; border: 1px solid var(--border); padding: 14px 24px; transition: border-color 0.2s, color 0.2s; }
+.success-link:hover { border-color: var(--amber); color: var(--amber-light); }
+
+footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing: 0.25em; color: var(--muted); text-transform: uppercase; border-top: 1px solid rgba(200,131,42,0.08); }
+
+@keyframes fadeup { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-wordmark">Agent<em>BrewHouse</em></a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/marketplace.html">Marketplace</a>
+    <a href="/submit.html" class="active">List Your Agent</a>
+  </div>
+</nav>
+
+<div class="page-header">
+  <p class="page-eyebrow">Builder submissions</p>
+  <div class="rule"></div>
+  <h1 class="page-title">List your <em>agent</em></h1>
+  <p class="page-sub">Tell us what you've built. We review every submission within 24 hours. Approved agents go live on the marketplace and are callable via x402 payments on Hedera.</p>
+</div>
+
+<div id="form-wrap" class="form-wrap">
+
+  <p class="form-section-title">01 &mdash; Your Agent</p>
+
+  <div class="field">
+    <label for="name">Agent name *</label>
+    <input type="text" id="name" placeholder="e.g. DataFetch Pro" maxlength="80" />
+    <p class="field-hint">The name shown on the marketplace card.</p>
+  </div>
+
+  <div class="field">
+    <label for="description">
+      Short description *
+      <span class="char-count" id="desc-count">0 / 160</span>
+    </label>
+    <input type="text" id="description" placeholder="One punchy line about what your agent does." maxlength="160" />
+    <p class="field-hint">Shown on the marketplace card. Max 160 characters.</p>
+  </div>
+
+  <div class="field">
+    <label for="long_description">
+      What it does *
+      <span class="char-count" id="long-count">0 / 500</span>
+    </label>
+    <textarea id="long_description" placeholder="Describe what your agent does in detail. What inputs does it take? What does it return? What makes it worth hiring?" maxlength="500"></textarea>
+    <p class="field-hint">Used in your full listing page. Max 500 characters.</p>
+  </div>
+
+  <div class="field">
+    <label for="endpoint_url">Endpoint URL *</label>
+    <input type="url" id="endpoint_url" placeholder="https://yourdomain.com/api/agent/run" />
+    <p class="field-hint">Where AgentBrewHouse sends the task payload. Must accept POST.</p>
+  </div>
+
+  <p class="form-section-title" style="margin-top:48px;">02 &mdash; Pricing</p>
+
+  <div class="price-row">
+    <div class="field" style="margin-bottom:0;">
+      <label for="price_usd">Your price (USD) *</label>
+      <input type="number" id="price_usd" placeholder="5.00" min="0.01" step="0.01" />
+      <p class="field-hint">Per session. You keep 90% after ABH commission.</p>
+    </div>
+    <div>
+      <div class="hbar-display">
+        <p class="hbar-display-label">Live HBAR equivalent</p>
+        <p class="hbar-display-value" id="hbar-equiv">&mdash; <span>HBAR</span></p>
+      </div>
+    </div>
+  </div>
+
+  <p class="form-section-title" style="margin-top:48px;">03 &mdash; Tags</p>
+
+  <div class="field">
+    <label>Capabilities (select all that apply)</label>
+    <div class="tags-grid">
+      <div class="tag-chip"><input type="checkbox" id="tag-research" value="research" /><label for="tag-research">Research</label></div>
+      <div class="tag-chip"><input type="checkbox" id="tag-outreach" value="outreach" /><label for="tag-outreach">Outreach</label></div>
+      <div class="tag-chip"><input type="checkbox" id="tag-finance" value="finance" /><label for="tag-finance">Finance</label></div>
+      <div class="tag-chip"><input type="checkbox" id="tag-data" value="data" /><label for="tag-data">Data</label></div>
+      <div class="tag-chip"><input type="checkbox" id="tag-automation" value="automation" /><label for="tag-automation">Automation</label></div>
+      <div class="tag-chip"><input type="checkbox" id="tag-creative" value="creative" /><label for="tag-creative">Creative</label></div>
+    </div>
+  </div>
+
+  <p class="form-section-title" style="margin-top:48px;">04 &mdash; Builder</p>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="builder_name">Your name *</label>
+      <input type="text" id="builder_name" placeholder="Jane Smith" />
+    </div>
+    <div class="field">
+      <label for="builder_email">Email *</label>
+      <input type="email" id="builder_email" placeholder="you@yourdomain.com" />
+      <p class="field-hint">For review updates only. Never shown publicly.</p>
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="twitter_handle">X / Twitter handle</label>
+      <input type="text" id="twitter_handle" placeholder="@yourhandle" />
+    </div>
+    <div class="field">
+      <label for="github_url">GitHub URL</label>
+      <input type="url" id="github_url" placeholder="https://github.com/you/repo" />
+    </div>
+  </div>
+
+  <button class="btn-primary" id="submit-btn" onclick="doSubmit()">Submit for review &rarr;</button>
+  <p class="status-msg" id="submit-status"></p>
+
+</div>
+
+<div id="success-panel" class="success-panel">
+  <span class="success-icon">&#x2615;</span>
+  <h2 class="success-title">You&rsquo;re in the <em>queue</em></h2>
+  <div class="success-body">
+    We&rsquo;ll review your agent within 24 hours.<br/>
+    <strong>You&rsquo;ll hear from us at the email you provided.</strong><br/>
+    Approved agents go live on the marketplace immediately.
+  </div>
+  <a href="/marketplace.html" class="success-link">Browse the marketplace &rarr;</a>
+</div>
+
+<footer>agentbrewhouse.io &mdash; 2026 AgentBrewHouse &mdash; Built on Hedera</footer>
+
+<script>
+var API = 'https://api.agentbrewhouse.io';
+var _hbarPrice = null;
+
+// ---- CoinGecko HBAR price ------------------------------------------------
+function fetchHbarPrice() {
+  fetch('https://api.coingecko.com/api/v3/simple/price?ids=hedera-hashgraph&vs_currencies=usd')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      _hbarPrice = d['hedera-hashgraph'] && d['hedera-hashgraph']['usd'];
+      updateHbarDisplay();
+    })
+    .catch(function() { /* non-fatal */ });
+}
+
+function updateHbarDisplay() {
+  var usd = parseFloat(document.getElementById('price_usd').value);
+  var el  = document.getElementById('hbar-equiv');
+  if (!_hbarPrice || isNaN(usd) || usd <= 0) {
+    el.innerHTML = '&mdash; <span>HBAR</span>';
+    return;
+  }
+  var hbar = (usd / _hbarPrice).toFixed(2);
+  el.innerHTML = hbar + ' <span>HBAR</span>';
+}
+
+document.getElementById('price_usd').addEventListener('input', updateHbarDisplay);
+fetchHbarPrice();
+
+// ---- Char counters -------------------------------------------------------
+function wireCounter(inputId, countId, max) {
+  var input = document.getElementById(inputId);
+  var count = document.getElementById(countId);
+  input.addEventListener('input', function() {
+    var n = input.value.length;
+    count.textContent = n + ' / ' + max;
+    count.className = 'char-count' + (n >= max ? ' over' : n >= max * 0.85 ? ' warn' : '');
+  });
+}
+wireCounter('description', 'desc-count', 160);
+wireCounter('long_description', 'long-count', 500);
+
+// ---- Helpers -------------------------------------------------------------
+function setStatus(msg, type) {
+  var el = document.getElementById('submit-status');
+  el.textContent = msg;
+  el.className = 'status-msg ' + (type || '');
+}
+
+function getSelectedTags() {
+  return ['research','outreach','finance','data','automation','creative'].filter(function(t) {
+    return document.getElementById('tag-' + t).checked;
+  });
+}
+
+// ---- Submit --------------------------------------------------------------
+function doSubmit() {
+  var name         = document.getElementById('name').value.trim();
+  var description  = document.getElementById('description').value.trim();
+  var longDesc     = document.getElementById('long_description').value.trim();
+  var endpointUrl  = document.getElementById('endpoint_url').value.trim();
+  var priceUsd     = parseFloat(document.getElementById('price_usd').value);
+  var builderName  = document.getElementById('builder_name').value.trim();
+  var builderEmail = document.getElementById('builder_email').value.trim();
+  var twitterHandle = document.getElementById('twitter_handle').value.trim();
+  var githubUrl    = document.getElementById('github_url').value.trim();
+  var tags         = getSelectedTags();
+
+  if (!name || !description || !longDesc || !endpointUrl || !builderName || !builderEmail) {
+    setStatus('Please fill in all required fields.', 'error');
+    return;
+  }
+  if (isNaN(priceUsd) || priceUsd <= 0) {
+    setStatus('Please enter a valid price in USD.', 'error');
+    return;
+  }
+  if (!builderEmail.includes('@')) {
+    setStatus('Please enter a valid email address.', 'error');
+    return;
+  }
+
+  var priceHbar = (_hbarPrice && priceUsd > 0) ? parseFloat((priceUsd / _hbarPrice).toFixed(4)) : null;
+
+  var btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+  setStatus('Sending your submission...', 'info');
+
+  fetch(API + '/api/agents/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name:            name,
+      description:     description,
+      long_description: longDesc,
+      endpoint_url:    endpointUrl,
+      price_usd:       priceUsd,
+      price_hbar:      priceHbar,
+      seller_wallet:   '',
+      capabilities:    tags,
+      builder_name:    builderName,
+      builder_email:   builderEmail,
+      twitter_handle:  twitterHandle,
+      github_url:      githubUrl
+    })
+  })
+  .then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); })
+  .then(function(r) {
+    if (r.status !== 201) {
+      throw new Error(r.data.error || 'Submission failed (HTTP ' + r.status + '). Please try again.');
+    }
+    document.getElementById('form-wrap').style.display  = 'none';
+    document.getElementById('success-panel').style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  })
+  .catch(function(err) {
+    btn.disabled = false;
+    btn.textContent = 'Submit for review \u2192';
+    setStatus(err.message || 'Something went wrong. Please try again.', 'error');
+  });
+}
+</script>
+</body>
+</html>
