@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AgentBrewHouse — Mission Control</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --panel: #141414;
+    --panel2: #1a1a1a;
+    --border: #2a2a2a;
+    --amber: #c8872a;
+    --amber-light: #e8a84a;
+    --amber-dim: rgba(200,135,42,0.15);
+    --cream: #f0e6d0;
+    --cream-dim: #a89880;
+    --green: #2d9e5f;
+    --red: #e05252;
+    --blue: #4a8fe8;
+    --font: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--cream);
+    font-family: var(--font);
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  /* ── LOGIN ── */
+  #login-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: var(--bg);
+  }
+
+  .login-box {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 48px;
+    width: 360px;
+    text-align: center;
+  }
+
+  .login-box .logo {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--amber);
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+
+  .login-box .tagline {
+    color: var(--cream-dim);
+    font-size: 12px;
+    margin-bottom: 32px;
+  }
+
+  .login-box input {
+    width: 100%;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: var(--cream);
+    font-size: 14px;
+    margin-bottom: 16px;
+    outline: none;
+  }
+
+  .login-box input:focus { border-color: var(--amber); }
+
+  .login-box button {
+    width: 100%;
+    background: var(--amber);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .login-box button:hover { background: var(--amber-light); }
+  .login-error { color: var(--red); font-size: 12px; margin-top: 12px; }
+
+  /* ── DASHBOARD ── */
+  #dashboard { display: none; }
+
+  /* ── COMMAND BAR ── */
+  .command-bar {
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .brand {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--amber);
+    white-space: nowrap;
+    margin-right: 8px;
+  }
+
+  .cmd-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .cmd-stat .label {
+    font-size: 10px;
+    color: var(--cream-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .cmd-stat .value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--cream);
+  }
+
+  .cmd-stat .value.amber { color: var(--amber); }
+
+  .status-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .cmd-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .last-updated {
+    font-size: 11px;
+    color: var(--cream-dim);
+  }
+
+  .refresh-btn {
+    background: var(--amber-dim);
+    border: 1px solid var(--amber);
+    color: var(--amber);
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .refresh-btn:hover { background: rgba(200,135,42,0.3); }
+
+  /* ── MAIN LAYOUT ── */
+  .main { padding: 24px; max-width: 1600px; margin: 0 auto; }
+
+  /* ── TILES ── */
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .tile {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tile::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--amber);
+    opacity: 0.4;
+  }
+
+  .tile.highlight::before { opacity: 1; }
+
+  .tile-label {
+    font-size: 11px;
+    color: var(--cream-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+
+  .tile-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--cream);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .tile-value.amber { color: var(--amber); }
+  .tile-value.green { color: var(--green); }
+  .tile-value.red { color: var(--red); }
+
+  .tile-sub {
+    font-size: 11px;
+    color: var(--cream-dim);
+  }
+
+  /* ── SECTION HEADERS ── */
+  .section-header {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--amber);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-header::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── AGENT CARDS ── */
+  .agent-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .agent-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    transition: border-color 0.2s;
+  }
+
+  .agent-card:hover { border-color: var(--amber); }
+
+  .agent-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .agent-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--cream);
+  }
+
+  .agent-id {
+    font-size: 10px;
+    color: var(--cream-dim);
+    font-family: monospace;
+  }
+
+  .agent-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(45,158,95,0.15);
+    color: var(--green);
+    border: 1px solid rgba(45,158,95,0.3);
+  }
+
+  .agent-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .agent-stat-item .label {
+    font-size: 10px;
+    color: var(--cream-dim);
+    margin-bottom: 2px;
+  }
+
+  .agent-stat-item .val {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--cream);
+  }
+
+  .agent-stat-item .val.amber { color: var(--amber); }
+  .agent-stat-item .val.small { font-size: 11px; }
+
+  /* ── TWO COL LAYOUT ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  /* ── PANELS ── */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+  }
+
+  .panel-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--amber);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* ── SESSION FEED ── */
+  .feed-filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
+  .feed-filter {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--cream-dim);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .feed-filter.active, .feed-filter:hover {
+    background: var(--amber-dim);
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+
+  .session-log {
+    max-height: 320px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .session-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 8px;
+    border-radius: 6px;
+    margin-bottom: 2px;
+    transition: background 0.15s;
+  }
+
+  .session-item:hover { background: var(--panel2); }
+  .session-item.replay { background: rgba(224,82,82,0.08); }
+
+  .session-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .session-dot.success { background: var(--green); }
+  .session-dot.error { background: var(--red); }
+  .session-dot.pending { background: var(--amber); }
+  .session-dot.replay-dot { background: var(--red); animation: pulse 1s infinite; }
+
+  .session-agent {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--cream);
+    width: 110px;
+    flex-shrink: 0;
+  }
+
+  .session-task {
+    font-size: 11px;
+    color: var(--cream-dim);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .session-hbar {
+    font-size: 11px;
+    color: var(--amber);
+    font-weight: 600;
+    width: 60px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .session-time {
+    font-size: 10px;
+    color: var(--cream-dim);
+    width: 60px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .replay-badge {
+    font-size: 9px;
+    background: rgba(224,82,82,0.2);
+    color: var(--red);
+    border: 1px solid rgba(224,82,82,0.4);
+    border-radius: 4px;
+    padding: 1px 5px;
+    flex-shrink: 0;
+  }
+
+  /* ── CHARTS ── */
+  .chart-container {
+    position: relative;
+    height: 180px;
+  }
+
+  .chart-toggle {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .toggle-btn {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--cream-dim);
+    border-radius: 5px;
+    padding: 3px 10px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .toggle-btn.active {
+    background: var(--amber-dim);
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+
+  /* ── MONITORING PANELS ── */
+  .monitor-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .monitor-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+
+  .monitor-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--amber);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+
+  .monitor-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .monitor-stat:last-child { border-bottom: none; }
+
+  .monitor-stat .key {
+    font-size: 11px;
+    color: var(--cream-dim);
+  }
+
+  .monitor-stat .val {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--cream);
+  }
+
+  .monitor-stat .val.green { color: var(--green); }
+  .monitor-stat .val.red { color: var(--red); }
+  .monitor-stat .val.amber { color: var(--amber); }
+
+  .run-now-btn {
+    width: 100%;
+    margin-top: 10px;
+    background: var(--amber-dim);
+    border: 1px solid var(--amber);
+    color: var(--amber);
+    border-radius: 6px;
+    padding: 6px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .run-now-btn:hover { background: rgba(200,135,42,0.3); }
+
+  /* ── FINANCIAL CENTRE ── */
+  .financial-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+  }
+
+  .fin-tile {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+
+  .fin-tile .label {
+    font-size: 10px;
+    color: var(--cream-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+  }
+
+  .fin-tile .value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--amber);
+  }
+
+  .fin-tile .sub {
+    font-size: 11px;
+    color: var(--cream-dim);
+    margin-top: 2px;
+  }
+
+  /* ── SUBMISSION QUEUE ── */
+  .submission-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px;
+    background: var(--panel2);
+    border-radius: 6px;
+    margin-bottom: 6px;
+  }
+
+  .sub-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--cream);
+    flex: 1;
+  }
+
+  .sub-by {
+    font-size: 11px;
+    color: var(--cream-dim);
+  }
+
+  .sub-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .btn-approve {
+    background: rgba(45,158,95,0.15);
+    border: 1px solid rgba(45,158,95,0.4);
+    color: var(--green);
+    border-radius: 5px;
+    padding: 3px 10px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  .btn-reject {
+    background: rgba(224,82,82,0.1);
+    border: 1px solid rgba(224,82,82,0.3);
+    color: var(--red);
+    border-radius: 5px;
+    padding: 3px 10px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+
+  /* ── MISC ── */
+  .loading { color: var(--cream-dim); font-size: 11px; text-align: center; padding: 20px; }
+
+  .empty { color: var(--cream-dim); font-size: 11px; text-align: center; padding: 16px; opacity: 0.6; }
+
+  .security-alert {
+    background: rgba(224,82,82,0.08);
+    border: 1px solid rgba(224,82,82,0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 11px;
+    color: var(--red);
+  }
+
+  .countdown {
+    font-size: 11px;
+    color: var(--cream-dim);
+    text-align: center;
+    padding: 12px;
+    border-top: 1px solid var(--border);
+    margin-top: 12px;
+  }
+
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--amber);
+    border-radius: 2px;
+    transition: width 1s linear;
+  }
+
+  @media (max-width: 1200px) {
+    .tiles { grid-template-columns: repeat(4, 1fr); }
+    .agent-grid { grid-template-columns: repeat(2, 1fr); }
+    .monitor-row { grid-template-columns: repeat(2, 1fr); }
+    .financial-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="logo">AgentBrewHouse</div>
+    <div class="tagline">Mission Control — Admin Access</div>
+    <input type="password" id="secret-input" placeholder="Admin secret" onkeydown="if(event.key==='Enter')login()">
+    <button onclick="login()">Enter Mission Control</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+
+  <!-- COMMAND BAR -->
+  <div class="command-bar">
+    <div class="brand">AgentBrewHouse</div>
+    <div class="status-pill">
+      <div class="status-dot" id="api-status-dot"></div>
+      <span id="api-status-text">API Live</span>
+    </div>
+    <div class="cmd-stat">
+      <div class="label">HBAR Price</div>
+      <div class="value amber" id="cmd-hbar-price">—</div>
+    </div>
+    <div class="cmd-stat">
+      <div class="label">Sessions Today</div>
+      <div class="value" id="cmd-sessions-today">—</div>
+    </div>
+    <div class="cmd-stat">
+      <div class="label">HBAR Earned (All Time)</div>
+      <div class="value amber" id="cmd-hbar-total">—</div>
+    </div>
+    <div class="cmd-stat">
+      <div class="label">Success Rate</div>
+      <div class="value" id="cmd-success-rate">—</div>
+    </div>
+    <div class="cmd-stat">
+      <div class="label">Network</div>
+      <div class="value" id="cmd-network">—</div>
+    </div>
+    <div class="cmd-right">
+      <div class="last-updated">Updated <span id="last-updated-time">—</span></div>
+      <button class="refresh-btn" onclick="loadAll()">Refresh</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- OVERVIEW TILES -->
+    <div class="section-header">Overview</div>
+    <div class="tiles">
+      <div class="tile highlight">
+        <div class="tile-label">Revenue Today</div>
+        <div class="tile-value amber" id="tile-rev-today">—</div>
+        <div class="tile-sub" id="tile-rev-today-usd">—</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Revenue This Week</div>
+        <div class="tile-value amber" id="tile-rev-week">—</div>
+        <div class="tile-sub" id="tile-rev-week-usd">—</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Total Sessions</div>
+        <div class="tile-value" id="tile-sessions-total">—</div>
+        <div class="tile-sub" id="tile-sessions-today-sub">— today</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Success Rate</div>
+        <div class="tile-value green" id="tile-success-rate">—</div>
+        <div class="tile-sub">all time</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Pending Submissions</div>
+        <div class="tile-value" id="tile-pending">—</div>
+        <div class="tile-sub">awaiting review</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Beanz VIP Members</div>
+        <div class="tile-value amber" id="tile-vip">—</div>
+        <div class="tile-sub">founding members</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Replay Attacks Blocked</div>
+        <div class="tile-value red" id="tile-replays">—</div>
+        <div class="tile-sub">all time</div>
+      </div>
+      <div class="tile">
+        <div class="tile-label">Agent Memories Logged</div>
+        <div class="tile-value" id="tile-memories">—</div>
+        <div class="tile-sub">across all agents</div>
+      </div>
+    </div>
+
+    <!-- AGENT SQUAD -->
+    <div class="section-header">Agent Squad</div>
+    <div class="agent-grid" id="agent-grid">
+      <div class="loading">Loading agents...</div>
+    </div>
+
+    <!-- LIVE FEED + CHARTS -->
+    <div class="section-header">Live Activity</div>
+    <div class="two-col">
+      <div class="panel">
+        <div class="panel-title">
+          Session Feed
+          <div class="feed-filters">
+            <span class="feed-filter active" onclick="filterSessions('all', this)">All</span>
+            <span class="feed-filter" onclick="filterSessions('success', this)">Success</span>
+            <span class="feed-filter" onclick="filterSessions('error', this)">Error</span>
+          </div>
+        </div>
+        <div class="session-log" id="session-log">
+          <div class="loading">Loading sessions...</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">
+          Revenue Over Time
+          <div class="chart-toggle">
+            <button class="toggle-btn active" onclick="setRevPeriod('7d', this)">7D</button>
+            <button class="toggle-btn" onclick="setRevPeriod('30d', this)">30D</button>
+            <button class="toggle-btn" onclick="setRevPeriod('90d', this)">90D</button>
+          </div>
+        </div>
+        <div class="chart-container">
+          <canvas id="revenue-chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- SESSIONS PER AGENT CHART -->
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-title">Sessions Per Agent</div>
+      <div class="chart-container" style="height:140px;">
+        <canvas id="agent-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- MONITORING PANELS -->
+    <div class="section-header">Monitoring</div>
+    <div class="monitor-row">
+      <div class="monitor-panel">
+        <div class="monitor-title">The Audit Report</div>
+        <div id="audit-panel">
+          <div class="monitor-stat">
+            <span class="key">Last Run</span>
+            <span class="val" id="audit-last-run">—</span>
+          </div>
+          <div class="monitor-stat">
+            <span class="key">Risk Score</span>
+            <span class="val" id="audit-risk-score">—</span>
+          </div>
+          <div class="monitor-stat">
+            <span class="key">Total Runs</span>
+            <span class="val" id="audit-total-runs">—</span>
+          </div>
+        </div>
+        <button class="run-now-btn" onclick="runAudit()">Run Audit Now</button>
+      </div>
+
+      <div class="monitor-panel">
+        <div class="monitor-title">Marketplace Health</div>
+        <div class="monitor-stat">
+          <span class="key">Pending Submissions</span>
+          <span class="val amber" id="mp-pending">—</span>
+        </div>
+        <div class="monitor-stat">
+          <span class="key">Approved Agents</span>
+          <span class="val green" id="mp-approved">—</span>
+        </div>
+        <div class="monitor-stat">
+          <span class="key">VIP Members</span>
+          <span class="val" id="mp-vip">—</span>
+        </div>
+        <div id="submissions-mini"></div>
+      </div>
+
+      <div class="monitor-panel">
+        <div class="monitor-title">Comms & Delivery</div>
+        <div class="monitor-stat">
+          <span class="key">Town Crier (7d)</span>
+          <span class="val" id="crier-count">—</span>
+        </div>
+        <div class="monitor-stat">
+          <span class="key">Crier Success Rate</span>
+          <span class="val green" id="crier-rate">—</span>
+        </div>
+        <div class="monitor-stat">
+          <span class="key">Greeter (7d)</span>
+          <span class="val" id="greeter-count">—</span>
+        </div>
+        <div class="monitor-stat">
+          <span class="key">Greeter Success Rate</span>
+          <span class="val green" id="greeter-rate">—</span>
+        </div>
+      </div>
+
+      <div class="monitor-panel">
+        <div class="monitor-title">Security & Infrastructure</div>
+        <div id="recent-replays-alert"></div>
+        <div class="monitor-stat">
+          <span class="key">Replays Today</span>
+          <span class="val red" id="sec-replays-today">—</span>
+        </div>
+        <div class="monitor-stat">
+          <span class="key">Error Rate (7d)</span>
+          <span class="val" id="sec-error-rate">—</span>
+        </div>
+        <div class="monitor-stat">
+          <span class="key">Railway</span>
+          <span class="val green" id="sec-railway">Healthy</span>
+        </div>
+        <div class="monitor-stat">
+          <span class="key">Total Blocked</span>
+          <span class="val" id="sec-total-blocked">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- FINANCIAL CENTRE -->
+    <div class="section-header">Financial Centre</div>
+    <div class="financial-grid">
+      <div class="fin-tile">
+        <div class="label">Wallet Balance</div>
+        <div class="value" id="fin-balance">—</div>
+        <div class="sub" id="fin-balance-usd">—</div>
+      </div>
+      <div class="fin-tile">
+        <div class="label">House Revenue (10%)</div>
+        <div class="value" id="fin-house-rev">—</div>
+        <div class="sub">all time</div>
+      </div>
+      <div class="fin-tile">
+        <div class="label">Seller Payouts (90%)</div>
+        <div class="value" id="fin-seller-payouts">—</div>
+        <div class="sub">all time</div>
+      </div>
+      <div class="fin-tile">
+        <div class="label">HBAR Price</div>
+        <div class="value" id="fin-hbar-price">—</div>
+        <div class="sub">live via CoinGecko</div>
+      </div>
+      <div class="fin-tile">
+        <div class="label">Projected Monthly</div>
+        <div class="value" id="fin-projected">—</div>
+        <div class="sub">based on 7d avg</div>
+      </div>
+    </div>
+
+    <!-- AUTO REFRESH COUNTDOWN -->
+    <div class="countdown">
+      Auto-refreshing in <span id="countdown-seconds">30</span>s
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:100%"></div>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</div><!-- /dashboard -->
+
+<script>
+const API = 'https://api.agentbrewhouse.io';
+let adminSecret = '';
+let revenueChart = null;
+let agentChart = null;
+let allSessions = [];
+let countdownInterval = null;
+let countdownVal = 30;
+
+// ── LOGIN ──
+function login() {
+  const val = document.getElementById('secret-input').value.trim();
+  if (!val) return;
+  adminSecret = val;
+  // Test it with a real call
+  fetchJson('/api/admin/stats/overview').then(data => {
+    if (data.error && data.error === 'Unauthorized') {
+      document.getElementById('login-error').textContent = 'Invalid secret.';
+      adminSecret = '';
+    } else {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      loadAll();
+      startCountdown();
+    }
+  }).catch(() => {
+    document.getElementById('login-error').textContent = 'Could not connect to API.';
+  });
+}
+
+// ── FETCH HELPER ──
+async function fetchJson(path) {
+  const res = await fetch(API + path, {
+    headers: { 'X-Admin-Secret': adminSecret }
+  });
+  return res.json();
+}
+
+// ── LOAD ALL ──
+async function loadAll() {
+  resetCountdown();
+  document.getElementById('last-updated-time').textContent = new Date().toLocaleTimeString();
+  await Promise.all([
+    loadOverview(),
+    loadAgents(),
+    loadSessions(),
+    loadRevenue('7d'),
+    loadSecurity(),
+    loadComms(),
+    loadMarketplace(),
+    loadWallet()
+  ]);
+}
+
+// ── OVERVIEW ──
+async function loadOverview() {
+  const d = await fetchJson('/api/admin/stats/overview');
+  if (d.error) return;
+
+  document.getElementById('cmd-hbar-price').textContent = '$' + d.hbar_price_usd;
+  document.getElementById('cmd-sessions-today').textContent = d.sessions_today;
+  document.getElementById('cmd-success-rate').textContent = d.success_rate + '%';
+
+  document.getElementById('tile-rev-today').textContent = d.revenue_today_hbar + ' HBAR';
+  document.getElementById('tile-rev-today-usd').textContent = '$' + d.revenue_today_usd + ' USD';
+  document.getElementById('tile-rev-week').textContent = d.revenue_week_hbar + ' HBAR';
+  document.getElementById('tile-rev-week-usd').textContent = '$' + d.revenue_week_usd + ' USD';
+  document.getElementById('tile-sessions-total').textContent = d.sessions_total.toLocaleString();
+  document.getElementById('tile-sessions-today-sub').textContent = d.sessions_today + ' today';
+  document.getElementById('tile-success-rate').textContent = d.success_rate + '%';
+  document.getElementById('tile-pending').textContent = d.pending_submissions;
+  document.getElementById('tile-vip').textContent = d.vip_members;
+  document.getElementById('tile-replays').textContent = d.replay_attacks_blocked;
+  document.getElementById('tile-memories').textContent = d.memories_logged.toLocaleString();
+
+  // Financial centre totals (rough calc)
+  document.getElementById('fin-hbar-price').textContent = '$' + d.hbar_price_usd;
+}
+
+// ── AGENTS ──
+async function loadAgents() {
+  const d = await fetchJson('/api/admin/stats/agents');
+  if (d.error || !d.agents) return;
+
+  const grid = document.getElementById('agent-grid');
+  grid.innerHTML = '';
+
+  d.agents.forEach(a => {
+    const lastRun = a.last_run ? timeAgo(a.last_run) : 'Never';
+    grid.innerHTML += `
+      <div class="agent-card">
+        <div class="agent-header">
+          <div>
+            <div class="agent-name">${a.name}</div>
+            <div class="agent-id">${a.id}</div>
+          </div>
+          <div class="agent-badge">Active</div>
+        </div>
+        <div class="agent-stats">
+          <div class="agent-stat-item">
+            <div class="label">Runs Today</div>
+            <div class="val">${a.runs_today}</div>
+          </div>
+          <div class="agent-stat-item">
+            <div class="label">Total Runs</div>
+            <div class="val">${a.runs_total}</div>
+          </div>
+          <div class="agent-stat-item">
+            <div class="label">HBAR Earned</div>
+            <div class="val amber">${a.hbar_earned}</div>
+          </div>
+          <div class="agent-stat-item">
+            <div class="label">Success</div>
+            <div class="val">${a.success_rate}%</div>
+          </div>
+          <div class="agent-stat-item">
+            <div class="label">Memories</div>
+            <div class="val">${a.memory_count}</div>
+          </div>
+          <div class="agent-stat-item">
+            <div class="label">Last Run</div>
+            <div class="val small">${lastRun}</div>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  // Agent bar chart
+  const labels = d.agents.map(a => a.name.replace('The ', ''));
+  const values = d.agents.map(a => a.runs_total);
+  renderAgentChart(labels, values);
+}
+
+// ── SESSIONS ──
+async function loadSessions(agentFilter, statusFilter) {
+  let url = '/api/admin/stats/sessions?limit=50';
+  if (agentFilter) url += '&agent_id=' + agentFilter;
+  if (statusFilter && statusFilter !== 'all') url += '&status=' + statusFilter;
+
+  const d = await fetchJson(url);
+  if (d.error || !d.sessions) return;
+  allSessions = d.sessions;
+  renderSessions(allSessions);
+}
+
+function renderSessions(sessions) {
+  const log = document.getElementById('session-log');
+  if (!sessions.length) { log.innerHTML = '<div class="empty">No sessions yet</div>'; return; }
+
+  log.innerHTML = sessions.map(s => {
+    const isReplay = s.status === 'replay';
+    const dotClass = isReplay ? 'replay-dot' : (s.status === 'success' ? 'success' : 'error');
+    const agentName = agentLabel(s.agent_id);
+    const task = s.task_summary || 'No summary';
+    const hbar = s.hbar_amount ? s.hbar_amount + ' HBAR' : '';
+    const time = s.created_at ? timeAgo(s.created_at) : '';
+    return `
+      <div class="session-item ${isReplay ? 'replay' : ''}">
+        <div class="session-dot ${dotClass}"></div>
+        <div class="session-agent">${agentName}</div>
+        <div class="session-task">${task}</div>
+        ${isReplay ? '<div class="replay-badge">REPLAY</div>' : ''}
+        <div class="session-hbar">${hbar}</div>
+        <div class="session-time">${time}</div>
+      </div>`;
+  }).join('');
+}
+
+function filterSessions(status, el) {
+  document.querySelectorAll('.feed-filter').forEach(f => f.classList.remove('active'));
+  el.classList.add('active');
+  if (status === 'all') {
+    renderSessions(allSessions);
+  } else {
+    renderSessions(allSessions.filter(s => s.status === status));
+  }
+}
+
+// ── REVENUE CHART ──
+async function loadRevenue(period) {
+  const d = await fetchJson('/api/admin/stats/revenue?period=' + period);
+  if (d.error || !d.data) return;
+  renderRevenueChart(d.data);
+}
+
+function setRevPeriod(period, el) {
+  document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  loadRevenue(period);
+}
+
+function renderRevenueChart(data) {
+  const ctx = document.getElementById('revenue-chart').getContext('2d');
+  if (revenueChart) revenueChart.destroy();
+  revenueChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: data.map(d => d.date.slice(5)),
+      datasets: [{
+        label: 'HBAR (house)',
+        data: data.map(d => d.hbar),
+        borderColor: '#c8872a',
+        backgroundColor: 'rgba(200,135,42,0.08)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 2,
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#a89880', font: { size: 10 } }, grid: { color: '#1e1e1e' } },
+        y: { ticks: { color: '#a89880', font: { size: 10 } }, grid: { color: '#1e1e1e' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+function renderAgentChart(labels, values) {
+  const ctx = document.getElementById('agent-chart').getContext('2d');
+  if (agentChart) agentChart.destroy();
+  agentChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Total Runs',
+        data: values,
+        backgroundColor: 'rgba(200,135,42,0.6)',
+        borderColor: '#c8872a',
+        borderWidth: 1,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#a89880', font: { size: 10 } }, grid: { display: false } },
+        y: { ticks: { color: '#a89880', font: { size: 10 } }, grid: { color: '#1e1e1e' }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+// ── SECURITY ──
+async function loadSecurity() {
+  const d = await fetchJson('/api/admin/stats/security');
+  if (d.error) return;
+
+  document.getElementById('sec-replays-today').textContent = d.replay_attacks_today;
+  document.getElementById('sec-error-rate').textContent = d.error_rate_7d + '%';
+  document.getElementById('sec-total-blocked').textContent = d.replay_attacks_total;
+
+  const alertDiv = document.getElementById('recent-replays-alert');
+  if (d.replay_attacks_today > 0) {
+    alertDiv.innerHTML = `<div class="security-alert">⚠ ${d.replay_attacks_today} replay attempt(s) today</div>`;
+  } else {
+    alertDiv.innerHTML = '';
+  }
+}
+
+// ── COMMS ──
+async function loadComms() {
+  const d = await fetchJson('/api/admin/stats/comms');
+  if (d.error) return;
+  document.getElementById('crier-count').textContent = d.town_crier.emails_7d;
+  document.getElementById('crier-rate').textContent = d.town_crier.success_rate + '%';
+  document.getElementById('greeter-count').textContent = d.greeter.emails_7d;
+  document.getElementById('greeter-rate').textContent = d.greeter.success_rate + '%';
+}
+
+// ── MARKETPLACE ──
+async function loadMarketplace() {
+  const d = await fetchJson('/api/admin/stats/marketplace');
+  if (d.error) return;
+  document.getElementById('mp-pending').textContent = d.pending_count;
+  document.getElementById('mp-approved').textContent = d.approved_count;
+  document.getElementById('mp-vip').textContent = d.vip_members;
+
+  // Mini submission queue
+  const mini = document.getElementById('submissions-mini');
+  if (d.pending_submissions && d.pending_submissions.length) {
+    mini.innerHTML = d.pending_submissions.slice(0, 3).map(s => `
+      <div class="submission-item">
+        <div class="sub-name">${s.agent_name || 'Unknown'}</div>
+        <div class="sub-actions">
+          <button class="btn-approve" onclick="reviewSubmission('${s.id}', 'approve')">✓</button>
+          <button class="btn-reject" onclick="reviewSubmission('${s.id}', 'reject')">✗</button>
+        </div>
+      </div>`).join('');
+  } else {
+    mini.innerHTML = '<div class="empty">No pending submissions</div>';
+  }
+
+  // Audit panel (use latest audit session)
+  document.getElementById('audit-last-run').textContent = 'See sessions';
+  document.getElementById('audit-risk-score').textContent = '—';
+  document.getElementById('audit-total-runs').textContent = '—';
+}
+
+// ── WALLET ──
+async function loadWallet() {
+  const d = await fetchJson('/api/admin/wallet/balance');
+  if (d.error) return;
+
+  document.getElementById('cmd-network').textContent = d.network.toUpperCase();
+  document.getElementById('fin-balance').textContent = d.balance_hbar + ' HBAR';
+  document.getElementById('fin-balance-usd').textContent = '$' + d.balance_usd + ' USD';
+  document.getElementById('fin-hbar-price').textContent = '$' + d.hbar_price_usd;
+
+  // Get total earned from overview (rough)
+  const ov = await fetchJson('/api/admin/stats/overview');
+  if (!ov.error) {
+    const totalRevWeek = ov.revenue_week_hbar;
+    const houseRev = ov.revenue_today_hbar;
+    document.getElementById('fin-house-rev').textContent = '—';
+    document.getElementById('fin-seller-payouts').textContent = '—';
+    document.getElementById('fin-projected').textContent = (totalRevWeek / 7 * 30).toFixed(2) + ' HBAR/mo';
+    document.getElementById('cmd-hbar-total').textContent = totalRevWeek + ' HBAR (7d)';
+  }
+}
+
+// ── REVIEW SUBMISSION ──
+async function reviewSubmission(id, action) {
+  const res = await fetch(`${API}/api/admin/submissions/${id}/${action}`, {
+    method: 'POST',
+    headers: { 'X-Admin-Secret': adminSecret }
+  });
+  const d = await res.json();
+  if (d.success) loadMarketplace();
+}
+
+// ── RUN AUDIT ──
+async function runAudit() {
+  const btn = document.querySelector('.run-now-btn');
+  btn.textContent = 'Running...';
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${API}/run`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Admin-Secret': adminSecret
+      },
+      body: JSON.stringify({ agent_id: 'abh_audit', task: 'run full audit', context: {} })
+    });
+    const d = await res.json();
+    document.getElementById('audit-last-run').textContent = 'Just now';
+    document.getElementById('audit-risk-score').textContent = d.risk_score || 'Done';
+  } catch (e) {
+    document.getElementById('audit-risk-score').textContent = 'Error';
+  }
+  btn.textContent = 'Run Audit Now';
+  btn.disabled = false;
+}
+
+// ── COUNTDOWN ──
+function startCountdown() {
+  countdownInterval = setInterval(() => {
+    countdownVal--;
+    document.getElementById('countdown-seconds').textContent = countdownVal;
+    const pct = (countdownVal / 30) * 100;
+    document.getElementById('progress-fill').style.width = pct + '%';
+    if (countdownVal <= 0) {
+      loadAll();
+    }
+  }, 1000);
+}
+
+function resetCountdown() {
+  countdownVal = 30;
+  document.getElementById('countdown-seconds').textContent = 30;
+  document.getElementById('progress-fill').style.width = '100%';
+}
+
+// ── HELPERS ──
+function timeAgo(iso) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  return Math.floor(hrs / 24) + 'd ago';
+}
+
+function agentLabel(id) {
+  const map = {
+    abh_gossip: 'The Gossip',
+    abh_cashier: 'The Cashier',
+    abh_crier: 'Town Crier',
+    abh_greeter: 'The Greeter',
+    abh_prep_cook: 'The Prep Cook',
+    abh_regular: 'The Regular',
+    abh_audit: 'The Audit',
+    abh_orchestrator: 'The Orchestrator',
+    abh_joe_dirt: 'Joe Dirt'
+  };
+  return map[id] || id;
+}
+</script>
+</body>
+</html>
