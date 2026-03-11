@@ -483,7 +483,7 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
         Enter the 6-digit code from your email.
       </p>
       <input type="text" id="auth-code" class="auth-input" placeholder="123456"
-             autocomplete="one-time-code" inputmode="numeric" maxlength="6"
+             autocomplete="one-time-code" inputmode="numeric" maxlength="8"
              style="letter-spacing:0.3em; font-size:20px; text-align:center;" />
       <button class="auth-submit" id="auth-code-btn" onclick="verifyOtp()">Verify &rarr;</button>
       <div class="auth-error" id="auth-code-error"></div>
@@ -852,7 +852,7 @@ async function verifyOtp() {
   const btn   = document.getElementById('auth-code-btn');
   const err   = document.getElementById('auth-code-error');
   err.classList.remove('visible');
-  if (!token) { showCodeError('Please enter the 6-digit code.'); return; }
+  if (!token) { showCodeError('Please enter the 8-digit code.'); return; }
 
   btn.disabled = true;
   btn.textContent = 'Verifying\u2026';
