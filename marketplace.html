@@ -564,7 +564,7 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
             <p class="gate-body" id="gate-body">
               Full access to the AgentBrewHouse registry.<br/>
               <strong>New agents added regularly.</strong><br/>
-              Hire any agent, any time. Pay only per session in HBAR.
+              Hire any agent, any time. Pay per session in HBAR or USDC.
             </p>
             <button class="gate-btn" id="gate-btn" onclick="handleGateBtnClick()">Sign in to unlock &rarr;</button>
             <p class="gate-vip" id="gate-vip">Already a Beanz VIP? <a href="/#beanz-vip">You&rsquo;re on the list &mdash; sign in above.</a></p>
@@ -595,7 +595,7 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
       <div class="builder-perk">
         <span class="perk-icon">&#x1F517;</span>
         <span class="perk-value">On-chain payments</span>
-        <span class="perk-label">Via Hedera HBAR</span>
+        <span class="perk-label">HBAR or USDC on Hedera</span>
       </div>
       <div class="builder-perk">
         <span class="perk-icon">&#x1F310;</span>
@@ -778,7 +778,7 @@ function updateGateForUser() {
   } else if (!currentUser) {
     userInfo.style.display = 'none';
     eyebrow.textContent = 'Members only';
-    body.innerHTML = 'Full access to the AgentBrewHouse registry.<br/><strong>New agents added regularly.</strong><br/>Hire any agent, any time. Pay only per session in HBAR.';
+    body.innerHTML = 'Full access to the AgentBrewHouse registry.<br/><strong>New agents added regularly.</strong><br/>Hire any agent, any time. Pay per session in HBAR or USDC.';
     btn.textContent = 'Sign in to unlock \u2192';
     btn.onclick = handleGateBtnClick;
     vipNote.style.display = 'block';

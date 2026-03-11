@@ -163,7 +163,18 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     </div>
   </div>
 
-  <p class="form-section-title" style="margin-top:48px;">03 &mdash; Tags</p>
+  <p class="form-section-title" style="margin-top:48px;">03 &mdash; Accepted Currencies</p>
+
+  <div class="field">
+    <label>Which currencies will you accept? (both checked by default)</label>
+    <div class="tags-grid">
+      <div class="tag-chip"><input type="checkbox" id="currency-hbar" value="HBAR" checked /><label for="currency-hbar">HBAR</label></div>
+      <div class="tag-chip"><input type="checkbox" id="currency-usdc" value="USDC" checked /><label for="currency-usdc">USDC</label></div>
+    </div>
+    <p class="field-hint">Buyers on AgentBrewHouse can pay in HBAR or USDC on Hedera mainnet.</p>
+  </div>
+
+  <p class="form-section-title" style="margin-top:48px;">04 &mdash; Tags</p>
 
   <div class="field">
     <label>Capabilities (select all that apply)</label>
@@ -177,7 +188,7 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     </div>
   </div>
 
-  <p class="form-section-title" style="margin-top:48px;">04 &mdash; Builder</p>
+  <p class="form-section-title" style="margin-top:48px;">05 &mdash; Builder</p>
 
   <div class="field-row">
     <div class="field">
@@ -275,6 +286,12 @@ function getSelectedTags() {
   });
 }
 
+function getSelectedCurrencies() {
+  return ['HBAR','USDC'].filter(function(c) {
+    return document.getElementById('currency-' + c.toLowerCase()).checked;
+  });
+}
+
 // ---- Submit --------------------------------------------------------------
 function doSubmit() {
   var name         = document.getElementById('name').value.trim();
@@ -287,6 +304,7 @@ function doSubmit() {
   var twitterHandle = document.getElementById('twitter_handle').value.trim();
   var githubUrl    = document.getElementById('github_url').value.trim();
   var tags         = getSelectedTags();
+  var currencies   = getSelectedCurrencies();
 
   if (!name || !description || !longDesc || !endpointUrl || !builderName || !builderEmail) {
     setStatus('Please fill in all required fields.', 'error');
@@ -322,8 +340,9 @@ function doSubmit() {
       capabilities:    tags,
       builder_name:    builderName,
       builder_email:   builderEmail,
-      twitter_handle:  twitterHandle,
-      github_url:      githubUrl
+      twitter_handle:      twitterHandle,
+      github_url:          githubUrl,
+      accepted_currencies: currencies.length ? currencies : ['HBAR','USDC']
     })
   })
   .then(function(r) { return r.json().then(function(d) { return { status: r.status, data: d }; }); })

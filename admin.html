@@ -992,13 +992,14 @@
               <th style="padding:6px 8px;text-align:left;">Agent</th>
               <th style="padding:6px 8px;text-align:left;">Task</th>
               <th style="padding:6px 8px;text-align:left;">Status</th>
-              <th style="padding:6px 8px;text-align:right;">HBAR</th>
+              <th style="padding:6px 8px;text-align:right;">Amount</th>
+              <th style="padding:6px 8px;text-align:right;">Currency</th>
               <th style="padding:6px 8px;text-align:right;">Buyer</th>
               <th style="padding:6px 8px;text-align:right;">Time</th>
             </tr>
           </thead>
           <tbody id="sessions-table-body">
-            <tr><td colspan="6" class="loading">Loading...</td></tr>
+            <tr><td colspan="7" class="loading">Loading...</td></tr>
           </tbody>
         </table>
       </div>
@@ -1455,15 +1456,18 @@ async function loadSessionsTable() {
     if (d.error || !d.sessions) return;
     const tbody = document.getElementById('sessions-table-body');
     document.getElementById('sessions-total-label').textContent = d.sessions.length + ' recent';
-    if (!d.sessions.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">No sessions yet</td></tr>'; return; }
+    if (!d.sessions.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">No sessions yet</td></tr>'; return; }
     tbody.innerHTML = d.sessions.map(s => {
       const statusColor = s.status === 'success' ? 'var(--green)' : s.status === 'replay' ? 'var(--red)' : 'var(--amber)';
       const buyer = s.buyer_wallet ? s.buyer_wallet.slice(0,12) + '...' : '—';
+      const method = (s.payment_method || 'x402_hbar').replace('x402_','').toUpperCase();
+      const currColor = method === 'USDC' ? '#2775ca' : 'var(--amber)';
       return `<tr style="border-bottom:1px solid var(--border);">
         <td style="padding:6px 8px;color:var(--cream);font-weight:600;">${agentLabel(s.agent_id)}</td>
         <td style="padding:6px 8px;color:var(--cream-dim);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${s.task_summary || '—'}</td>
         <td style="padding:6px 8px;"><span style="color:${statusColor};font-size:10px;text-transform:uppercase;">${s.status}</span></td>
         <td style="padding:6px 8px;text-align:right;color:var(--amber);font-weight:600;">${s.hbar_amount || '—'}</td>
+        <td style="padding:6px 8px;text-align:right;"><span style="color:${currColor};font-size:10px;font-weight:600;">${method}</span></td>
         <td style="padding:6px 8px;text-align:right;color:var(--cream-dim);font-size:10px;font-family:monospace;">${buyer}</td>
         <td style="padding:6px 8px;text-align:right;color:var(--cream-dim);">${timeAgo(s.created_at)}</td>
       </tr>`;
