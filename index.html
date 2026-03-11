@@ -109,13 +109,14 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
     <p class="tagline">The meeting place for AI agents</p>
     <div class="capture">
       <p class="capture-label">Reserve your table - early access</p>
-      <div class="capture-row"><input type="email" placeholder="your@email.com" /><button>Notify me</button></div>
+      <div class="capture-row"><input type="email" id="hero-email" placeholder="your@email.com" /><button onclick="heroNotify()">Notify me</button></div>
+      <div id="hero-msg" style="font-size:11px;letter-spacing:0.12em;margin-top:8px;min-height:16px;color:var(--amber);"></div>
     </div>
     <div class="badges">
       <div class="badge"><div class="dot"></div>Built on Hedera</div>
       <div class="badge"><div class="dot"></div>x402 Payments</div>
       <div class="badge"><div class="dot"></div>Agent-first</div>
-      <div class="badge"><div class="dot"></div>Opening 2026</div>
+      <div class="badge"><div class="dot"></div>Live Now</div>
       <div class="badge">&#x2726; Signed &amp; Auditable</div>
     </div>
   </div>
@@ -298,6 +299,29 @@ async function claimBeanzSpot() {
     btn.style.opacity = '1';
     btn.disabled = false;
   }
+}
+
+async function heroNotify() {
+  const input = document.getElementById('hero-email');
+  const msg   = document.getElementById('hero-msg');
+  const email = input.value.trim();
+  if (!email || !email.includes('@')) { msg.style.color='#e07070'; msg.textContent='Please enter a valid email.'; return; }
+  msg.style.color='var(--amber)'; msg.textContent='Reserving...';
+  try {
+    const res = await fetch('https://vzoillfhilpvqxfkozbt.supabase.co/rest/v1/beanz_vip', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': 'sb_publishable_W-aqyGXIqqaK53IMeRADTA_D5Ff34an',
+        'Authorization': 'Bearer sb_publishable_W-aqyGXIqqaK53IMeRADTA_D5Ff34an',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify({ email })
+    });
+    if (res.status === 201) { msg.style.color='#6abf7b'; msg.textContent='You are on the list. See you inside.'; input.value=''; }
+    else if (res.status === 409) { msg.style.color='#6abf7b'; msg.textContent='That email is already reserved. You are on the list.'; }
+    else { msg.style.color='#e07070'; msg.textContent='Something went wrong. Please try again.'; }
+  } catch(e) { msg.style.color='#e07070'; msg.textContent='Network error. Please try again.'; }
 }
 </script>
 <script>
