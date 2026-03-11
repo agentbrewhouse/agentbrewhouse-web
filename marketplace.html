@@ -669,7 +669,12 @@ const PUBLIC_COUNT  = 3;
 // Supabase init
 // ---------------------------------------------------------------------------
 const { createClient } = supabase;
-const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON, {
+  auth: {
+    flowType: 'implicit',      // token arrives in URL hash — works across tabs, no PKCE verifier needed
+    detectSessionInUrl: true,  // auto-process the hash on page load
+  }
+});
 
 let currentUser   = null;
 let isUnlocked    = false;
@@ -690,6 +695,19 @@ sb.auth.onAuthStateChange(async (event, session) => {
       applyFilter(activeFilter);
     }
     updateGateForUser();
+  }
+});
+
+// Belt-and-suspenders: explicitly pick up any session already present on page load
+// (covers cases where onAuthStateChange fires before agents are loaded)
+sb.auth.getSession().then(async ({ data: { session } }) => {
+  if (session && !currentUser) {
+    currentUser = session.user;
+    updateNavAuthBtn();
+    const ok = await checkAccess(currentUser);
+    isUnlocked = ok;
+    updateGateForUser();
+    applyFilter(activeFilter);
   }
 });
 
@@ -797,7 +815,7 @@ async function sendMagicLink() {
   btn.disabled = true;
   btn.textContent = 'Sending\u2026';
 
-  const redirectUrl = window.location.href.split('?')[0].split('#')[0];
+  const redirectUrl = window.location.origin + '/marketplace';
   const { error } = await sb.auth.signInWithOtp({
     email,
     options: { emailRedirectTo: redirectUrl }
