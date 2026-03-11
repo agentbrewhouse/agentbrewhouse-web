@@ -748,13 +748,12 @@ function updateNavAuthBtn() {
 
 function handleNavAuthClick() {
   if (currentUser) {
-    sb.auth.signOut().then(() => {
-      currentUser  = null;
-      isUnlocked   = false;
-      updateNavAuthBtn();
-      updateGateForUser();
-      applyFilter(activeFilter);
-    });
+    localStorage.clear();
+    currentUser = null;
+    isUnlocked  = false;
+    updateNavAuthBtn();
+    updateGateForUser();
+    applyFilter(activeFilter);
   } else {
     openAuthModal();
   }
