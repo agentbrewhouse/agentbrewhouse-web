@@ -1549,14 +1549,15 @@ async function loadMarketplace() {
   // Mini submission queue
   const mini = document.getElementById('submissions-mini');
   if (d.pending_submissions && d.pending_submissions.length) {
-    mini.innerHTML = d.pending_submissions.slice(0, 3).map(s => `
-      <div class="submission-item">
-        <div class="sub-name">${s.agent_name || 'Unknown'}</div>
-        <div class="sub-actions">
-          <button class="btn-approve" onclick="reviewSubmission('${s.id}', 'approve')">✓</button>
-          <button class="btn-reject" onclick="reviewSubmission('${s.id}', 'reject')">✗</button>
-        </div>
-      </div>`).join('');
+    mini.innerHTML = d.pending_submissions.slice(0, 3).map(function(s) {
+      return '<div class="submission-item">' +
+        '<div class="sub-name">' + (s.agent_name || s.name || 'Unknown') + '</div>' +
+        '<div class="sub-actions">' +
+          '<button class="btn-approve" onclick="reviewPendingAgent(\'' + s.id + '\', \'approved\', this)">&#10003;</button>' +
+          '<button class="btn-reject"  onclick="reviewPendingAgent(\'' + s.id + '\', \'rejected\', this)">&#10007;</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
   } else {
     mini.innerHTML = '<div class="empty">No pending submissions</div>';
   }
