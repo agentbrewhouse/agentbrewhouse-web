@@ -668,9 +668,6 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
 
 <footer>agentbrewhouse.io &mdash; 2026 AgentBrewHouse</footer>
 
-<!-- Hedera SDK + HashConnect for HashPack payments -->
-<script src="https://unpkg.com/@hashgraph/sdk@2.50.0/dist/web/index.js"></script>
-<script src="https://unpkg.com/hashconnect@2.3.2/dist/umd/hashconnect.js"></script>
 
 <script>
 // ---------------------------------------------------------------------------
@@ -717,53 +714,75 @@ sb.auth.onAuthStateChange(async (event, session) => {
 async function checkAccess(user) {
   console.log('[checkAccess] START — passed user:', user.email, 'id:', user.id);
 
-  // Re-verify the session is live before querying
-  try {
-    const { data: { user: freshUser }, error: guErr } = await sb.auth.getUser();
-    if (guErr || !freshUser) {
-      console.warn('[checkAccess] getUser() failed or returned no user:', guErr);
-      return false;
+  var timedOut = false;
+
+  async function runChecks() {
+    // Re-verify session is live
+    try {
+      const { data: { user: freshUser }, error: guErr } = await sb.auth.getUser();
+      if (guErr || !freshUser) {
+        console.warn('[checkAccess] getUser() failed:', guErr);
+        return false;
+      }
+      console.log('[checkAccess] getUser() confirmed:', freshUser.email, 'id:', freshUser.id);
+      user = freshUser;
+    } catch(e) {
+      console.warn('[checkAccess] getUser() threw:', e);
     }
-    console.log('[checkAccess] getUser() confirmed:', freshUser.email, 'id:', freshUser.id);
-    user = freshUser; // use the freshly-verified object
-  } catch(e) {
-    console.warn('[checkAccess] getUser() threw:', e);
+
+    const emailNorm = (user.email || '').toLowerCase().trim();
+    console.log('[checkAccess] normalised email:', emailNorm);
+
+    // --- Check 1: beanz_vip (matched on email field, case-insensitive) ---
+    try {
+      console.log('[checkAccess] querying beanz_vip...');
+      const { data, error } = await sb
+        .from('beanz_vip')
+        .select('email')
+        .ilike('email', emailNorm)
+        .maybeSingle();
+      console.log('[checkAccess] result:', data, error);
+      if (error) console.error('[checkAccess] beanz_vip ERROR:', error.message, error.code);
+      if (data) { console.log('[checkAccess] GRANTED via beanz_vip'); return true; }
+    } catch(e) {
+      console.error('[checkAccess] beanz_vip threw:', e);
+    }
+
+    // --- Check 2: subscriptions ---
+    try {
+      console.log('[checkAccess] querying subscriptions...');
+      const { data: sub, error: subErr } = await sb
+        .from('subscriptions')
+        .select('status')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+      console.log('[checkAccess] subscriptions result:', sub, subErr);
+      if (subErr) console.error('[checkAccess] subscriptions ERROR:', subErr.message, subErr.code);
+      if (sub) { console.log('[checkAccess] GRANTED via subscription'); return true; }
+    } catch(e) {
+      console.error('[checkAccess] subscriptions threw:', e);
+    }
+
+    console.warn('[checkAccess] DENIED — not in beanz_vip, no active subscription');
+    return false;
   }
 
-  const emailNorm = (user.email || '').toLowerCase().trim();
-  console.log('[checkAccess] normalised email for lookup:', emailNorm);
+  var timeoutPromise = new Promise(function(_, reject) {
+    setTimeout(function() { timedOut = true; reject(new Error('TIMEOUT')); }, 5000);
+  });
 
-  // --- Check 1: Beanz VIP whitelist ---
   try {
-    const { data: vip, error: vipErr } = await sb
-      .from('beanz_vip')
-      .select('email')
-      .ilike('email', emailNorm)
-      .maybeSingle();
-    console.log('[checkAccess] beanz_vip → data:', vip, '| error:', vipErr);
-    if (vipErr) console.error('[checkAccess] beanz_vip ERROR:', vipErr.message, vipErr.code);
-    if (vip) { console.log('[checkAccess] GRANTED via beanz_vip'); return true; }
+    var result = await Promise.race([runChecks(), timeoutPromise]);
+    return result;
   } catch(e) {
-    console.error('[checkAccess] beanz_vip threw:', e);
+    if (timedOut) {
+      console.error('[checkAccess] TIMEOUT — Supabase query did not resolve within 5s');
+    } else {
+      console.error('[checkAccess] unexpected error:', e);
+    }
+    return false;
   }
-
-  // --- Check 2: Active subscription ---
-  try {
-    const { data: sub, error: subErr } = await sb
-      .from('subscriptions')
-      .select('status')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
-      .maybeSingle();
-    console.log('[checkAccess] subscriptions → data:', sub, '| error:', subErr);
-    if (subErr) console.error('[checkAccess] subscriptions ERROR:', subErr.message, subErr.code);
-    if (sub) { console.log('[checkAccess] GRANTED via subscription'); return true; }
-  } catch(e) {
-    console.error('[checkAccess] subscriptions threw:', e);
-  }
-
-  console.warn('[checkAccess] DENIED — email not in beanz_vip and no active subscription');
-  return false;
 }
 
 function updateNavAuthBtn() {
