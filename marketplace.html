@@ -693,6 +693,12 @@ let allAgents     = [];
 let activeFilter  = 'all';
 let hbarPrice     = null;
 
+// HashPack singleton — shared across all pay functions
+var _hc                  = null;
+var _hcTopic             = null;
+var _hcAccountId         = null;
+var _checkAccessInFlight = false;
+
 // ---------------------------------------------------------------------------
 // Auth
 // ---------------------------------------------------------------------------
@@ -702,12 +708,17 @@ sb.auth.onAuthStateChange(async (event, session) => {
   updateNavAuthBtn();
   if (currentUser) {
     closeAuthModal();
-    if (!isUnlocked) {
-      const ok = await checkAccess(currentUser);
-      console.log('[auth] onAuthStateChange checkAccess result:', ok, '| isUnlocked was:', isUnlocked);
-      isUnlocked = ok;
+    if (!isUnlocked && !_checkAccessInFlight) {
+      _checkAccessInFlight = true;
+      try {
+        const ok = await checkAccess(currentUser);
+        console.log('[auth] onAuthStateChange checkAccess result:', ok, '| isUnlocked was:', isUnlocked);
+        isUnlocked = ok;
+      } finally {
+        _checkAccessInFlight = false;
+      }
     } else {
-      console.log('[auth] onAuthStateChange — already unlocked, skipping checkAccess');
+      console.log('[auth] onAuthStateChange — skipping checkAccess (isUnlocked=' + isUnlocked + ', inFlight=' + _checkAccessInFlight + ')');
     }
     applyFilter(activeFilter);
     updateGateForUser();
@@ -1053,6 +1064,72 @@ function cardHtml(agent, i, isLocked) {
 }
 
 // ---------------------------------------------------------------------------
+// HashPack connection — singleton, lazy CDN loading
+// ---------------------------------------------------------------------------
+function _loadScript(src) {
+  return new Promise(function(resolve, reject) {
+    if (document.querySelector('script[src="' + src + '"]')) { resolve(); return; }
+    var s = document.createElement('script');
+    s.src = src;
+    s.onload = resolve;
+    s.onerror = function() { reject(new Error('Failed to load script: ' + src)); };
+    document.head.appendChild(s);
+  });
+}
+
+async function _connectHashPack() {
+  // Return cached connection if already paired
+  if (_hc && _hcTopic && _hcAccountId) {
+    return { hc: _hc, topic: _hcTopic, accountId: _hcAccountId };
+  }
+
+  // Lazy-load Hedera SDK if not present
+  if (!window.hashgraph) {
+    await _loadScript('https://cdn.jsdelivr.net/npm/@hashgraph/sdk@2.44.0/dist/web/index.js');
+  }
+
+  // Lazy-load HashConnect if not present
+  if (!window.HashConnect && !(window.hashconnect && window.hashconnect.HashConnect)) {
+    await _loadScript('https://cdn.jsdelivr.net/npm/hashconnect@2.3.2/dist/index.js');
+  }
+
+  var HC = window.HashConnect || (window.hashconnect && window.hashconnect.HashConnect);
+  if (!HC) throw new Error('HashConnect library not found after load. Please refresh and try again.');
+
+  var hc = new HC();
+  var appMeta = {
+    name:        'AgentBrewHouse',
+    description: 'AI Agent Marketplace on Hedera',
+    icon:        'https://agentbrewhouse.io/favicon.ico'
+  };
+
+  var initData = await hc.init(appMeta, 'production');
+  var topic, accountId;
+
+  if (initData.savedPairings && initData.savedPairings.length > 0) {
+    topic     = initData.savedPairings[0].topic;
+    accountId = initData.savedPairings[0].accountIds[0];
+  } else {
+    var pairingData = await new Promise(function(resolve, reject) {
+      hc.pairingEvent.once(function(data) {
+        if (data.accountIds && data.accountIds.length > 0) resolve(data);
+        else reject(new Error('No account returned by HashPack'));
+      });
+      hc.connectToLocalWallet();
+    });
+    topic     = pairingData.topic;
+    accountId = pairingData.accountIds[0];
+  }
+
+  // Cache for reuse by payUsdc and future payHbar
+  _hc          = hc;
+  _hcTopic     = topic;
+  _hcAccountId = accountId;
+
+  return { hc: _hc, topic: _hcTopic, accountId: _hcAccountId };
+}
+
+// ---------------------------------------------------------------------------
 // USDC payment via HashPack
 // ---------------------------------------------------------------------------
 async function payUsdc(agentIdx) {
@@ -1071,55 +1148,28 @@ async function payUsdc(agentIdx) {
   setBtnState('Connecting\u2026', true);
 
   try {
-    var _sdk = window.hashgraph || window.Hedera || window;
-    var _TransferTransaction = _sdk.TransferTransaction;
-
-    var HC = window.HashConnect || (window.hashconnect && window.hashconnect.HashConnect);
-    if (!HC) throw new Error('HashConnect library not loaded. Please refresh and try again.');
-    var hashconnect = new HC();
-    var appMeta = {
-      name:        'AgentBrewHouse',
-      description: 'AI Agent Marketplace on Hedera',
-      icon:        'https://agentbrewhouse.io/favicon.ico'
-    };
-
-    var initData = await hashconnect.init(appMeta, 'production');
-
-    var topic, accountId;
-
-    if (initData.savedPairings && initData.savedPairings.length > 0) {
-      topic     = initData.savedPairings[0].topic;
-      accountId = initData.savedPairings[0].accountIds[0];
-    } else {
-      var pairingData = await new Promise(function(resolve, reject) {
-        hashconnect.pairingEvent.once(function(data) {
-          if (data.accountIds && data.accountIds.length > 0) {
-            resolve(data);
-          } else {
-            reject(new Error('No account returned by HashPack'));
-          }
-        });
-        hashconnect.connectToLocalWallet();
-      });
-      topic     = pairingData.topic;
-      accountId = pairingData.accountIds[0];
-    }
+    // Reuse the shared HashPack connection (initialises once, reused on subsequent calls)
+    var conn = await _connectHashPack();
 
     setBtnState('Confirm in HashPack\u2026', true);
 
-    var provider  = hashconnect.getProvider('mainnet', topic, accountId);
-    var signer    = hashconnect.getSigner(provider);
-    var rawAmount = Math.round(parseFloat(agent.usdc_price) * 1000000);
+    var _sdk = window.hashgraph || window.Hedera || window;
+    var _TransferTransaction = _sdk.TransferTransaction;
+    if (!_TransferTransaction) throw new Error('Hedera SDK not loaded. Please refresh and try again.');
+
+    var provider     = conn.hc.getProvider('mainnet', conn.topic, conn.accountId);
+    var signer       = conn.hc.getSigner(provider);
+    var rawAmount    = Math.round(parseFloat(agent.usdc_price) * 1000000);
     var sellerWallet = agent.seller_wallet || agent.wallet_address || '';
 
     var tx = await new _TransferTransaction()
-      .addTokenTransfer('0.0.456858', accountId, -rawAmount)
+      .addTokenTransfer('0.0.456858', conn.accountId, -rawAmount)
       .addTokenTransfer('0.0.456858', sellerWallet, rawAmount)
       .freezeWithSigner(signer);
 
-    var signedTx    = await tx.signWithSigner(signer);
-    var txResponse  = await signedTx.executeWithSigner(signer);
-    var txId        = txResponse.transactionId.toString();
+    var signedTx   = await tx.signWithSigner(signer);
+    var txResponse = await signedTx.executeWithSigner(signer);
+    var txId       = txResponse.transactionId.toString();
 
     setBtnState('Verifying\u2026', true);
 
@@ -1135,7 +1185,7 @@ async function payUsdc(agentIdx) {
     }
 
     if (btn) {
-      btn.textContent     = 'Paid \u2713';
+      btn.textContent      = 'Paid \u2713';
       btn.style.background = '#22c55e';
     }
 
