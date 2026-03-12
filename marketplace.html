@@ -1147,7 +1147,32 @@ async function fetchHbar() {
 async function loadAgents() {
   try {
     const d = await (await fetch(API_AGENTS)).json();
-    allAgents = d.agents || [];
+
+    // Deduplicate by id (guards against API returning duplicate rows)
+    const seen = new Set();
+    allAgents = (d.agents || []).filter(function(a) {
+      const key = a.id || a.name;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    // Backfill avatar_url from Supabase for any agents the API didn't include it for
+    const noAvatar = allAgents.filter(function(a) { return !a.avatar_url; });
+    if (noAvatar.length > 0) {
+      const ids = noAvatar.map(function(a) { return a.id; }).filter(Boolean);
+      if (ids.length > 0) {
+        const { data: rows } = await sb.from('agents').select('id, avatar_url').in('id', ids);
+        if (rows && rows.length) {
+          const avatarMap = {};
+          rows.forEach(function(r) { if (r.avatar_url) avatarMap[r.id] = r.avatar_url; });
+          allAgents.forEach(function(a) {
+            if (!a.avatar_url && a.id && avatarMap[a.id]) a.avatar_url = avatarMap[a.id];
+          });
+        }
+      }
+    }
+
     applyFilter(activeFilter);
   } catch(err) {
     document.getElementById('state').innerHTML =
