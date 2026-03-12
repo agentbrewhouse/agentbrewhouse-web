@@ -715,30 +715,54 @@ sb.auth.onAuthStateChange(async (event, session) => {
 
 
 async function checkAccess(user) {
-  console.log('[checkAccess] checking user:', user.email, 'id:', user.id);
+  console.log('[checkAccess] START — passed user:', user.email, 'id:', user.id);
+
+  // Re-verify the session is live before querying
   try {
-    // Check Beanz VIP whitelist by email
+    const { data: { user: freshUser }, error: guErr } = await sb.auth.getUser();
+    if (guErr || !freshUser) {
+      console.warn('[checkAccess] getUser() failed or returned no user:', guErr);
+      return false;
+    }
+    console.log('[checkAccess] getUser() confirmed:', freshUser.email, 'id:', freshUser.id);
+    user = freshUser; // use the freshly-verified object
+  } catch(e) {
+    console.warn('[checkAccess] getUser() threw:', e);
+  }
+
+  const emailNorm = (user.email || '').toLowerCase().trim();
+  console.log('[checkAccess] normalised email for lookup:', emailNorm);
+
+  // --- Check 1: Beanz VIP whitelist ---
+  try {
     const { data: vip, error: vipErr } = await sb
       .from('beanz_vip')
       .select('email')
-      .eq('email', user.email)
+      .ilike('email', emailNorm)
       .maybeSingle();
-    console.log('[checkAccess] beanz_vip result:', vip, 'error:', vipErr);
-    if (vip) return true;
+    console.log('[checkAccess] beanz_vip → data:', vip, '| error:', vipErr);
+    if (vipErr) console.error('[checkAccess] beanz_vip ERROR:', vipErr.message, vipErr.code);
+    if (vip) { console.log('[checkAccess] GRANTED via beanz_vip'); return true; }
+  } catch(e) {
+    console.error('[checkAccess] beanz_vip threw:', e);
+  }
 
-    // Check active subscription by user ID
+  // --- Check 2: Active subscription ---
+  try {
     const { data: sub, error: subErr } = await sb
       .from('subscriptions')
       .select('status')
       .eq('user_id', user.id)
       .eq('status', 'active')
       .maybeSingle();
-    console.log('[checkAccess] subscriptions result:', sub, 'error:', subErr);
-    if (sub) return true;
+    console.log('[checkAccess] subscriptions → data:', sub, '| error:', subErr);
+    if (subErr) console.error('[checkAccess] subscriptions ERROR:', subErr.message, subErr.code);
+    if (sub) { console.log('[checkAccess] GRANTED via subscription'); return true; }
   } catch(e) {
-    console.warn('[checkAccess] exception:', e);
+    console.error('[checkAccess] subscriptions threw:', e);
   }
-  console.log('[checkAccess] access denied');
+
+  console.warn('[checkAccess] DENIED — email not in beanz_vip and no active subscription');
   return false;
 }
 
@@ -861,18 +885,18 @@ async function verifyOtp() {
   btn.disabled = true;
   btn.textContent = 'Verifying\u2026';
 
-  // Hard fallback: after 2s check if session exists regardless of promise state
+  // Hard fallback: if 3 seconds pass and session exists but modal is still open, close it
   var fallbackFired = false;
   var fallbackTimer = setTimeout(async function() {
     fallbackFired = true;
     try {
       var s = await sb.auth.getSession();
       if (s && s.data && s.data.session) {
+        console.log('[verifyOtp] fallback: session found, closing modal');
         closeAuthModal();
-        location.reload();
       }
     } catch(e) {}
-  }, 2000);
+  }, 3000);
 
   let verifyError;
   try {
@@ -896,8 +920,8 @@ async function verifyOtp() {
     return;
   }
 
-  closeAuthModal();
-  location.reload();
+  // Success — onAuthStateChange fires automatically and handles closeAuthModal + grid refresh
+  console.log('[verifyOtp] success, onAuthStateChange will update UI');
 }
 
 function showAuthError(msg) {
