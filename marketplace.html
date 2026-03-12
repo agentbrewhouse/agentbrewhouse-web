@@ -137,7 +137,7 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .hire-btn.disabled { opacity: 0.3; cursor: default; pointer-events: none; }
 .pay-btns { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
 .pay-btns .hire-btn, .pay-btns .usdc-btn { display: block; width: 100%; text-align: center; box-sizing: border-box; }
-.usdc-btn { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #fff; background: #2775ca; border: none; padding: 12px 20px; cursor: pointer; font-family: 'DM Mono', monospace; font-weight: bold; transition: opacity 0.2s, transform 0.15s; white-space: nowrap; }
+.usdc-btn { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #a8c4e0; background: transparent; border: 1px solid #a8c4e0; padding: 12px 20px; cursor: pointer; font-family: 'DM Mono', monospace; font-weight: bold; transition: opacity 0.2s, transform 0.15s; white-space: nowrap; }
 .usdc-btn:hover { opacity: 0.85; transform: scale(1.03); }
 .usdc-btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
 
@@ -1011,7 +1011,9 @@ async function payUsdc(agentIdx) {
     var _sdk = window.hashgraph || window.Hedera || window;
     var _TransferTransaction = _sdk.TransferTransaction;
 
-    var hashconnect = new HashConnect();
+    var HC = window.HashConnect || (window.hashconnect && window.hashconnect.HashConnect);
+    if (!HC) throw new Error('HashConnect library not loaded. Please refresh and try again.');
+    var hashconnect = new HC();
     var appMeta = {
       name:        'AgentBrewHouse',
       description: 'AI Agent Marketplace on Hedera',
