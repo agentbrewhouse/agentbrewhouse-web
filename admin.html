@@ -643,6 +643,153 @@
     cursor: pointer;
   }
 
+  /* ── PENDING SUBMISSION CARDS ── */
+  .sub-card {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+  }
+
+  .sub-card:hover { border-color: rgba(200,135,42,0.4); }
+
+  .sub-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .sub-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--cream);
+    margin-bottom: 3px;
+  }
+
+  .sub-card-meta {
+    font-size: 10px;
+    color: var(--cream-dim);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .sub-card-desc {
+    font-size: 11px;
+    color: var(--cream-dim);
+    line-height: 1.6;
+    margin-bottom: 10px;
+    max-height: 48px;
+    overflow: hidden;
+  }
+
+  .sub-card-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 10px;
+  }
+
+  .sub-skill-tag {
+    font-size: 10px;
+    background: rgba(200,135,42,0.08);
+    border: 1px solid rgba(200,135,42,0.2);
+    color: var(--amber);
+    border-radius: 4px;
+    padding: 2px 7px;
+  }
+
+  .sub-card-links {
+    font-size: 10px;
+    color: var(--cream-dim);
+    margin-bottom: 10px;
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .sub-card-links a {
+    color: var(--blue);
+    text-decoration: none;
+  }
+
+  .sub-card-links a:hover { text-decoration: underline; }
+
+  .sub-method-badge {
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .sub-method-badge.web_form {
+    background: rgba(74,143,232,0.12);
+    border: 1px solid rgba(74,143,232,0.3);
+    color: var(--blue);
+  }
+
+  .sub-method-badge.hcs10 {
+    background: rgba(200,135,42,0.12);
+    border: 1px solid rgba(200,135,42,0.3);
+    color: var(--amber);
+  }
+
+  .sub-card-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .btn-approve-full {
+    background: rgba(45,158,95,0.12);
+    border: 1px solid rgba(45,158,95,0.4);
+    color: var(--green);
+    border-radius: 6px;
+    padding: 5px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-approve-full:hover { background: rgba(45,158,95,0.25); }
+  .btn-approve-full:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .btn-reject-full {
+    background: rgba(224,82,82,0.08);
+    border: 1px solid rgba(224,82,82,0.3);
+    color: var(--red);
+    border-radius: 6px;
+    padding: 5px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-reject-full:hover { background: rgba(224,82,82,0.2); }
+  .btn-reject-full:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .sub-reviewed {
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+
+  .sub-reviewed.approved {
+    background: rgba(45,158,95,0.12);
+    color: var(--green);
+  }
+
+  .sub-reviewed.rejected {
+    background: rgba(224,82,82,0.08);
+    color: var(--red);
+  }
+
   /* ── MISC ── */
   .loading { color: var(--cream-dim); font-size: 11px; text-align: center; padding: 20px; }
 
@@ -978,6 +1125,25 @@
 
     </div>
 
+    <!-- PENDING SUBMISSIONS QUEUE -->
+    <div class="section-header">Pending Submissions</div>
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-title">
+        Incoming Agent Submissions
+        <div style="display:flex;gap:8px;align-items:center;">
+          <span id="pending-queue-count" style="font-size:11px;color:var(--cream-dim);font-weight:400;">—</span>
+          <select id="pending-status-filter" onchange="loadPendingSubmissions()" style="background:var(--panel2);border:1px solid var(--border);color:var(--cream-dim);border-radius:5px;padding:3px 8px;font-size:11px;cursor:pointer;">
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+      </div>
+      <div id="pending-queue">
+        <div class="loading">Loading submissions...</div>
+      </div>
+    </div>
+
     <!-- LIVE SESSIONS TABLE -->
     <div class="section-header">Live Sessions</div>
     <div class="panel" style="margin-bottom:16px;">
@@ -1069,7 +1235,8 @@ async function loadAll() {
     loadWallet(),
     loadSignups(),
     loadScoutTargets(),
-    loadSessionsTable()
+    loadSessionsTable(),
+    loadPendingSubmissions()
   ]);
 }
 
@@ -1344,14 +1511,118 @@ async function loadWallet() {
   }
 }
 
-// ── REVIEW SUBMISSION ──
+// ── REVIEW SUBMISSION (mini queue in marketplace health panel) ──
 async function reviewSubmission(id, action) {
-  const res = await fetch(`${API}/api/admin/submissions/${id}/${action}`, {
+  const res = await fetch(API + '/api/admin/submissions/' + id + '/' + action, {
     method: 'POST',
     headers: { 'X-Admin-Secret': adminSecret }
   });
   const d = await res.json();
-  if (d.success) loadMarketplace();
+  if (d.success) { loadMarketplace(); loadPendingSubmissions(); }
+}
+
+// ── PENDING SUBMISSIONS QUEUE ──
+async function loadPendingSubmissions() {
+  const status = document.getElementById('pending-status-filter')
+    ? document.getElementById('pending-status-filter').value
+    : 'pending';
+  const d = await fetchJson('/api/admin/pending?status=' + status);
+  const container = document.getElementById('pending-queue');
+  const countEl   = document.getElementById('pending-queue-count');
+  if (!container) return;
+
+  if (d.error) {
+    container.innerHTML = '<div class="empty">Error loading submissions</div>';
+    return;
+  }
+
+  const subs = d.submissions || [];
+  countEl.textContent = subs.length + ' ' + status;
+
+  if (!subs.length) {
+    container.innerHTML = '<div class="empty">No ' + status + ' submissions</div>';
+    return;
+  }
+
+  container.innerHTML = subs.map(function(s) {
+    var skills = (s.skills || []).map(function(sk) {
+      return '<span class="sub-skill-tag">' + sk + '</span>';
+    }).join('');
+
+    var links = '';
+    if (s.mcp_endpoint) links += '<a href="' + s.mcp_endpoint + '" target="_blank">MCP Endpoint</a>';
+    if (s.github_url)   links += '<a href="' + s.github_url + '" target="_blank">GitHub</a>';
+    if (s.twitter_handle) links += '<span>' + s.twitter_handle + '</span>';
+
+    var method = s.submission_method || 'web_form';
+    var methodLabel = method === 'hcs10' ? 'HCS-10' : 'Web Form';
+    var ago  = s.created_at ? timeAgo(s.created_at) : '';
+    var price = s.price_hbar ? s.price_hbar + ' HBAR' : 'TBD';
+    var submittedBy = s.submitted_by || 'anonymous';
+
+    var actions = '';
+    if (s.status === 'pending') {
+      actions = (
+        '<button class="btn-approve-full" onclick="reviewPendingAgent(\'' + s.id + '\', \'approved\', this)">Approve</button>' +
+        '<button class="btn-reject-full"  onclick="reviewPendingAgent(\'' + s.id + '\', \'rejected\', this)">Reject</button>'
+      );
+    } else {
+      var cls = s.status === 'approved' ? 'approved' : 'rejected';
+      actions = '<span class="sub-reviewed ' + cls + '">' + s.status.toUpperCase() + '</span>';
+    }
+
+    return (
+      '<div class="sub-card" id="sub-' + s.id + '">' +
+        '<div class="sub-card-header">' +
+          '<div>' +
+            '<div class="sub-card-title">' + s.name + '</div>' +
+            '<div class="sub-card-meta">' +
+              '<span>' + price + '</span>' +
+              '<span>By: ' + submittedBy + '</span>' +
+              '<span>' + ago + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<span class="sub-method-badge ' + method + '">' + methodLabel + '</span>' +
+        '</div>' +
+        (s.description ? '<div class="sub-card-desc">' + s.description + '</div>' : '') +
+        (skills ? '<div class="sub-card-skills">' + skills + '</div>' : '') +
+        (links  ? '<div class="sub-card-links">'  + links  + '</div>' : '') +
+        '<div class="sub-card-actions">' + actions + '</div>' +
+      '</div>'
+    );
+  }).join('');
+}
+
+async function reviewPendingAgent(id, status, btn) {
+  var card = document.getElementById('sub-' + id);
+  var btns = card ? card.querySelectorAll('button') : [];
+  btns.forEach(function(b) { b.disabled = true; });
+  if (btn) btn.textContent = status === 'approved' ? 'Approving...' : 'Rejecting...';
+
+  try {
+    var res = await fetch(API + '/api/admin/agents/' + id + '/review', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Admin-Secret': adminSecret
+      },
+      body: JSON.stringify({ status: status })
+    });
+    var d = await res.json();
+    if (d.error) {
+      alert('Error: ' + d.error);
+      btns.forEach(function(b) { b.disabled = false; });
+      if (btn) btn.textContent = status === 'approved' ? 'Approve' : 'Reject';
+      return;
+    }
+    // Refresh queue and marketplace health panel
+    loadPendingSubmissions();
+    loadMarketplace();
+    loadOverview();
+  } catch(e) {
+    alert('Network error. Please try again.');
+    btns.forEach(function(b) { b.disabled = false; });
+  }
 }
 
 // ── RUN AUDIT ──
