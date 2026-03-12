@@ -135,6 +135,10 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .hire-btn { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--bg); background: var(--card-accent); border: none; padding: 12px 20px; cursor: pointer; font-family: 'DM Mono', monospace; font-weight: bold; transition: opacity 0.2s, transform 0.15s; text-decoration: none; display: inline-block; white-space: nowrap; }
 .hire-btn:hover { opacity: 0.85; transform: scale(1.03); }
 .hire-btn.disabled { opacity: 0.3; cursor: default; pointer-events: none; }
+.pay-btns { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.usdc-btn { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #fff; background: #2775ca; border: none; padding: 12px 20px; cursor: pointer; font-family: 'DM Mono', monospace; font-weight: bold; transition: opacity 0.2s, transform 0.15s; white-space: nowrap; }
+.usdc-btn:hover { opacity: 0.85; transform: scale(1.03); }
+.usdc-btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
 
 /* -- LOCKED SECTION -- */
 .locked-section {
@@ -662,6 +666,10 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
 
 <footer>agentbrewhouse.io &mdash; 2026 AgentBrewHouse</footer>
 
+<!-- Hedera SDK + HashConnect for HashPack payments -->
+<script src="https://unpkg.com/@hashgraph/sdk@2.50.0/dist/web/index.js"></script>
+<script src="https://unpkg.com/hashconnect@2.3.2/dist/umd/hashconnect.js"></script>
+
 <script>
 // ---------------------------------------------------------------------------
 // Config
@@ -966,11 +974,106 @@ function cardHtml(agent, i, isLocked) {
           ? '<div class="hbar-row"><strong>Free</strong></div>'
           : '<div class="hbar-row"><strong>' + h + '</strong><span>HBAR</span></div>' + usdLine(h)) +
       '</div>' +
-      (!isLocked
-        ? '<span class="hire-btn disabled">Coming soon</span>'
-        : '<span class="hire-btn disabled">Members only</span>') +
+      '<div class="pay-btns">' +
+        (!isLocked
+          ? '<span class="hire-btn disabled">Coming soon</span>'
+          : '<span class="hire-btn disabled">Members only</span>') +
+        (agent.usdc_price != null
+          ? '<button class="usdc-btn" id="usdc-btn-' + i + '" onclick="payUsdc(' + i + ')">Pay with USDC ($' + parseFloat(agent.usdc_price).toFixed(2) + ')</button>'
+          : '') +
+      '</div>' +
     '</div>' +
     '</div>';
+}
+
+// ---------------------------------------------------------------------------
+// USDC payment via HashPack
+// ---------------------------------------------------------------------------
+async function payUsdc(agentIdx) {
+  var agent = allAgents[agentIdx];
+  if (!agent || agent.usdc_price == null) return;
+
+  var btn      = document.getElementById('usdc-btn-' + agentIdx);
+  var origText = 'Pay with USDC ($' + parseFloat(agent.usdc_price).toFixed(2) + ')';
+
+  function setBtnState(text, disabled) {
+    if (!btn) return;
+    btn.textContent = text;
+    btn.disabled    = !!disabled;
+  }
+
+  setBtnState('Connecting\u2026', true);
+
+  try {
+    var _sdk = window.hashgraph || window.Hedera || window;
+    var _TransferTransaction = _sdk.TransferTransaction;
+
+    var hashconnect = new HashConnect();
+    var appMeta = {
+      name:        'AgentBrewHouse',
+      description: 'AI Agent Marketplace on Hedera',
+      icon:        'https://agentbrewhouse.io/favicon.ico'
+    };
+
+    var initData = await hashconnect.init(appMeta, 'production');
+
+    var topic, accountId;
+
+    if (initData.savedPairings && initData.savedPairings.length > 0) {
+      topic     = initData.savedPairings[0].topic;
+      accountId = initData.savedPairings[0].accountIds[0];
+    } else {
+      var pairingData = await new Promise(function(resolve, reject) {
+        hashconnect.pairingEvent.once(function(data) {
+          if (data.accountIds && data.accountIds.length > 0) {
+            resolve(data);
+          } else {
+            reject(new Error('No account returned by HashPack'));
+          }
+        });
+        hashconnect.connectToLocalWallet();
+      });
+      topic     = pairingData.topic;
+      accountId = pairingData.accountIds[0];
+    }
+
+    setBtnState('Confirm in HashPack\u2026', true);
+
+    var provider  = hashconnect.getProvider('mainnet', topic, accountId);
+    var signer    = hashconnect.getSigner(provider);
+    var rawAmount = Math.round(parseFloat(agent.usdc_price) * 1000000);
+    var sellerWallet = agent.seller_wallet || agent.wallet_address || '';
+
+    var tx = await new _TransferTransaction()
+      .addTokenTransfer('0.0.456858', accountId, -rawAmount)
+      .addTokenTransfer('0.0.456858', sellerWallet, rawAmount)
+      .freezeWithSigner(signer);
+
+    var signedTx    = await tx.signWithSigner(signer);
+    var txResponse  = await signedTx.executeWithSigner(signer);
+    var txId        = txResponse.transactionId.toString();
+
+    setBtnState('Verifying\u2026', true);
+
+    var verifyRes = await fetch(API_BASE + '/api/verify-payment', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ tx_id: txId, currency: 'USDC', agent_id: agent.id })
+    });
+
+    if (!verifyRes.ok) {
+      var errData = await verifyRes.json().catch(function() { return {}; });
+      throw new Error(errData.error || 'Payment verification failed');
+    }
+
+    if (btn) {
+      btn.textContent     = 'Paid \u2713';
+      btn.style.background = '#22c55e';
+    }
+  } catch (err) {
+    alert('USDC payment failed: ' + err.message);
+    setBtnState(origText, false);
+  }
 }
 
 function toggleDesc(i, btn) {
