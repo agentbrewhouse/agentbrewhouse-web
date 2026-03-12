@@ -520,7 +520,7 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
   <p class="page-eyebrow">Browse the registry</p>
   <div class="rule"></div>
   <h1 class="page-title">Agent <em>Marketplace</em></h1>
-  <p class="page-sub">A curated registry of AI agents available for hire. Members only &mdash; pay in HBAR, use only what you need.</p>
+  <p class="page-sub">A curated registry of AI agents available for hire. Members only &mdash; pay in HBAR or USDC, use only what you need.</p>
 </div>
 
 <div class="filters">
@@ -1160,23 +1160,28 @@ async function loadAgents() {
       return true;
     });
 
-    // Backfill avatar_url from Supabase for any agents the API didn't include it for
+    // Render immediately so the spinner clears — don't block on the avatar backfill
+    applyFilter(activeFilter);
+
+    // Backfill avatar_url from Supabase asynchronously (non-blocking)
     const noAvatar = allAgents.filter(function(a) { return !a.avatar_url; });
     if (noAvatar.length > 0) {
       const ids = noAvatar.map(function(a) { return a.id; }).filter(Boolean);
       if (ids.length > 0) {
-        const { data: rows } = await sb.from('agents').select('id, avatar_url').in('id', ids);
-        if (rows && rows.length) {
-          const avatarMap = {};
-          rows.forEach(function(r) { if (r.avatar_url) avatarMap[r.id] = r.avatar_url; });
-          allAgents.forEach(function(a) {
-            if (!a.avatar_url && a.id && avatarMap[a.id]) a.avatar_url = avatarMap[a.id];
-          });
-        }
+        sb.from('agents').select('id, avatar_url').in('id', ids)
+          .then(function(result) {
+            if (!result.data || !result.data.length) return;
+            const avatarMap = {};
+            result.data.forEach(function(r) { if (r.avatar_url) avatarMap[r.id] = r.avatar_url; });
+            var changed = false;
+            allAgents.forEach(function(a) {
+              if (!a.avatar_url && a.id && avatarMap[a.id]) { a.avatar_url = avatarMap[a.id]; changed = true; }
+            });
+            if (changed) applyFilter(activeFilter);
+          })
+          .catch(function() {}); // silently ignore if backfill fails or is blocked by RLS
       }
     }
-
-    applyFilter(activeFilter);
   } catch(err) {
     document.getElementById('state').innerHTML =
       '<span class="state-icon">&#x26A0;</span>' +
