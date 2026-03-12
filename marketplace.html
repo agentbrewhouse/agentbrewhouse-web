@@ -1052,12 +1052,12 @@ function cardHtml(agent, i, isLocked) {
           : '<div class="hbar-row"><strong>' + h + '</strong><span>HBAR</span></div>' + usdLine(h)) +
       '</div>' +
       '<div class="pay-btns">' +
-        (!isLocked
-          ? '<span class="hire-btn disabled">Coming soon</span>'
-          : '<span class="hire-btn disabled">Members only</span>') +
         (agent.usdc_price != null
           ? '<button class="usdc-btn" id="usdc-btn-' + i + '" onclick="payUsdc(' + i + ')">$ USDC</button>'
           : '') +
+        (!isLocked
+          ? '<span class="hire-btn disabled">Coming soon</span>'
+          : '<span class="hire-btn disabled">Members only</span>') +
       '</div>' +
     '</div>' +
     '</div>';
