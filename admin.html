@@ -336,79 +336,92 @@
   .brew-masters-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    margin-bottom: 20px;
+    gap: 16px;
+    margin-bottom: 24px;
+    overflow: visible;
+    padding-top: 20px; /* room for overflowing avatars */
   }
 
   .brew-master-card {
     background: var(--panel);
     border: 1px solid var(--amber);
-    border-radius: 12px;
-    padding: 20px;
+    border-radius: 14px;
+    padding: 22px 22px 18px;
     position: relative;
+    overflow: visible;
     transition: border-color 0.2s, box-shadow 0.2s;
+    /* Extra top padding to give the overflowing avatar room */
+    padding-top: 18px;
   }
 
   .brew-master-card:hover {
-    border-color: var(--amber-light, #e8a84a);
-    box-shadow: 0 0 24px rgba(200,131,42,0.1);
+    border-color: #e8a84a;
+    box-shadow: 0 0 32px rgba(200,131,42,0.15);
   }
 
-  .bm-header {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    margin-bottom: 14px;
+  /* Avatar — large circle anchored to top-right corner, half inside / half outside */
+  .bm-avatar-wrap {
+    position: absolute;
+    top: -18px;
+    right: 20px;
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    border: 3px solid var(--amber);
+    box-shadow: 0 0 28px rgba(200,131,42,0.35), 0 4px 16px rgba(0,0,0,0.6);
+    overflow: hidden;
+    background: var(--panel2);
+    flex-shrink: 0;
   }
 
   .bm-avatar {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
+    width: 100%;
+    height: 100%;
     object-fit: cover;
-    border: 2px solid var(--amber);
-    flex-shrink: 0;
+    display: block;
   }
 
   .bm-avatar-placeholder {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: var(--panel2);
-    border: 2px solid var(--border);
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 22px;
-    flex-shrink: 0;
-    color: var(--amber);
+    font-size: 30px;
     font-weight: 700;
+    color: var(--amber);
+    background: var(--panel2);
   }
 
-  .bm-identity { flex: 1; min-width: 0; }
+  /* Name + badge — leave right-side space so avatar doesn't overlap text */
+  .bm-header {
+    padding-right: 80px;
+    margin-bottom: 14px;
+  }
 
   .bm-name {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 700;
     color: var(--cream);
-    margin-bottom: 3px;
+    margin-bottom: 4px;
+    line-height: 1.2;
   }
 
   .bm-id {
     font-size: 10px;
     color: var(--cream-dim);
     font-family: monospace;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
   }
 
   .bm-badge {
     font-size: 9px;
-    padding: 2px 8px;
+    padding: 2px 9px;
     border-radius: 10px;
     background: rgba(200,131,42,0.15);
     color: var(--amber);
     border: 1px solid rgba(200,131,42,0.35);
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     display: inline-block;
   }
@@ -431,7 +444,7 @@
   }
 
   .bm-stat .val {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--cream);
   }
@@ -454,8 +467,7 @@
   .bm-output-text {
     font-size: 11px;
     color: rgba(240,230,208,0.65);
-    line-height: 1.65;
-    max-height: 60px;
+    line-height: 1.7;
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -493,12 +505,12 @@
     opacity: 0.5;
     font-family: inherit;
     font-weight: 600;
-    transition: opacity 0.2s;
   }
 
   @media (max-width: 700px) {
     .brew-masters-grid { grid-template-columns: 1fr; }
     .bm-stats { grid-template-columns: repeat(2, 1fr); }
+    .bm-avatar-wrap { width: 72px; height: 72px; top: -14px; right: 16px; }
   }
 
   /* ── TWO COL LAYOUT ── */
@@ -1532,20 +1544,18 @@ async function loadSeniorStaff() {
   d.staff.forEach(s => {
     const lastRun = s.last_run ? timeAgo(s.last_run) : 'Never';
     const outputLabel = s.last_output_type === 'engineering_change' ? 'Last commit' : 'Last report';
-    const avatarHtml = s.avatar_url
-      ? '<img class="bm-avatar" src="' + s.avatar_url + '" alt="' + s.name + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
+    const avatarInner = s.avatar_url
+      ? '<img class="bm-avatar" src="' + s.avatar_url + '" alt="' + s.name + '" onerror="this.style.display=\'none\';this.parentNode.querySelector(\'.bm-avatar-placeholder\').style.display=\'flex\'">' +
         '<div class="bm-avatar-placeholder" style="display:none">' + s.name.charAt(0) + '</div>'
       : '<div class="bm-avatar-placeholder">' + s.name.charAt(0) + '</div>';
 
     grid.innerHTML +=
       '<div class="brew-master-card">' +
+        '<div class="bm-avatar-wrap">' + avatarInner + '</div>' +
         '<div class="bm-header">' +
-          avatarHtml +
-          '<div class="bm-identity">' +
-            '<div class="bm-name">' + s.name + '</div>' +
-            '<div class="bm-id">' + s.id + '</div>' +
-            '<span class="bm-badge">Senior Staff</span>' +
-          '</div>' +
+          '<div class="bm-name">' + s.name + '</div>' +
+          '<div class="bm-id">' + s.id + '</div>' +
+          '<span class="bm-badge">Senior Staff</span>' +
         '</div>' +
         '<div class="bm-stats">' +
           '<div class="bm-stat"><div class="label">Today</div><div class="val">' + s.runs_today + '</div></div>' +
