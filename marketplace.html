@@ -861,6 +861,19 @@ async function verifyOtp() {
   btn.disabled = true;
   btn.textContent = 'Verifying\u2026';
 
+  // Hard fallback: after 2s check if session exists regardless of promise state
+  var fallbackFired = false;
+  var fallbackTimer = setTimeout(async function() {
+    fallbackFired = true;
+    try {
+      var s = await sb.auth.getSession();
+      if (s && s.data && s.data.session) {
+        closeAuthModal();
+        location.reload();
+      }
+    } catch(e) {}
+  }, 2000);
+
   let verifyError;
   try {
     const { error } = await sb.auth.verifyOtp({
@@ -873,6 +886,9 @@ async function verifyOtp() {
     verifyError = e;
   }
 
+  clearTimeout(fallbackTimer);
+  if (fallbackFired) return;
+
   if (verifyError) {
     btn.disabled = false;
     btn.textContent = 'Verify \u2192';
@@ -880,8 +896,8 @@ async function verifyOtp() {
     return;
   }
 
-  // onAuthStateChange fires automatically with SIGNED_IN — just close the modal
   closeAuthModal();
+  location.reload();
 }
 
 function showAuthError(msg) {
