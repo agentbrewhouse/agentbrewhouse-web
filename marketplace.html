@@ -135,9 +135,8 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .hire-btn { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--bg); background: var(--card-accent); border: none; padding: 12px 20px; cursor: pointer; font-family: 'DM Mono', monospace; font-weight: bold; transition: opacity 0.2s, transform 0.15s; text-decoration: none; display: inline-block; white-space: nowrap; }
 .hire-btn:hover { opacity: 0.85; transform: scale(1.03); }
 .hire-btn.disabled { opacity: 0.3; cursor: default; pointer-events: none; }
-.pay-btns { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
-.pay-btns .hire-btn, .pay-btns .usdc-btn { display: block; width: 100%; text-align: center; box-sizing: border-box; }
-.usdc-btn { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #a8c4e0; background: transparent; border: 1px solid #a8c4e0; padding: 12px 20px; cursor: pointer; font-family: 'DM Mono', monospace; font-weight: bold; transition: opacity 0.2s, transform 0.15s; white-space: nowrap; }
+.pay-btns { display: flex; flex-direction: row; align-items: center; gap: 8px; flex-wrap: wrap; }
+.usdc-btn { font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: #a8c4e0; background: transparent; border: 1px solid #a8c4e0; padding: 9px 10px; cursor: pointer; font-family: 'DM Mono', monospace; font-weight: bold; transition: opacity 0.2s, transform 0.15s; white-space: nowrap; }
 .usdc-btn:hover { opacity: 0.85; transform: scale(1.03); }
 .usdc-btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
 
@@ -983,7 +982,7 @@ function cardHtml(agent, i, isLocked) {
           ? '<span class="hire-btn disabled">Coming soon</span>'
           : '<span class="hire-btn disabled">Members only</span>') +
         (agent.usdc_price != null
-          ? '<button class="usdc-btn" id="usdc-btn-' + i + '" onclick="payUsdc(' + i + ')">Pay with USDC ($' + parseFloat(agent.usdc_price).toFixed(2) + ')</button>'
+          ? '<button class="usdc-btn" id="usdc-btn-' + i + '" onclick="payUsdc(' + i + ')">$ USDC</button>'
           : '') +
       '</div>' +
     '</div>' +
@@ -998,7 +997,7 @@ async function payUsdc(agentIdx) {
   if (!agent || agent.usdc_price == null) return;
 
   var btn      = document.getElementById('usdc-btn-' + agentIdx);
-  var origText = 'Pay with USDC ($' + parseFloat(agent.usdc_price).toFixed(2) + ')';
+  var origText = '$ USDC';
 
   function setBtnState(text, disabled) {
     if (!btn) return;
