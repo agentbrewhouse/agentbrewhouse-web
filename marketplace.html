@@ -693,11 +693,8 @@ let allAgents     = [];
 let activeFilter  = 'all';
 let hbarPrice     = null;
 
-// HashPack singleton — shared across all pay functions
-var _hc                  = null;
-var _hcTopic             = null;
-var _hcAccountId         = null;
 var _checkAccessInFlight = false;
+var _usdcAgentIdx        = null;
 
 // ---------------------------------------------------------------------------
 // Auth
@@ -974,8 +971,14 @@ function showCodeError(msg) {
 document.getElementById('auth-overlay').addEventListener('click', function(e) {
   if (e.target === this) closeAuthModal();
 });
+document.getElementById('usdc-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeUsdcModal();
+});
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeAuthModal();
+  if (e.key === 'Escape') {
+    closeAuthModal();
+    closeUsdcModal();
+  }
 });
 
 // ---------------------------------------------------------------------------
@@ -1064,138 +1067,98 @@ function cardHtml(agent, i, isLocked) {
 }
 
 // ---------------------------------------------------------------------------
-// HashPack connection — singleton, lazy CDN loading
+// USDC payment — server-side verification, no browser SDK
 // ---------------------------------------------------------------------------
-function _loadScript(src) {
-  return new Promise(function(resolve, reject) {
-    if (document.querySelector('script[src="' + src + '"]')) { resolve(); return; }
-    var s = document.createElement('script');
-    s.src = src;
-    s.onload = resolve;
-    s.onerror = function() { reject(new Error('Failed to load script: ' + src)); };
-    document.head.appendChild(s);
-  });
-}
+var USDC_WALLET = '0.0.8144441';
+var USDC_TOKEN  = '0.0.456858';
 
-async function _connectHashPack() {
-  // Return cached connection if already paired
-  if (_hc && _hcTopic && _hcAccountId) {
-    return { hc: _hc, topic: _hcTopic, accountId: _hcAccountId };
-  }
-
-  // Lazy-load Hedera SDK if not present
-  if (!window.hashgraph) {
-    await _loadScript('https://cdn.jsdelivr.net/npm/@hashgraph/sdk@2.44.0/dist/web/index.js');
-  }
-
-  // Lazy-load HashConnect if not present
-  if (!window.HashConnect && !(window.hashconnect && window.hashconnect.HashConnect)) {
-    await _loadScript('https://cdn.jsdelivr.net/npm/hashconnect@2.3.2/dist/index.js');
-  }
-
-  var HC = window.HashConnect || (window.hashconnect && window.hashconnect.HashConnect);
-  if (!HC) throw new Error('HashConnect library not found after load. Please refresh and try again.');
-
-  var hc = new HC();
-  var appMeta = {
-    name:        'AgentBrewHouse',
-    description: 'AI Agent Marketplace on Hedera',
-    icon:        'https://agentbrewhouse.io/favicon.ico'
-  };
-
-  var initData = await hc.init(appMeta, 'production');
-  var topic, accountId;
-
-  if (initData.savedPairings && initData.savedPairings.length > 0) {
-    topic     = initData.savedPairings[0].topic;
-    accountId = initData.savedPairings[0].accountIds[0];
-  } else {
-    var pairingData = await new Promise(function(resolve, reject) {
-      hc.pairingEvent.once(function(data) {
-        if (data.accountIds && data.accountIds.length > 0) resolve(data);
-        else reject(new Error('No account returned by HashPack'));
-      });
-      hc.connectToLocalWallet();
-    });
-    topic     = pairingData.topic;
-    accountId = pairingData.accountIds[0];
-  }
-
-  // Cache for reuse by payUsdc and future payHbar
-  _hc          = hc;
-  _hcTopic     = topic;
-  _hcAccountId = accountId;
-
-  return { hc: _hc, topic: _hcTopic, accountId: _hcAccountId };
-}
-
-// ---------------------------------------------------------------------------
-// USDC payment via HashPack
-// ---------------------------------------------------------------------------
-async function payUsdc(agentIdx) {
+function payUsdc(agentIdx) {
   var agent = allAgents[agentIdx];
   if (!agent || agent.usdc_price == null) return;
+  _usdcAgentIdx = agentIdx;
 
-  var btn      = document.getElementById('usdc-btn-' + agentIdx);
-  var origText = '$ USDC';
+  var amount = parseFloat(agent.usdc_price).toFixed(6).replace(/\.?0+$/, '') || agent.usdc_price;
+  var memo   = 'abh:agent/' + agent.id;
 
-  function setBtnState(text, disabled) {
-    if (!btn) return;
-    btn.textContent = text;
-    btn.disabled    = !!disabled;
+  document.getElementById('usdc-modal-amount').textContent = amount;
+  document.getElementById('usdc-modal-name').textContent   = agent.name;
+  document.getElementById('usdc-memo').textContent         = memo;
+  document.getElementById('usdc-txid').value               = '';
+  document.getElementById('usdc-error').textContent        = '';
+  document.getElementById('usdc-error').classList.remove('visible');
+  document.getElementById('usdc-verify-btn').disabled      = false;
+  document.getElementById('usdc-verify-btn').textContent   = 'Verify payment \u2192';
+  document.getElementById('usdc-overlay').classList.add('visible');
+}
+
+function closeUsdcModal() {
+  document.getElementById('usdc-overlay').classList.remove('visible');
+  var idx = _usdcAgentIdx;
+  _usdcAgentIdx = null;
+  if (idx !== null) {
+    var btn = document.getElementById('usdc-btn-' + idx);
+    if (btn && btn.textContent !== 'Paid \u2713') {
+      btn.textContent = '$ USDC';
+      btn.disabled    = false;
+    }
+  }
+}
+
+async function submitUsdcPayment() {
+  var txId  = (document.getElementById('usdc-txid').value || '').trim();
+  var errEl = document.getElementById('usdc-error');
+  var verBtn = document.getElementById('usdc-verify-btn');
+
+  if (!txId) {
+    errEl.textContent = 'Please enter your transaction ID.';
+    errEl.classList.add('visible');
+    return;
   }
 
-  setBtnState('Connecting\u2026', true);
+  var agentIdx = _usdcAgentIdx;
+  var agent    = agentIdx !== null ? allAgents[agentIdx] : null;
+  if (!agent) { closeUsdcModal(); return; }
+
+  verBtn.disabled    = true;
+  verBtn.textContent = 'Verifying\u2026';
+  errEl.classList.remove('visible');
 
   try {
-    // Reuse the shared HashPack connection (initialises once, reused on subsequent calls)
-    var conn = await _connectHashPack();
-
-    setBtnState('Confirm in HashPack\u2026', true);
-
-    var _sdk = window.hashgraph || window.Hedera || window;
-    var _TransferTransaction = _sdk.TransferTransaction;
-    if (!_TransferTransaction) throw new Error('Hedera SDK not loaded. Please refresh and try again.');
-
-    var provider     = conn.hc.getProvider('mainnet', conn.topic, conn.accountId);
-    var signer       = conn.hc.getSigner(provider);
-    var rawAmount    = Math.round(parseFloat(agent.usdc_price) * 1000000);
-    var sellerWallet = agent.seller_wallet || agent.wallet_address || '';
-
-    var tx = await new _TransferTransaction()
-      .addTokenTransfer('0.0.456858', conn.accountId, -rawAmount)
-      .addTokenTransfer('0.0.456858', sellerWallet, rawAmount)
-      .freezeWithSigner(signer);
-
-    var signedTx   = await tx.signWithSigner(signer);
-    var txResponse = await signedTx.executeWithSigner(signer);
-    var txId       = txResponse.transactionId.toString();
-
-    setBtnState('Verifying\u2026', true);
-
-    var verifyRes = await fetch(API_BASE + '/api/verify-payment', {
+    var res = await fetch(API_BASE + '/api/payments/usdc', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ tx_id: txId, currency: 'USDC', agent_id: agent.id })
+      body:    JSON.stringify({
+        tx_id:       txId,
+        amount_usdc: parseFloat(agent.usdc_price),
+        resource:    'agent/' + agent.id,
+        account:     agent.id,
+      })
     });
 
-    if (!verifyRes.ok) {
-      var errData = await verifyRes.json().catch(function() { return {}; });
-      throw new Error(errData.error || 'Payment verification failed');
+    var data = await res.json().catch(function() { return {}; });
+
+    if (!res.ok) {
+      throw new Error(data.detail || data.error || 'Verification failed (' + res.status + ')');
     }
 
+    var btn = document.getElementById('usdc-btn-' + agentIdx);
     if (btn) {
       btn.textContent      = 'Paid \u2713';
       btn.style.background = '#22c55e';
+      btn.disabled         = true;
     }
 
+    document.getElementById('usdc-overlay').classList.remove('visible');
+    _usdcAgentIdx = null;
+
     if (agent.name === 'Joe Dirt') {
-      var _phrases = ["Life's a garden, dig it.", "This server's fresher than a clean mullet."];
-      showToast(_phrases[Math.floor(Math.random() * _phrases.length)]);
+      showToast("Life's a garden, dig it.");
     }
   } catch (err) {
-    alert('USDC payment failed: ' + err.message);
-    setBtnState(origText, false);
+    errEl.textContent = err.message;
+    errEl.classList.add('visible');
+    verBtn.disabled    = false;
+    verBtn.textContent = 'Verify payment \u2192';
   }
 }
 
@@ -1405,5 +1368,29 @@ function showToast(message) {
   }, 4000);
 }
 </script>
+
+<!-- USDC PAYMENT MODAL -->
+<div class="auth-overlay" id="usdc-overlay">
+  <div class="auth-card">
+    <button class="auth-close" onclick="closeUsdcModal()" aria-label="Close">&times;</button>
+    <p class="auth-eyebrow">Pay with USDC</p>
+    <h2 class="auth-title">Send <em><span id="usdc-modal-amount">0.00</span> USDC</em></h2>
+    <p style="font-size:10px;letter-spacing:0.18em;color:var(--muted);text-transform:uppercase;margin-top:4px" id="usdc-modal-name"></p>
+    <div class="auth-rule"></div>
+    <div style="text-align:left;margin-bottom:20px">
+      <p style="font-size:10px;letter-spacing:0.1em;color:rgba(240,230,208,0.5);line-height:2;text-transform:uppercase">Send to wallet</p>
+      <p style="font-family:'DM Mono',monospace;font-size:13px;color:var(--amber-light);margin-bottom:14px" id="usdc-wallet-display">0.0.8144441</p>
+      <p style="font-size:10px;letter-spacing:0.1em;color:rgba(240,230,208,0.5);line-height:2;text-transform:uppercase">Token ID (USDC on Hedera)</p>
+      <p style="font-family:'DM Mono',monospace;font-size:13px;color:var(--cream);margin-bottom:14px">0.0.456858</p>
+      <p style="font-size:10px;letter-spacing:0.1em;color:rgba(240,230,208,0.5);line-height:2;text-transform:uppercase">Memo</p>
+      <p style="font-family:'DM Mono',monospace;font-size:12px;color:var(--cream);margin-bottom:14px" id="usdc-memo">abh:...</p>
+    </div>
+    <p class="auth-body" style="margin-bottom:12px">After sending, paste your Hedera transaction ID below:</p>
+    <input type="text" id="usdc-txid" class="auth-input" placeholder="0.0.XXXXXX@seconds.nanos" autocomplete="off" />
+    <button class="auth-submit" id="usdc-verify-btn" onclick="submitUsdcPayment()">Verify payment &rarr;</button>
+    <div class="auth-error" id="usdc-error"></div>
+    <p class="auth-note">Open HashPack &#8594; Send &#8594; Token Transfer &#8594; choose USDC &#8594; paste the wallet address and memo above.</p>
+  </div>
+</div>
 </body>
 </html>
