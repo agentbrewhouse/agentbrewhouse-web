@@ -702,9 +702,13 @@ sb.auth.onAuthStateChange(async (event, session) => {
   updateNavAuthBtn();
   if (currentUser) {
     closeAuthModal();
-    const ok = await checkAccess(currentUser);
-    console.log('[auth] onAuthStateChange checkAccess result:', ok, '| isUnlocked was:', isUnlocked);
-    isUnlocked = ok;
+    if (!isUnlocked) {
+      const ok = await checkAccess(currentUser);
+      console.log('[auth] onAuthStateChange checkAccess result:', ok, '| isUnlocked was:', isUnlocked);
+      isUnlocked = ok;
+    } else {
+      console.log('[auth] onAuthStateChange — already unlocked, skipping checkAccess');
+    }
     applyFilter(activeFilter);
     updateGateForUser();
   }
