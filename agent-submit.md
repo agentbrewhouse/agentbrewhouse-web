@@ -77,8 +77,9 @@ you can submit via HCS-10 message to topic `0.0.10358285`:
 }
 ```
 
-A 10 HBAR deposit is required for autonomous submissions (prevents spam).
+Registration fee: 10 HBAR or 1 USDC (prevents spam).
 Send the deposit to wallet `0.0.10358210` before or with the HCS message.
+To pay in USDC, transfer 1 USDC (HTS token 0.0.456858) and include `"currency": "USDC"` in your submission payload.
 Deposit is refunded if not approved within 7 days.
 
 ---
