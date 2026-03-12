@@ -838,6 +838,89 @@
     .monitor-row { grid-template-columns: repeat(2, 1fr); }
     .financial-grid { grid-template-columns: repeat(3, 1fr); }
   }
+
+  /* ── RECRUITER APPROVALS ── */
+  .recruiter-card {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 10px;
+    transition: border-color 0.2s;
+  }
+
+  .recruiter-card:hover { border-color: rgba(200,135,42,0.4); }
+
+  .recruiter-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .recruiter-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--cream);
+    margin-bottom: 4px;
+  }
+
+  .recruiter-card-meta {
+    font-size: 10px;
+    color: var(--cream-dim);
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .recruiter-card-meta a {
+    color: var(--blue);
+    text-decoration: none;
+  }
+
+  .recruiter-card-meta a:hover { text-decoration: underline; }
+
+  .recruiter-field-label {
+    font-size: 10px;
+    color: var(--cream-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    margin-top: 10px;
+  }
+
+  .recruiter-subject {
+    font-size: 12px;
+    color: var(--amber);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+
+  .recruiter-draft-textarea {
+    width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+    color: var(--cream);
+    font-size: 12px;
+    font-family: var(--font);
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 100px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .recruiter-draft-textarea:focus { border-color: var(--amber); }
+
+  .recruiter-card-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 12px;
+  }
 </style>
 </head>
 <body>
@@ -1144,6 +1227,18 @@
       </div>
     </div>
 
+    <!-- RECRUITER APPROVALS -->
+    <div class="section-header">Recruiter Approvals</div>
+    <div class="panel" style="margin-bottom:16px;">
+      <div class="panel-title">
+        Outreach Drafts Pending Approval
+        <span id="recruiter-queue-count" style="font-size:11px;color:var(--cream-dim);font-weight:400;">—</span>
+      </div>
+      <div id="recruiter-queue">
+        <div class="loading">Loading drafts...</div>
+      </div>
+    </div>
+
     <!-- LIVE SESSIONS TABLE -->
     <div class="section-header">Live Sessions</div>
     <div class="panel" style="margin-bottom:16px;">
@@ -1236,7 +1331,8 @@ async function loadAll() {
     loadSignups(),
     loadScoutTargets(),
     loadSessionsTable(),
-    loadPendingSubmissions()
+    loadPendingSubmissions(),
+    loadRecruiterApprovals()
   ]);
 }
 
@@ -1774,6 +1870,104 @@ function timeAgo(iso) {
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return hrs + 'h ago';
   return Math.floor(hrs / 24) + 'd ago';
+}
+
+// ── RECRUITER APPROVALS ──
+async function loadRecruiterApprovals() {
+  var container = document.getElementById('recruiter-queue');
+  var countEl   = document.getElementById('recruiter-queue-count');
+  if (!container) return;
+
+  var d = await fetchJson('/api/admin/recruiter/pending');
+  if (d.error) {
+    container.innerHTML = '<div class="empty">Error loading drafts</div>';
+    return;
+  }
+
+  var targets = d.targets || [];
+  countEl.textContent = targets.length + ' pending approval';
+
+  if (!targets.length) {
+    container.innerHTML = '<div class="empty">No drafts pending — The Recruiter hasn\'t run yet, or all drafts have been reviewed</div>';
+    return;
+  }
+
+  container.innerHTML = targets.map(function(t, idx) {
+    var ago = t.created_at ? timeAgo(t.created_at) : '';
+    var emailDisplay = t.email ? t.email : '<span style="color:var(--red);font-size:10px;">no email found</span>';
+    return (
+      '<div class="recruiter-card" id="recruit-' + t.id + '">' +
+        '<div class="recruiter-card-header">' +
+          '<div style="flex:1;min-width:0;">' +
+            '<div class="recruiter-card-title">' + (t.name || 'Unknown') + '</div>' +
+            '<div class="recruiter-card-meta">' +
+              '<span>' + emailDisplay + '</span>' +
+              (t.url ? '<a href="' + t.url + '" target="_blank">' + t.url.replace('https://','').slice(0,60) + '</a>' : '') +
+              '<span>' + ago + '</span>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        (t.summary ? '<div style="font-size:11px;color:var(--cream-dim);margin-bottom:8px;line-height:1.5;">' + t.summary + '</div>' : '') +
+        '<div class="recruiter-field-label">Subject</div>' +
+        '<div class="recruiter-subject">' + (t.email_subject || 'Join AgentBrewHouse') + '</div>' +
+        '<div class="recruiter-field-label">Email Draft (editable before approving)</div>' +
+        '<textarea class="recruiter-draft-textarea" id="recruit-draft-' + t.id + '" rows="6">' + (t.email_draft || '') + '</textarea>' +
+        '<div class="recruiter-card-actions">' +
+          '<button class="btn-approve-full" onclick="reviewRecruiterTarget(\'' + t.id + '\', \'approved\', this)">Approve &amp; Queue</button>' +
+          '<button class="btn-reject-full"  onclick="reviewRecruiterTarget(\'' + t.id + '\', \'rejected\', this)">Reject</button>' +
+        '</div>' +
+      '</div>'
+    );
+  }).join('');
+}
+
+async function reviewRecruiterTarget(id, status, btn) {
+  var card  = document.getElementById('recruit-' + id);
+  var btns  = card ? card.querySelectorAll('button') : [];
+  btns.forEach(function(b) { b.disabled = true; });
+  if (btn) btn.textContent = status === 'approved' ? 'Approving...' : 'Rejecting...';
+
+  // Read back any edits the user made to the draft
+  var draftEl = document.getElementById('recruit-draft-' + id);
+  var draft   = draftEl ? draftEl.value : '';
+
+  try {
+    var res = await fetch(API + '/api/admin/recruiter/' + id, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Admin-Secret': adminSecret
+      },
+      body: JSON.stringify({ status: status, email_draft: draft })
+    });
+    var d = await res.json();
+    if (d.error) {
+      alert('Error: ' + d.error);
+      btns.forEach(function(b) { b.disabled = false; });
+      if (btn) btn.textContent = status === 'approved' ? 'Approve & Queue' : 'Reject';
+      return;
+    }
+    // Remove the card from the list
+    if (card) {
+      card.style.transition = 'opacity 0.3s';
+      card.style.opacity = '0';
+      setTimeout(function() {
+        card.remove();
+        // Update the count
+        var remaining = document.querySelectorAll('[id^="recruit-"]').length;
+        var countEl = document.getElementById('recruiter-queue-count');
+        if (countEl) countEl.textContent = remaining + ' pending approval';
+        if (remaining === 0) {
+          var q = document.getElementById('recruiter-queue');
+          if (q) q.innerHTML = '<div class="empty">All drafts reviewed</div>';
+        }
+      }, 300);
+    }
+  } catch(e) {
+    alert('Network error. Please try again.');
+    btns.forEach(function(b) { b.disabled = false; });
+    if (btn) btn.textContent = status === 'approved' ? 'Approve & Queue' : 'Reject';
+  }
 }
 
 function agentLabel(id) {
