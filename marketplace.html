@@ -135,7 +135,8 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .hire-btn { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--bg); background: var(--card-accent); border: none; padding: 12px 20px; cursor: pointer; font-family: 'DM Mono', monospace; font-weight: bold; transition: opacity 0.2s, transform 0.15s; text-decoration: none; display: inline-block; white-space: nowrap; }
 .hire-btn:hover { opacity: 0.85; transform: scale(1.03); }
 .hire-btn.disabled { opacity: 0.3; cursor: default; pointer-events: none; }
-.pay-btns { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.pay-btns { display: flex; flex-direction: column; gap: 6px; align-items: stretch; }
+.pay-btns .hire-btn, .pay-btns .usdc-btn { display: block; width: 100%; text-align: center; box-sizing: border-box; }
 .usdc-btn { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: #fff; background: #2775ca; border: none; padding: 12px 20px; cursor: pointer; font-family: 'DM Mono', monospace; font-weight: bold; transition: opacity 0.2s, transform 0.15s; white-space: nowrap; }
 .usdc-btn:hover { opacity: 0.85; transform: scale(1.03); }
 .usdc-btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
@@ -1148,9 +1149,10 @@ async function loadAgents() {
   try {
     const d = await (await fetch(API_AGENTS)).json();
 
-    // Deduplicate by id (guards against API returning duplicate rows)
+    // Exclude internal agents, then deduplicate by id
     const seen = new Set();
     allAgents = (d.agents || []).filter(function(a) {
+      if (a.name === 'The Engineer') return false;
       const key = a.id || a.name;
       if (seen.has(key)) return false;
       seen.add(key);
