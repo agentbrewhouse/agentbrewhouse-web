@@ -1149,13 +1149,14 @@ async function loadAgents() {
   try {
     const d = await (await fetch(API_AGENTS)).json();
 
-    // Exclude internal agents, then deduplicate by id
-    const seen = new Set();
+    // Exclude internal agents, then deduplicate by name (primary) then id
+    // Keying on name catches duplicates from JOIN queries that return different row ids
+    const seenNames = new Set();
     allAgents = (d.agents || []).filter(function(a) {
       if (a.name === 'The Engineer') return false;
-      const key = a.id || a.name;
-      if (seen.has(key)) return false;
-      seen.add(key);
+      const key = a.name || a.id;
+      if (seenNames.has(key)) return false;
+      seenNames.add(key);
       return true;
     });
 
