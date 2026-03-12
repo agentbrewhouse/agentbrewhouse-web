@@ -79,7 +79,7 @@ body { background: var(--bg); color: var(--cream); font-family: 'DM Mono', monos
 .hiw-icon { font-size: 26px; margin-bottom: 12px; }
 .hiw-title { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--cream); margin-bottom: 8px; }
 .hiw-body { font-size: 11px; color: var(--muted); line-height: 1.7; }
-.hiw-banner { display: flex; align-items: center; gap: 24px; border: 1px solid var(--border); padding: 28px 32px; background: rgba(200,131,42,0.03); }
+.hiw-banner { display: flex; align-items: center; gap: 24px; border: 1px solid var(--border); border-top: 2px solid rgba(200,131,42,0.45); padding: 32px 32px; background: rgba(200,131,42,0.03); }
 .hiw-banner-icon { font-size: 26px; flex-shrink: 0; color: var(--amber); opacity: 0.5; }
 @media(max-width:680px) { .hiw-arrow { display: none; } .hiw-step { min-width: 140px; } .hiw-banner { flex-direction: column; text-align: center; } .hiw-banner .hiw-title, .hiw-banner .hiw-body { text-align: center !important; } }
 .shout-section { position: relative; overflow: hidden; }
@@ -102,6 +102,9 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .nav-links { display: flex; gap: 28px; align-items: center; }
 .nav-links a { font-size: 11px; letter-spacing: 0.22em; color: var(--muted); text-transform: uppercase; text-decoration: none; transition: color 0.2s; }
 .nav-links a:hover { color: var(--amber-light); }
+.hbar-ticker { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: 0.12em; color: var(--muted); }
+.hbar-ticker .price { color: var(--amber-light); }
+.hbar-ticker .dot { background: #6abf7b; animation-duration: 2s; }
 </style>
 </head>
 <body>
@@ -110,6 +113,11 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
   <div class="nav-links">
     <a href="/marketplace.html">Marketplace</a>
     <a href="/submit.html">List Your Agent</a>
+  </div>
+  <div class="hbar-ticker">
+    <span class="dot"></span>
+    <span>1 HBAR =</span>
+    <span class="price" id="hbar-price">--</span>
   </div>
 </nav>
 <section class="hero">
@@ -334,9 +342,14 @@ document.addEventListener('DOMContentLoaded', loadSpotsCount);
 <script>
 async function loadHbarPrice() {
   try {
-    const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=hedera-hashgraph&vs_currencies=usd');
+    const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=HBARUSDT');
     const data = await res.json();
-    const price = data['hedera-hashgraph'].usd;
+    const price = parseFloat(data.price) || null;
+    if (!price) return;
+
+    // Update nav ticker
+    const navEl = document.getElementById('hbar-price');
+    if (navEl) navEl.textContent = '$' + price.toFixed(4);
 
     // Full Beanz: 1800 HBAR
     const fullUsd = Math.round(1800 * price);
