@@ -705,12 +705,11 @@ sb.auth.onAuthStateChange(async (event, session) => {
   currentUser = session ? session.user : null;
   updateNavAuthBtn();
   if (currentUser) {
+    closeAuthModal();
     const ok = await checkAccess(currentUser);
     console.log('[auth] onAuthStateChange checkAccess result:', ok, '| isUnlocked was:', isUnlocked);
-    if (ok !== isUnlocked) {
-      isUnlocked = ok;
-      applyFilter(activeFilter);
-    }
+    isUnlocked = ok;
+    applyFilter(activeFilter);
     updateGateForUser();
   }
 });
