@@ -456,6 +456,8 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
 .gate-user-info strong { color: var(--amber-light); }
 
 @keyframes fadeup { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.abh-toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1a1612; border: 1px solid var(--amber); color: var(--cream); font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.08em; padding: 14px 24px; z-index: 9999; opacity: 0; transition: opacity 0.35s ease, transform 0.35s ease; pointer-events: none; white-space: nowrap; max-width: 90vw; text-align: center; }
+.abh-toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
@@ -1071,6 +1073,11 @@ async function payUsdc(agentIdx) {
       btn.textContent     = 'Paid \u2713';
       btn.style.background = '#22c55e';
     }
+
+    if (agent.name === 'Joe Dirt') {
+      var _phrases = ["Life's a garden, dig it.", "This server's fresher than a clean mullet."];
+      showToast(_phrases[Math.floor(Math.random() * _phrases.length)]);
+    }
   } catch (err) {
     alert('USDC payment failed: ' + err.message);
     setBtnState(origText, false);
@@ -1262,6 +1269,26 @@ document.querySelectorAll('.filter-btn').forEach(function(b) {
 loadAgents();
 fetchHbar();
 setInterval(fetchHbar, 60000);
+
+// ---------------------------------------------------------------------------
+// Toast notification
+// ---------------------------------------------------------------------------
+var _toastEl = null;
+var _toastTimer = null;
+
+function showToast(message) {
+  if (!_toastEl) {
+    _toastEl = document.createElement('div');
+    _toastEl.className = 'abh-toast';
+    document.body.appendChild(_toastEl);
+  }
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastEl.textContent = message;
+  _toastEl.classList.add('visible');
+  _toastTimer = setTimeout(function() {
+    _toastEl.classList.remove('visible');
+  }, 4000);
+}
 </script>
 </body>
 </html>
