@@ -332,6 +332,175 @@
   .agent-stat-item .val.amber { color: var(--amber); }
   .agent-stat-item .val.small { font-size: 11px; }
 
+  /* ── BREW MASTERS (SENIOR STAFF) ── */
+  .brew-masters-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .brew-master-card {
+    background: var(--panel);
+    border: 1px solid var(--amber);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .brew-master-card:hover {
+    border-color: var(--amber-light, #e8a84a);
+    box-shadow: 0 0 24px rgba(200,131,42,0.1);
+  }
+
+  .bm-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .bm-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--amber);
+    flex-shrink: 0;
+  }
+
+  .bm-avatar-placeholder {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--panel2);
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+    color: var(--amber);
+    font-weight: 700;
+  }
+
+  .bm-identity { flex: 1; min-width: 0; }
+
+  .bm-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--cream);
+    margin-bottom: 3px;
+  }
+
+  .bm-id {
+    font-size: 10px;
+    color: var(--cream-dim);
+    font-family: monospace;
+    margin-bottom: 5px;
+  }
+
+  .bm-badge {
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(200,131,42,0.15);
+    color: var(--amber);
+    border: 1px solid rgba(200,131,42,0.35);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    display: inline-block;
+  }
+
+  .bm-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .bm-stat .label {
+    font-size: 9px;
+    color: var(--cream-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 3px;
+  }
+
+  .bm-stat .val {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--cream);
+  }
+
+  .bm-stat .val.amber { color: var(--amber); }
+  .bm-stat .val.small { font-size: 11px; font-weight: 400; }
+
+  .bm-output {
+    margin-bottom: 14px;
+  }
+
+  .bm-output-label {
+    font-size: 9px;
+    color: var(--amber);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 5px;
+  }
+
+  .bm-output-text {
+    font-size: 11px;
+    color: rgba(240,230,208,0.65);
+    line-height: 1.65;
+    max-height: 60px;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
+  .bm-output-empty {
+    font-size: 11px;
+    color: var(--cream-dim);
+    font-style: italic;
+  }
+
+  .bm-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .bm-last-run {
+    font-size: 10px;
+    color: var(--cream-dim);
+  }
+
+  .bm-chat-btn {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--amber);
+    background: transparent;
+    border: 1px solid rgba(200,131,42,0.4);
+    border-radius: 6px;
+    padding: 6px 14px;
+    cursor: not-allowed;
+    opacity: 0.5;
+    font-family: inherit;
+    font-weight: 600;
+    transition: opacity 0.2s;
+  }
+
+  @media (max-width: 700px) {
+    .brew-masters-grid { grid-template-columns: 1fr; }
+    .bm-stats { grid-template-columns: repeat(2, 1fr); }
+  }
+
   /* ── TWO COL LAYOUT ── */
   .two-col {
     display: grid;
@@ -1001,6 +1170,12 @@
       </div>
     </div>
 
+    <!-- BREW MASTERS -->
+    <div class="section-header">&#9749; The Brew Masters</div>
+    <div class="brew-masters-grid" id="brew-masters-grid">
+      <div class="loading">Loading senior staff...</div>
+    </div>
+
     <!-- AGENT SQUAD -->
     <div class="section-header">Agent Squad</div>
     <div class="agent-grid" id="agent-grid">
@@ -1303,6 +1478,7 @@ async function loadAll() {
   document.getElementById('last-updated-time').textContent = new Date().toLocaleTimeString();
   await Promise.all([
     loadOverview(),
+    loadSeniorStaff(),
     loadAgents(),
     loadSessions(),
     loadRevenue('7d'),
@@ -1343,6 +1519,54 @@ async function loadOverview() {
   document.getElementById('fin-hbar-price').textContent = '$' + d.hbar_price_usd;
 }
 
+// ── BREW MASTERS ──
+async function loadSeniorStaff() {
+  const d = await fetchJson('/api/admin/stats/senior-staff');
+  const grid = document.getElementById('brew-masters-grid');
+  if (d.error || !d.staff || !d.staff.length) {
+    grid.innerHTML = '<div class="loading" style="color:var(--cream-dim)">No senior staff data</div>';
+    return;
+  }
+
+  grid.innerHTML = '';
+  d.staff.forEach(s => {
+    const lastRun = s.last_run ? timeAgo(s.last_run) : 'Never';
+    const outputLabel = s.last_output_type === 'engineering_change' ? 'Last commit' : 'Last report';
+    const avatarHtml = s.avatar_url
+      ? '<img class="bm-avatar" src="' + s.avatar_url + '" alt="' + s.name + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
+        '<div class="bm-avatar-placeholder" style="display:none">' + s.name.charAt(0) + '</div>'
+      : '<div class="bm-avatar-placeholder">' + s.name.charAt(0) + '</div>';
+
+    grid.innerHTML +=
+      '<div class="brew-master-card">' +
+        '<div class="bm-header">' +
+          avatarHtml +
+          '<div class="bm-identity">' +
+            '<div class="bm-name">' + s.name + '</div>' +
+            '<div class="bm-id">' + s.id + '</div>' +
+            '<span class="bm-badge">Senior Staff</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="bm-stats">' +
+          '<div class="bm-stat"><div class="label">Today</div><div class="val">' + s.runs_today + '</div></div>' +
+          '<div class="bm-stat"><div class="label">Total Runs</div><div class="val">' + s.runs_total + '</div></div>' +
+          '<div class="bm-stat"><div class="label">Memories</div><div class="val">' + s.memory_count + '</div></div>' +
+          '<div class="bm-stat"><div class="label">Last Run</div><div class="val small">' + lastRun + '</div></div>' +
+        '</div>' +
+        '<div class="bm-output">' +
+          '<div class="bm-output-label">' + outputLabel + '</div>' +
+          (s.last_output
+            ? '<div class="bm-output-text">' + s.last_output.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>'
+            : '<div class="bm-output-empty">No output recorded yet</div>') +
+        '</div>' +
+        '<div class="bm-footer">' +
+          '<span class="bm-last-run">' + (s.last_run ? new Date(s.last_run).toLocaleString() : 'Never run') + '</span>' +
+          '<button class="bm-chat-btn" title="Coming soon">&#128172; Chat</button>' +
+        '</div>' +
+      '</div>';
+  });
+}
+
 // ── AGENTS ──
 async function loadAgents() {
   const d = await fetchJson('/api/admin/stats/agents');
@@ -1351,49 +1575,54 @@ async function loadAgents() {
   const grid = document.getElementById('agent-grid');
   grid.innerHTML = '';
 
-  d.agents.forEach(a => {
-    const lastRun = a.last_run ? timeAgo(a.last_run) : 'Never';
-    grid.innerHTML += `
-      <div class="agent-card">
-        <div class="agent-header">
-          <div>
-            <div class="agent-name">${a.name}</div>
-            <div class="agent-id">${a.id}</div>
-          </div>
-          <div class="agent-badge">Active</div>
-        </div>
-        <div class="agent-stats">
-          <div class="agent-stat-item">
-            <div class="label">Runs Today</div>
-            <div class="val">${a.runs_today}</div>
-          </div>
-          <div class="agent-stat-item">
-            <div class="label">Total Runs</div>
-            <div class="val">${a.runs_total}</div>
-          </div>
-          <div class="agent-stat-item">
-            <div class="label">HBAR Earned</div>
-            <div class="val amber">${a.hbar_earned}</div>
-          </div>
-          <div class="agent-stat-item">
-            <div class="label">Success</div>
-            <div class="val">${a.success_rate}%</div>
-          </div>
-          <div class="agent-stat-item">
-            <div class="label">Memories</div>
-            <div class="val">${a.memory_count}</div>
-          </div>
-          <div class="agent-stat-item">
-            <div class="label">Last Run</div>
-            <div class="val small">${lastRun}</div>
-          </div>
-        </div>
-      </div>`;
+  // Senior staff have their own section — exclude them from the squad grid
+  const SENIOR = ['Maya', 'The Engineer'];
+  // Deduplicate by name, take first occurrence
+  const seen = new Set();
+  const squadAgents = d.agents.filter(a => {
+    if (SENIOR.includes(a.name)) return false;
+    if (seen.has(a.name)) return false;
+    seen.add(a.name);
+    return true;
   });
 
-  // Agent bar chart
-  const labels = d.agents.map(a => a.name.replace('The ', ''));
-  const values = d.agents.map(a => a.runs_total);
+  squadAgents.forEach(a => {
+    const lastRun = a.last_run ? timeAgo(a.last_run) : 'Never';
+    const avatarHtml = a.avatar_url
+      ? '<img src="' + a.avatar_url + '" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--border);flex-shrink:0" onerror="this.style.display=\'none\'">'
+      : '';
+    grid.innerHTML +=
+      '<div class="agent-card">' +
+        '<div class="agent-header">' +
+          '<div style="display:flex;align-items:center;gap:8px;min-width:0">' +
+            avatarHtml +
+            '<div>' +
+              '<div class="agent-name">' + a.name + '</div>' +
+              '<div class="agent-id">' + a.id + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="agent-badge">Active</div>' +
+        '</div>' +
+        '<div class="agent-stats">' +
+          '<div class="agent-stat-item"><div class="label">Runs Today</div><div class="val">' + a.runs_today + '</div></div>' +
+          '<div class="agent-stat-item"><div class="label">Total Runs</div><div class="val">' + a.runs_total + '</div></div>' +
+          '<div class="agent-stat-item"><div class="label">HBAR Earned</div><div class="val amber">' + a.hbar_earned + '</div></div>' +
+          '<div class="agent-stat-item"><div class="label">Success</div><div class="val">' + a.success_rate + '%</div></div>' +
+          '<div class="agent-stat-item"><div class="label">Memories</div><div class="val">' + a.memory_count + '</div></div>' +
+          '<div class="agent-stat-item"><div class="label">Last Run</div><div class="val small">' + lastRun + '</div></div>' +
+        '</div>' +
+      '</div>';
+  });
+
+  // Agent bar chart uses all agents (deduped by name across full list)
+  const chartSeen = new Set();
+  const chartAgents = d.agents.filter(a => {
+    if (chartSeen.has(a.name)) return false;
+    chartSeen.add(a.name);
+    return true;
+  });
+  const labels = chartAgents.map(a => a.name.replace('The ', ''));
+  const values = chartAgents.map(a => a.runs_total);
   renderAgentChart(labels, values);
 }
 
