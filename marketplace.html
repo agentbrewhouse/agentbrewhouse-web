@@ -863,16 +863,22 @@ async function verifyOtp() {
   btn.disabled = true;
   btn.textContent = 'Verifying\u2026';
 
-  const { error } = await sb.auth.verifyOtp({
-    email: _otpEmail,
-    token,
-    type: 'email',
-  });
+  let verifyError;
+  try {
+    const { error } = await sb.auth.verifyOtp({
+      email: _otpEmail,
+      token,
+      type: 'email',
+    });
+    verifyError = error;
+  } catch(e) {
+    verifyError = e;
+  }
 
-  if (error) {
+  if (verifyError) {
     btn.disabled = false;
     btn.textContent = 'Verify \u2192';
-    showCodeError(error.message || 'Invalid code. Please try again.');
+    showCodeError(verifyError.message || 'Invalid code. Please try again.');
     return;
   }
 
