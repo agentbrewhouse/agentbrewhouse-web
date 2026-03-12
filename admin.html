@@ -1628,16 +1628,35 @@ async function loadPendingSubmissions() {
       return '<span class="sub-skill-tag">' + sk + '</span>';
     }).join('');
 
-    var links = '';
-    if (s.mcp_endpoint) links += '<a href="' + s.mcp_endpoint + '" target="_blank">MCP Endpoint</a>';
-    if (s.github_url)   links += '<a href="' + s.github_url + '" target="_blank">GitHub</a>';
-    if (s.twitter_handle) links += '<span>' + s.twitter_handle + '</span>';
-
     var method = s.submission_method || 'web_form';
-    var methodLabel = method === 'hcs10' ? 'HCS-10' : 'Web Form';
-    var ago  = s.created_at ? timeAgo(s.created_at) : '';
+    var methodLabel = method === 'hcs10' ? 'HCS-10 Autonomous' : 'Web Form';
+    var ago   = s.created_at ? timeAgo(s.created_at) : '';
     var price = s.price_hbar ? s.price_hbar + ' HBAR' : 'TBD';
-    var submittedBy = s.submitted_by || 'anonymous';
+
+    var submittedBy = s.submitted_by || '';
+    var walletLine  = '';
+    var emailLine   = '';
+    if (submittedBy.indexOf('@') !== -1) {
+      emailLine  = '<span>&#9993; ' + submittedBy + '</span>';
+    } else if (submittedBy) {
+      walletLine = '<span>&#9674; ' + submittedBy + '</span>';
+    }
+
+    var depositBadge = (s.deposit_verified)
+      ? '<span style="font-size:9px;background:rgba(45,158,95,0.12);border:1px solid rgba(45,158,95,0.3);color:var(--green);border-radius:4px;padding:2px 6px;">Deposit &#10003;</span>'
+      : '';
+
+    var endpointRow = s.mcp_endpoint
+      ? '<div class="sub-card-links"><span style="color:var(--cream-dim);font-size:10px;">Endpoint:</span> <a href="' + s.mcp_endpoint + '" target="_blank" style="word-break:break-all;">' + s.mcp_endpoint + '</a>' +
+        (s.github_url ? ' &nbsp;<a href="' + s.github_url + '" target="_blank">GitHub</a>' : '') +
+        (s.twitter_handle ? ' &nbsp;<span>' + s.twitter_handle + '</span>' : '') +
+        '</div>'
+      : (s.github_url || s.twitter_handle
+        ? '<div class="sub-card-links">' +
+            (s.github_url ? '<a href="' + s.github_url + '" target="_blank">GitHub</a>' : '') +
+            (s.twitter_handle ? '<span>' + s.twitter_handle + '</span>' : '') +
+          '</div>'
+        : '');
 
     var actions = '';
     if (s.status === 'pending') {
@@ -1657,15 +1676,18 @@ async function loadPendingSubmissions() {
             '<div class="sub-card-title">' + s.name + '</div>' +
             '<div class="sub-card-meta">' +
               '<span>' + price + '</span>' +
-              '<span>By: ' + submittedBy + '</span>' +
+              emailLine + walletLine +
               '<span>' + ago + '</span>' +
             '</div>' +
           '</div>' +
-          '<span class="sub-method-badge ' + method + '">' + methodLabel + '</span>' +
+          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">' +
+            '<span class="sub-method-badge ' + method + '">' + methodLabel + '</span>' +
+            depositBadge +
+          '</div>' +
         '</div>' +
         (s.description ? '<div class="sub-card-desc">' + s.description + '</div>' : '') +
         (skills ? '<div class="sub-card-skills">' + skills + '</div>' : '') +
-        (links  ? '<div class="sub-card-links">'  + links  + '</div>' : '') +
+        endpointRow +
         '<div class="sub-card-actions">' + actions + '</div>' +
       '</div>'
     );
