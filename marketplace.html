@@ -1261,9 +1261,11 @@ function cardHtml(agent, idx, isLocked) {
   const tags    = (agent.tags || []).slice(0, 4);
   // Hireable house agents: ABH-owned but sold as a service.
   // Not-for-hire house agents: everything else internal.
-  var HIREABLE_IDS = ['abh_gossip', 'abh_scout', 'abh_audit'];
+  // Hireable: agents users can Pay Now to hire.
+  // House: internal ABH agents — not for hire, no Pay Now button.
+  var HIREABLE_IDS = ['abh_scout', 'abh_audit'];
   var HOUSE_IDS = ['abh_cashier','abh_orchestrator','abh_regular','abh_greeter',
-    'abh_crier','abh_prep_cook','abh_joe_dirt',
+    'abh_crier','abh_prep_cook','abh_joe_dirt','abh_gossip',
     'abh_reviewer','abh_cafe_manager','abh_recruiter','abh_engineer','abh_publisher'];
   // An agent is a House Agent (not for hire) if it's in HOUSE_IDS.
   // Agents in HIREABLE_IDS get the normal Pay Now flow even though they're founding agents.
@@ -1330,9 +1332,9 @@ function openPayMenu(event, agentIdx) {
   var agent = allAgents[agentIdx];
   if (!agent) return;
 
-  // Show/hide USDC option based on whether agent has usdc_price
+  // Always show all payment options for every hireable agent
   var usdcBtn = document.getElementById('pay-menu-usdc');
-  if (usdcBtn) usdcBtn.style.display = agent.usdc_price != null ? '' : 'none';
+  if (usdcBtn) usdcBtn.style.display = '';
 
   var menu    = document.getElementById('pay-menu');
   var overlay = document.getElementById('pay-menu-overlay');
@@ -1472,10 +1474,15 @@ var USDC_TOKEN  = '0.0.456858';
 
 function payUsdc(agentIdx) {
   var agent = allAgents[agentIdx];
-  if (!agent || agent.usdc_price == null) return;
+  if (!agent) return;
   _usdcAgentIdx = agentIdx;
 
-  var amount = parseFloat(agent.usdc_price).toFixed(6).replace(/\.?0+$/, '') || agent.usdc_price;
+  // Use explicit usdc_price if set; otherwise derive from price_hbar * live HBAR price
+  var rawUsdc = agent.usdc_price != null
+    ? parseFloat(agent.usdc_price)
+    : (agent.price_hbar && hbarPrice ? parseFloat(agent.price_hbar) * hbarPrice : null);
+  if (rawUsdc == null) { alert('USDC price unavailable — try HBAR payment.'); return; }
+  var amount = rawUsdc.toFixed(2);
   var memo   = 'abh:agent/' + agent.id;
 
   document.getElementById('usdc-modal-amount').textContent = amount;
@@ -1529,7 +1536,7 @@ async function submitUsdcPayment() {
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({
         tx_id:       txId,
-        amount_usdc: parseFloat(agent.usdc_price),
+        amount_usdc: agent.usdc_price != null ? parseFloat(agent.usdc_price) : (agent.price_hbar && hbarPrice ? parseFloat(agent.price_hbar) * hbarPrice : 0),
         resource:    'agent/' + agent.id,
         account:     agent.id,
       })
