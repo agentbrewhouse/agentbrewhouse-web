@@ -454,6 +454,24 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
 .auth-submit:hover { background: var(--amber-light); }
 .auth-submit:disabled { opacity: 0.4; cursor: default; }
 .auth-note { margin-top: 18px; font-size: 9px; letter-spacing: 0.14em; color: var(--muted); line-height: 1.8; }
+.pay-modal-agent-name { font-size: 10px; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+.pay-fields { text-align: left; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
+.pay-field { background: rgba(255,255,255,0.03); border: 1px solid rgba(200,131,42,0.18); border-radius: 8px; padding: 10px 12px; }
+.pay-field-label { font-size: 9px; letter-spacing: 0.16em; color: rgba(240,230,208,0.45); text-transform: uppercase; margin-bottom: 7px; }
+.pay-field-row { display: flex; align-items: center; gap: 8px; }
+.pay-field-value {
+  flex: 1; background: transparent; border: none; outline: none;
+  font-family: 'DM Mono', monospace; font-size: 12px; color: var(--amber-light);
+  cursor: text; min-width: 0; padding: 0;
+  user-select: all; -webkit-user-select: all;
+}
+.pay-copy-btn {
+  background: none; border: 1px solid rgba(200,131,42,0.25); border-radius: 5px;
+  color: var(--muted); font-size: 13px; cursor: pointer;
+  padding: 3px 7px; line-height: 1; transition: all 0.15s; flex-shrink: 0;
+}
+.pay-copy-btn:hover { background: rgba(200,131,42,0.12); color: var(--amber); border-color: rgba(200,131,42,0.5); }
+.pay-copy-btn.copied { background: rgba(45,158,95,0.15); color: #2d9e5f; border-color: rgba(45,158,95,0.4); }
 .auth-sent { display: none; }
 .auth-sent.visible { display: block; }
 .auth-sent-icon { font-size: 36px; margin-bottom: 14px; display: block; }
@@ -575,13 +593,23 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     <button class="auth-close" onclick="closeHbarModal()" aria-label="Close">&times;</button>
     <p class="auth-eyebrow">Pay with HBAR</p>
     <h2 class="auth-title">Send <em><span id="hbar-modal-amount">0</span> HBAR</em></h2>
-    <p style="font-size:10px;letter-spacing:0.18em;color:var(--muted);text-transform:uppercase;margin-top:4px" id="hbar-modal-name"></p>
+    <p class="pay-modal-agent-name" id="hbar-modal-name"></p>
     <div class="auth-rule"></div>
-    <div style="text-align:left;margin-bottom:20px">
-      <p style="font-size:10px;letter-spacing:0.1em;color:rgba(240,230,208,0.5);line-height:2;text-transform:uppercase">Send to wallet</p>
-      <p style="font-family:'DM Mono',monospace;font-size:13px;color:var(--amber-light);margin-bottom:14px">0.0.10358210</p>
-      <p style="font-size:10px;letter-spacing:0.1em;color:rgba(240,230,208,0.5);line-height:2;text-transform:uppercase">Memo (include this exactly)</p>
-      <p style="font-family:'DM Mono',monospace;font-size:12px;color:var(--cream);margin-bottom:14px" id="hbar-memo">abh:...</p>
+    <div class="pay-fields">
+      <div class="pay-field">
+        <div class="pay-field-label">Send to wallet</div>
+        <div class="pay-field-row">
+          <input class="pay-field-value" id="hbar-wallet-input" type="text" readonly value="0.0.10358210" />
+          <button class="pay-copy-btn" onclick="copyPayField('hbar-wallet-input', this)" title="Copy wallet address">&#128203;</button>
+        </div>
+      </div>
+      <div class="pay-field">
+        <div class="pay-field-label">Memo &mdash; include this exactly</div>
+        <div class="pay-field-row">
+          <input class="pay-field-value" id="hbar-memo" type="text" readonly value="abh:..." />
+          <button class="pay-copy-btn" onclick="copyPayField('hbar-memo', this)" title="Copy memo">&#128203;</button>
+        </div>
+      </div>
     </div>
     <p class="auth-body" style="margin-bottom:12px">After sending, paste your Hedera transaction ID below:</p>
     <input type="text" id="hbar-txid" class="auth-input" placeholder="0.0.XXXXXX@seconds.nanos" autocomplete="off" />
@@ -597,15 +625,30 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     <button class="auth-close" onclick="closeUsdcModal()" aria-label="Close">&times;</button>
     <p class="auth-eyebrow">Pay with USDC</p>
     <h2 class="auth-title">Send <em><span id="usdc-modal-amount">0.00</span> USDC</em></h2>
-    <p style="font-size:10px;letter-spacing:0.18em;color:var(--muted);text-transform:uppercase;margin-top:4px" id="usdc-modal-name"></p>
+    <p class="pay-modal-agent-name" id="usdc-modal-name"></p>
     <div class="auth-rule"></div>
-    <div style="text-align:left;margin-bottom:20px">
-      <p style="font-size:10px;letter-spacing:0.1em;color:rgba(240,230,208,0.5);line-height:2;text-transform:uppercase">Send to wallet</p>
-      <p style="font-family:'DM Mono',monospace;font-size:13px;color:var(--amber-light);margin-bottom:14px" id="usdc-wallet-display">0.0.10358210</p>
-      <p style="font-size:10px;letter-spacing:0.1em;color:rgba(240,230,208,0.5);line-height:2;text-transform:uppercase">Token ID (USDC on Hedera)</p>
-      <p style="font-family:'DM Mono',monospace;font-size:13px;color:var(--cream);margin-bottom:14px">0.0.456858</p>
-      <p style="font-size:10px;letter-spacing:0.1em;color:rgba(240,230,208,0.5);line-height:2;text-transform:uppercase">Memo</p>
-      <p style="font-family:'DM Mono',monospace;font-size:12px;color:var(--cream);margin-bottom:14px" id="usdc-memo">abh:...</p>
+    <div class="pay-fields">
+      <div class="pay-field">
+        <div class="pay-field-label">Send to wallet</div>
+        <div class="pay-field-row">
+          <input class="pay-field-value" id="usdc-wallet-input" type="text" readonly value="0.0.10358210" />
+          <button class="pay-copy-btn" onclick="copyPayField('usdc-wallet-input', this)" title="Copy wallet address">&#128203;</button>
+        </div>
+      </div>
+      <div class="pay-field">
+        <div class="pay-field-label">Token ID (USDC on Hedera)</div>
+        <div class="pay-field-row">
+          <input class="pay-field-value" id="usdc-token-input" type="text" readonly value="0.0.456858" />
+          <button class="pay-copy-btn" onclick="copyPayField('usdc-token-input', this)" title="Copy token ID">&#128203;</button>
+        </div>
+      </div>
+      <div class="pay-field">
+        <div class="pay-field-label">Memo</div>
+        <div class="pay-field-row">
+          <input class="pay-field-value" id="usdc-memo" type="text" readonly value="abh:..." />
+          <button class="pay-copy-btn" onclick="copyPayField('usdc-memo', this)" title="Copy memo">&#128203;</button>
+        </div>
+      </div>
     </div>
     <p class="auth-body" style="margin-bottom:12px">After sending, paste your Hedera transaction ID below:</p>
     <input type="text" id="usdc-txid" class="auth-input" placeholder="0.0.XXXXXX@seconds.nanos" autocomplete="off" />
@@ -1298,6 +1341,33 @@ function closePayMenu() {
 }
 
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Copy field helper — reads from input.value (plain string, no DOM artifacts)
+// ---------------------------------------------------------------------------
+function copyPayField(inputId, btn) {
+  var el  = document.getElementById(inputId);
+  var val = el ? el.value.trim() : '';
+  if (!val) return;
+  navigator.clipboard.writeText(val).then(function() {
+    btn.innerHTML = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() {
+      btn.innerHTML = '&#128203;';
+      btn.classList.remove('copied');
+    }, 1800);
+  }).catch(function() {
+    // Fallback for older browsers
+    el.select();
+    document.execCommand('copy');
+    btn.innerHTML = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(function() {
+      btn.innerHTML = '&#128203;';
+      btn.classList.remove('copied');
+    }, 1800);
+  });
+}
+
 // HBAR payment — manual send + tx ID verify (mirrors USDC flow)
 // ---------------------------------------------------------------------------
 var _hbarAgentIdx = null;
@@ -1309,9 +1379,10 @@ function payHbar(agentIdx) {
   _hbarAgentIdx = agentIdx;
 
   var memo = 'abh:agent/' + agent.id;
-  document.getElementById('hbar-modal-amount').textContent = agent.price_hbar || 0;
-  document.getElementById('hbar-modal-name').textContent   = agent.name;
-  document.getElementById('hbar-memo').textContent         = memo;
+  document.getElementById('hbar-modal-amount').textContent   = agent.price_hbar || 0;
+  document.getElementById('hbar-modal-name').textContent     = agent.name;
+  document.getElementById('hbar-wallet-input').value         = ABH_HBAR_WALLET;
+  document.getElementById('hbar-memo').value                 = memo;
   document.getElementById('hbar-txid').value               = '';
   document.getElementById('hbar-error').textContent        = '';
   document.getElementById('hbar-error').classList.remove('visible');
@@ -1392,7 +1463,9 @@ function payUsdc(agentIdx) {
 
   document.getElementById('usdc-modal-amount').textContent = amount;
   document.getElementById('usdc-modal-name').textContent   = agent.name;
-  document.getElementById('usdc-memo').textContent         = memo;
+  document.getElementById('usdc-wallet-input').value       = USDC_WALLET;
+  document.getElementById('usdc-token-input').value        = USDC_TOKEN;
+  document.getElementById('usdc-memo').value               = memo;
   document.getElementById('usdc-txid').value               = '';
   document.getElementById('usdc-error').textContent        = '';
   document.getElementById('usdc-error').classList.remove('visible');
