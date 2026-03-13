@@ -94,6 +94,52 @@
   .login-box button:hover { background: var(--amber-light); }
   .login-error { color: var(--red); font-size: 12px; margin-top: 12px; }
 
+  .bio-btn {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--amber);
+    border-radius: 8px;
+    padding: 12px;
+    color: var(--amber);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: background 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .bio-btn:hover { background: var(--amber-dim); }
+  .bio-divider {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px; color: var(--cream-dim); font-size: 11px;
+  }
+  .bio-divider::before, .bio-divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+  .save-device-banner {
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--amber);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-top: 16px;
+    text-align: left;
+    font-size: 12px;
+    color: var(--cream-dim);
+  }
+  .save-device-banner strong { color: var(--cream); display: block; margin-bottom: 6px; }
+  .save-device-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .save-device-actions button {
+    flex: 1; padding: 8px; border-radius: 6px; font-size: 12px;
+    font-weight: 600; cursor: pointer; border: none; transition: opacity 0.2s;
+  }
+  .save-device-actions button:hover { opacity: 0.85; }
+  .save-device-yes { background: var(--amber); color: #000; }
+  .save-device-no  { background: var(--panel); color: var(--cream-dim); border: 1px solid var(--border) !important; }
+
   /* ── DASHBOARD ── */
   #dashboard { display: none; }
 
@@ -1358,10 +1404,28 @@
 <div id="login-screen">
   <div class="login-box">
     <div class="logo">AgentBrewHouse</div>
-    <div class="tagline">Mission Control — Admin Access</div>
+    <div class="tagline">Mission Control &#8212; Admin Access</div>
+
+    <!-- Biometric login (shown only if passkey registered on this device) -->
+    <button id="bio-btn" class="bio-btn" onclick="loginBiometric()" style="display:none">
+      <span>&#9654;</span> Use Fingerprint / Touch ID
+    </button>
+    <div id="bio-divider" class="bio-divider" style="display:none">or</div>
+
+    <!-- Secret login -->
     <input type="password" id="secret-input" placeholder="Admin secret" onkeydown="if(event.key==='Enter')login()">
     <button onclick="login()">Enter Mission Control</button>
     <div class="login-error" id="login-error"></div>
+
+    <!-- Save device prompt (shown after successful secret login) -->
+    <div id="save-device-banner" class="save-device-banner" style="display:none">
+      <strong>Save this device?</strong>
+      Use fingerprint or Touch ID to log in next time &#8212; no secret needed.
+      <div class="save-device-actions">
+        <button class="save-device-yes" onclick="registerPasskey()">Yes, save device</button>
+        <button class="save-device-no"  onclick="dismissSavePrompt()">Not now</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1722,6 +1786,186 @@ let countdownInterval = null;
 let countdownVal = 30;
 
 // ── LOGIN ──
+// ── WEBAUTHN HELPERS ──────────────────────────────────────────────────────
+
+var _waSupported = window.PublicKeyCredential != null;
+var _waHasKey    = localStorage.getItem('abh_passkey_registered') === 'true';
+
+// Show biometric button on page load if passkey registered on this device
+(function() {
+  if (_waSupported && _waHasKey) {
+    document.getElementById('bio-btn').style.display    = 'flex';
+    document.getElementById('bio-divider').style.display = 'flex';
+  }
+})();
+
+// base64url <-> ArrayBuffer (WebAuthn requires ArrayBuffer; JSON uses base64url strings)
+function _b64uToBuffer(b64u) {
+  var b64 = b64u.replace(/-/g, '+').replace(/_/g, '/');
+  while (b64.length % 4) b64 += '=';
+  var bin = atob(b64), buf = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  return buf.buffer;
+}
+function _bufToB64u(buf) {
+  var bytes = new Uint8Array(buf), bin = '';
+  bytes.forEach(function(b) { bin += String.fromCharCode(b); });
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+// Convert py_webauthn options (base64url strings) to WebAuthn API format (ArrayBuffers)
+function _prepRegOptions(opts) {
+  opts.challenge = _b64uToBuffer(opts.challenge);
+  opts.user.id   = _b64uToBuffer(opts.user.id);
+  if (opts.excludeCredentials) {
+    opts.excludeCredentials = opts.excludeCredentials.map(function(c) {
+      return Object.assign({}, c, { id: _b64uToBuffer(c.id) });
+    });
+  }
+  return opts;
+}
+function _prepAuthOptions(opts) {
+  opts.challenge = _b64uToBuffer(opts.challenge);
+  if (opts.allowCredentials) {
+    opts.allowCredentials = opts.allowCredentials.map(function(c) {
+      return Object.assign({}, c, { id: _b64uToBuffer(c.id) });
+    });
+  }
+  return opts;
+}
+
+// Serialise a RegistrationPublicKeyCredential for sending to the backend
+function _serializeRegCred(cred) {
+  var r = cred.response;
+  return {
+    id:    cred.id,
+    rawId: _bufToB64u(cred.rawId),
+    type:  cred.type,
+    response: {
+      clientDataJSON:    _bufToB64u(r.clientDataJSON),
+      attestationObject: _bufToB64u(r.attestationObject),
+    }
+  };
+}
+
+// Serialise an AuthenticationPublicKeyCredential for sending to the backend
+function _serializeAuthCred(cred) {
+  var r = cred.response;
+  var out = {
+    id:    cred.id,
+    rawId: _bufToB64u(cred.rawId),
+    type:  cred.type,
+    response: {
+      clientDataJSON:    _bufToB64u(r.clientDataJSON),
+      authenticatorData: _bufToB64u(r.authenticatorData),
+      signature:         _bufToB64u(r.signature),
+    }
+  };
+  if (r.userHandle) out.response.userHandle = _bufToB64u(r.userHandle);
+  return out;
+}
+
+// Fingerprint / Touch ID login
+async function loginBiometric() {
+  var err = document.getElementById('login-error');
+  err.textContent = '';
+  try {
+    // 1. Get challenge from server
+    var beginRes = await fetch(API + '/api/admin/webauthn/authenticate/begin', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}'
+    });
+    var opts = await beginRes.json();
+    if (opts.error) { err.textContent = 'Biometric error: ' + opts.error; return; }
+
+    // 2. Authenticate with device
+    var cred = await navigator.credentials.get({ publicKey: _prepAuthOptions(opts) });
+
+    // 3. Verify with server
+    var completeRes = await fetch(API + '/api/admin/webauthn/authenticate/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(_serializeAuthCred(cred))
+    });
+    var result = await completeRes.json();
+    if (!result.ok) { err.textContent = 'Biometric verification failed.'; return; }
+
+    // 4. Restore secret from localStorage and proceed
+    var saved = localStorage.getItem('abh_admin_secret');
+    if (!saved) {
+      err.textContent = 'Device key missing -- please log in with your secret once.';
+      _clearPasskeyLocal();
+      return;
+    }
+    adminSecret = saved;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display    = 'block';
+    loadAll();
+    startCountdown();
+  } catch(e) {
+    if (e.name === 'NotAllowedError') {
+      err.textContent = 'Biometric cancelled.';
+    } else {
+      err.textContent = 'Biometric failed: ' + e.message;
+    }
+  }
+}
+
+// Register a new passkey after successful secret login
+async function registerPasskey() {
+  var banner = document.getElementById('save-device-banner');
+  banner.innerHTML = '<strong>Registering...</strong>';
+  try {
+    // 1. Get registration options (auth required -- secret already set)
+    var beginRes = await fetch(API + '/api/admin/webauthn/register/begin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': adminSecret },
+      body: '{}'
+    });
+    var opts = await beginRes.json();
+    if (opts.error) { banner.innerHTML = '<strong style="color:var(--red)">Registration error: ' + opts.error + '</strong>'; return; }
+
+    // 2. Create credential on device
+    var cred = await navigator.credentials.create({ publicKey: _prepRegOptions(opts) });
+
+    // 3. Send to server
+    var completeRes = await fetch(API + '/api/admin/webauthn/register/complete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': adminSecret },
+      body: JSON.stringify(_serializeRegCred(cred))
+    });
+    var result = await completeRes.json();
+    if (!result.ok) {
+      banner.innerHTML = '<strong style="color:var(--red)">Registration failed.</strong>';
+      return;
+    }
+
+    // 4. Save secret + flag to localStorage
+    localStorage.setItem('abh_admin_secret',      adminSecret);
+    localStorage.setItem('abh_passkey_registered', 'true');
+    banner.innerHTML = '<strong style="color:var(--green)">&#10003; Device saved. Use fingerprint next time.</strong>';
+    setTimeout(function() { banner.style.display = 'none'; }, 3000);
+  } catch(e) {
+    if (e.name === 'NotAllowedError') {
+      banner.innerHTML = '<strong>Cancelled.</strong>';
+    } else {
+      banner.innerHTML = '<strong style="color:var(--red)">Error: ' + e.message + '</strong>';
+    }
+  }
+}
+
+function dismissSavePrompt() {
+  document.getElementById('save-device-banner').style.display = 'none';
+}
+
+function _clearPasskeyLocal() {
+  localStorage.removeItem('abh_passkey_registered');
+  localStorage.removeItem('abh_admin_secret');
+  document.getElementById('bio-btn').style.display    = 'none';
+  document.getElementById('bio-divider').style.display = 'none';
+}
+
+// ── LOGIN ─────────────────────────────────────────────────────────────────
+
 function login() {
   const val = document.getElementById('secret-input').value.trim();
   if (!val) return;
@@ -1736,6 +1980,10 @@ function login() {
       document.getElementById('dashboard').style.display = 'block';
       loadAll();
       startCountdown();
+      // Offer passkey registration if WebAuthn supported and not yet registered
+      if (_waSupported && !_waHasKey) {
+        document.getElementById('save-device-banner').style.display = 'block';
+      }
     }
   }).catch(() => {
     document.getElementById('login-error').textContent = 'Could not connect to API.';

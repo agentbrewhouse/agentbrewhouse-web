@@ -1233,6 +1233,20 @@ function tier(hbar) {
   return                          { label: 'Elite', color: '#e8a84a' };
 }
 
+// Named badge colours -- use for agent-specific role badges
+var BADGE_COLORS = {
+  'ARCHITECT':    '#c8832a',
+  'INTELLIGENCE': '#c8832a',
+  'AGENT':        '#7eb8d4',
+  'PRO':          '#c47eb8',
+  'FOUNDING':     '#e8a84a',
+};
+
+// Per-agent badge overrides (agent_id -> {label, color})
+var BADGE_OVERRIDE = {
+  'abh_engineer': { label: 'Architect', color: BADGE_COLORS['ARCHITECT'] },
+};
+
 function usdLine(hbar) {
   if (!hbarPrice || !hbar) return '';
   return '<div class="usd-row">~ $' + (hbar * hbarPrice).toFixed(2) + ' USD</div>';
@@ -1255,10 +1269,13 @@ function cardHtml(agent, idx, isLocked) {
   // Agents in HIREABLE_IDS get the normal Pay Now flow even though they're founding agents.
   const isHouse = HOUSE_IDS.indexOf(agent.agent_id) !== -1;
 
-  // Badge: HOUSE AGENT for founding agents, otherwise tier label
-  var badgeHtml = isHouse
-    ? '<div class="tier-badge badge-house" style="--tier-color:#c8832a">House Agent</div>'
-    : '<div class="tier-badge" style="--tier-color:' + t.color + '">' + t.label + '</div>';
+  // Badge: check override first, then House Agent, then price tier
+  var _badgeOver = BADGE_OVERRIDE[agent.agent_id];
+  var badgeHtml = _badgeOver
+    ? '<div class="tier-badge" style="--tier-color:' + _badgeOver.color + '">' + _badgeOver.label + '</div>'
+    : isHouse
+      ? '<div class="tier-badge badge-house" style="--tier-color:#c8832a">House Agent</div>'
+      : '<div class="tier-badge" style="--tier-color:' + t.color + '">' + t.label + '</div>';
 
   // Footer price + pay section
   var priceHtml;
