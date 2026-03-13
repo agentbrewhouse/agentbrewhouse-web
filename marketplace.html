@@ -1202,12 +1202,15 @@ function cardHtml(agent, idx, isLocked) {
   const av      = agent.avatar_url || AVATARS[agent.name];
   const avHtml  = av ? '<img src="' + av + '" alt="' + agent.name + '" />' : (agent.category || '?');
   const tags    = (agent.tags || []).slice(0, 4);
-  // House agents: use founding_agent flag OR match known internal agent_ids
-  // (belt-and-suspenders in case the DB flag isn't set on every row)
+  // Hireable house agents: ABH-owned but sold as a service.
+  // Not-for-hire house agents: everything else internal.
+  var HIREABLE_IDS = ['abh_gossip', 'abh_scout', 'abh_audit'];
   var HOUSE_IDS = ['abh_cashier','abh_orchestrator','abh_regular','abh_greeter',
-    'abh_gossip','abh_crier','abh_prep_cook','abh_audit','abh_joe_dirt',
-    'abh_scout','abh_reviewer','abh_cafe_manager','abh_recruiter','abh_engineer'];
-  const isHouse = agent.founding_agent === true || HOUSE_IDS.indexOf(agent.agent_id) !== -1;
+    'abh_crier','abh_prep_cook','abh_joe_dirt',
+    'abh_reviewer','abh_cafe_manager','abh_recruiter','abh_engineer'];
+  // An agent is a House Agent (not for hire) if it's in HOUSE_IDS.
+  // Agents in HIREABLE_IDS get the normal Pay Now flow even though they're founding agents.
+  const isHouse = HOUSE_IDS.indexOf(agent.agent_id) !== -1;
 
   // Badge: HOUSE AGENT for founding agents, otherwise tier label
   var badgeHtml = isHouse
