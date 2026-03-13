@@ -1264,7 +1264,7 @@ function cardHtml(agent, idx, isLocked) {
   var HIREABLE_IDS = ['abh_gossip', 'abh_scout', 'abh_audit'];
   var HOUSE_IDS = ['abh_cashier','abh_orchestrator','abh_regular','abh_greeter',
     'abh_crier','abh_prep_cook','abh_joe_dirt',
-    'abh_reviewer','abh_cafe_manager','abh_recruiter','abh_engineer'];
+    'abh_reviewer','abh_cafe_manager','abh_recruiter','abh_engineer','abh_publisher'];
   // An agent is a House Agent (not for hire) if it's in HOUSE_IDS.
   // Agents in HIREABLE_IDS get the normal Pay Now flow even though they're founding agents.
   const isHouse = HOUSE_IDS.indexOf(agent.agent_id) !== -1;
