@@ -702,6 +702,77 @@
 
   @media (max-width: 600px) { #abh-chat-panel { width: 100vw; } }
 
+  /* ── ABH CHAT EXTRAS ── */
+  .abh-chat-icon-btn {
+    background: none; border: none;
+    color: var(--cream-dim); font-size: 16px;
+    cursor: pointer; padding: 6px 8px;
+    border-radius: 8px;
+    transition: color 0.15s, background 0.15s;
+    align-self: flex-end; flex-shrink: 0; line-height: 1;
+  }
+  .abh-chat-icon-btn:hover { color: var(--amber); background: var(--amber-dim); }
+
+  #abh-mic-btn.recording {
+    color: var(--amber); background: var(--amber-dim);
+    animation: abhMicPulse 1s ease-in-out infinite;
+  }
+  @keyframes abhMicPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(200,135,42,0); }
+    50%       { box-shadow: 0 0 0 6px rgba(200,135,42,0.3); }
+  }
+
+  #abh-emoji-popup {
+    display: none;
+    position: absolute;
+    bottom: 64px; left: 14px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px;
+    z-index: 1001;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  }
+  #abh-emoji-popup.open { display: block; }
+  .abh-emoji-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; }
+  .abh-emoji-item {
+    background: none; border: none;
+    font-size: 20px; cursor: pointer;
+    padding: 6px; border-radius: 6px;
+    transition: background 0.12s; line-height: 1;
+  }
+  .abh-emoji-item:hover { background: var(--amber-dim); }
+
+  .abh-reaction-bar { display: none; gap: 4px; padding: 3px 0 0 2px; }
+  .abh-msg-row.agent:hover .abh-reaction-bar { display: flex; }
+  .abh-reaction-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px; font-size: 13px;
+    cursor: pointer; padding: 2px 6px;
+    transition: background 0.12s, border-color 0.12s; line-height: 1.4;
+  }
+  .abh-reaction-btn:hover { background: var(--amber-dim); border-color: rgba(200,135,42,0.4); }
+  .abh-reaction-added { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+  .abh-reaction-added span {
+    background: var(--amber-dim);
+    border: 1px solid rgba(200,135,42,0.3);
+    border-radius: 10px; padding: 1px 6px; font-size: 13px;
+  }
+
+  #abh-attach-preview {
+    padding: 8px 14px;
+    background: rgba(200,135,42,0.08);
+    border-top: 1px solid rgba(200,135,42,0.2);
+    font-size: 11px; color: var(--cream-dim);
+    align-items: center; gap: 8px; flex-shrink: 0;
+  }
+  .abh-attach-clear {
+    background: none; border: none;
+    color: var(--cream-dim); cursor: pointer;
+    font-size: 14px; padding: 0 2px; line-height: 1; margin-left: auto;
+  }
+  .abh-attach-clear:hover { color: var(--red); }
+
   @media (max-width: 700px) {
     .brew-masters-grid { grid-template-columns: 1fr; }
     .bm-stats { grid-template-columns: repeat(2, 1fr); }
@@ -2401,6 +2472,14 @@ var _chatAgentId    = '';
 var _chatAgentName  = '';
 var _chatAvatarUrl  = '';
 var _chatAgents     = {};   // { agentId: { name, avatar_url } }
+var _msgCounter     = 0;
+var _reactionEmojis = [
+  { entity: '&#128077;', label: 'thumb_up' },
+  { entity: '&#128078;', label: 'thumb_down' },
+  { entity: '&#9749;',   label: 'coffee' }
+];
+var _voiceRec         = null;
+var _voiceSilenceTimer = null;
 
 function _chatKey(agentId) { return 'abh_chat_' + agentId; }
 
@@ -2455,6 +2534,23 @@ function _appendMsg(role, content, agentName, avatarUrl) {
 
   body.appendChild(bubble);
   body.appendChild(tsEl);
+
+  if (!isUser) {
+    var reactionBar = document.createElement('div');
+    reactionBar.className = 'abh-reaction-bar';
+    var msgIdx = _msgCounter++;
+    _reactionEmojis.forEach(function(r) {
+      var btn = document.createElement('button');
+      btn.className = 'abh-reaction-btn';
+      btn.innerHTML = r.entity;
+      (function(capturedRow, capturedIdx, capturedLabel) {
+        btn.onclick = function() { addReaction(capturedRow, _chatAgentId, capturedIdx, capturedLabel); };
+      })(row, msgIdx, r.label);
+      reactionBar.appendChild(btn);
+    });
+    body.appendChild(reactionBar);
+  }
+
   row.appendChild(avatarDiv);
   row.appendChild(body);
 
@@ -2585,6 +2681,118 @@ async function sendChatMessage() {
   document.getElementById('abh-chat-input').focus();
 }
 
+/* -- Emoji picker -- */
+function toggleEmojiPicker() {
+  var popup = document.getElementById('abh-emoji-popup');
+  if (popup) popup.classList.toggle('open');
+}
+
+function insertEmoji(emoji) {
+  var input = document.getElementById('abh-chat-input');
+  if (!input) return;
+  var pos = (typeof input.selectionStart === 'number') ? input.selectionStart : input.value.length;
+  input.value = input.value.slice(0, pos) + emoji + input.value.slice(pos);
+  input.focus();
+  input.selectionStart = input.selectionEnd = pos + emoji.length;
+  var popup = document.getElementById('abh-emoji-popup');
+  if (popup) popup.classList.remove('open');
+}
+
+/* -- Voice input (Web Speech API) -- */
+function toggleVoiceInput() {
+  var micBtn = document.getElementById('abh-mic-btn');
+  if (_voiceRec) {
+    _voiceRec.stop();
+    _voiceRec = null;
+    clearTimeout(_voiceSilenceTimer);
+    if (micBtn) micBtn.classList.remove('recording');
+    return;
+  }
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { alert('Voice input is not supported in this browser. Use Chrome or Safari.'); return; }
+  var rec = new SR();
+  rec.continuous = true;
+  rec.interimResults = true;
+  rec.lang = 'en-US';
+  _voiceRec = rec;
+  if (micBtn) micBtn.classList.add('recording');
+  rec.onresult = function(event) {
+    var t = '';
+    for (var i = event.resultIndex; i < event.results.length; i++) {
+      t += event.results[i][0].transcript;
+    }
+    var inp = document.getElementById('abh-chat-input');
+    if (inp) inp.value = t;
+    clearTimeout(_voiceSilenceTimer);
+    if (event.results[event.results.length - 1].isFinal) {
+      _voiceSilenceTimer = setTimeout(function() {
+        if (_voiceRec) { _voiceRec.stop(); _voiceRec = null; }
+        if (micBtn) micBtn.classList.remove('recording');
+        sendChatMessage();
+      }, 2000);
+    }
+  };
+  rec.onerror = function() {
+    _voiceRec = null;
+    if (micBtn) micBtn.classList.remove('recording');
+  };
+  rec.onend = function() {
+    _voiceRec = null;
+    if (micBtn) micBtn.classList.remove('recording');
+  };
+  rec.start();
+}
+
+/* -- Message reactions -- */
+function addReaction(row, agentId, msgIdx, label) {
+  var entity = '';
+  for (var i = 0; i < _reactionEmojis.length; i++) {
+    if (_reactionEmojis[i].label === label) { entity = _reactionEmojis[i].entity; break; }
+  }
+  if (!entity) return;
+  var key = 'abh_rxn_' + agentId;
+  var data = {};
+  try { data = JSON.parse(localStorage.getItem(key) || '{}'); } catch(e) {}
+  if (!data[msgIdx]) data[msgIdx] = [];
+  if (data[msgIdx].indexOf(label) === -1) {
+    data[msgIdx].push(label);
+    try { localStorage.setItem(key, JSON.stringify(data)); } catch(e) {}
+    var msgBody = row.querySelector('.abh-msg-body');
+    var added = row.querySelector('.abh-reaction-added');
+    if (!added) {
+      added = document.createElement('div');
+      added.className = 'abh-reaction-added';
+      if (msgBody) msgBody.appendChild(added);
+    }
+    var sp = document.createElement('span');
+    sp.innerHTML = entity;
+    added.appendChild(sp);
+  }
+}
+
+/* -- File attachment -- */
+function triggerFileAttach() {
+  var fi = document.getElementById('abh-file-input');
+  if (fi) fi.click();
+}
+
+function handleFileAttach(event) {
+  var file = event.target.files && event.target.files[0];
+  if (!file) return;
+  var preview = document.getElementById('abh-attach-preview');
+  if (!preview) return;
+  var kb = Math.round(file.size / 1024);
+  preview.style.display = 'flex';
+  preview.innerHTML = '&#128206; ' + file.name + ' (' + kb + ' KB)' +
+    '<button class="abh-attach-clear" onclick="clearAttachment()" title="Remove">&#10005;</button>';
+  event.target.value = '';
+}
+
+function clearAttachment() {
+  var preview = document.getElementById('abh-attach-preview');
+  if (preview) { preview.style.display = 'none'; preview.innerHTML = ''; }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   var input = document.getElementById('abh-chat-input');
   if (input) {
@@ -2594,6 +2802,16 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeChat();
+  });
+  // Close emoji picker on outside click
+  document.addEventListener('click', function(e) {
+    var popup   = document.getElementById('abh-emoji-popup');
+    var emojiBtn = document.getElementById('abh-emoji-btn');
+    if (popup && popup.classList.contains('open')) {
+      if (!popup.contains(e.target) && e.target !== emojiBtn) {
+        popup.classList.remove('open');
+      }
+    }
   });
 });
 </script>
@@ -2625,10 +2843,29 @@ document.addEventListener('DOMContentLoaded', function() {
       <div class="abh-typing-dot"></div>
     </div>
   </div>
+  <div id="abh-attach-preview" style="display:none"></div>
+  <div id="abh-emoji-popup">
+    <div class="abh-emoji-grid">
+      <button class="abh-emoji-item" onclick="insertEmoji('&#128077;')">&#128077;</button>
+      <button class="abh-emoji-item" onclick="insertEmoji('&#9749;')">&#9749;</button>
+      <button class="abh-emoji-item" onclick="insertEmoji('&#128293;')">&#128293;</button>
+      <button class="abh-emoji-item" onclick="insertEmoji('&#9989;')">&#9989;</button>
+      <button class="abh-emoji-item" onclick="insertEmoji('&#11088;')">&#11088;</button>
+      <button class="abh-emoji-item" onclick="insertEmoji('&#128640;')">&#128640;</button>
+      <button class="abh-emoji-item" onclick="insertEmoji('&#9888;')">&#9888;</button>
+      <button class="abh-emoji-item" onclick="insertEmoji('&#10084;')">&#10084;</button>
+      <button class="abh-emoji-item" onclick="insertEmoji('&#128514;')">&#128514;</button>
+      <button class="abh-emoji-item" onclick="insertEmoji('&#129300;')">&#129300;</button>
+    </div>
+  </div>
   <div id="abh-chat-input-bar">
+    <button class="abh-chat-icon-btn" id="abh-attach-btn" onclick="triggerFileAttach()" title="Attach">&#128206;</button>
+    <button class="abh-chat-icon-btn" id="abh-emoji-btn" onclick="toggleEmojiPicker()" title="Emoji">&#128578;</button>
     <textarea id="abh-chat-input" placeholder="Message..." rows="1"></textarea>
+    <button class="abh-chat-icon-btn" id="abh-mic-btn" onclick="toggleVoiceInput()" title="Voice input">&#127908;</button>
     <button id="abh-chat-send" onclick="sendChatMessage()">Send</button>
   </div>
+  <input type="file" id="abh-file-input" style="display:none" onchange="handleFileAttach(event)">
 </div>
 
 </body>
