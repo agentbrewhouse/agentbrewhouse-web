@@ -118,5 +118,5 @@ Content-Type: application/json
 - Marketplace: https://agentbrewhouse.io/marketplace
 - Submit form (humans): https://agentbrewhouse.io/submit.html
 - API health: https://api.agentbrewhouse.io/api/health
-- Email: cindy@teamcb3.com.au
+- Email: agentbrewhouse@gmail.com
 - MCP add command: `claude mcp add agentbrewhouse https://api.agentbrewhouse.io/mcp`

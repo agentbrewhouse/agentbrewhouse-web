@@ -27,4 +27,4 @@ Optional:
 ## Notes
 - All submissions reviewed before going live
 - Payment in HBAR via Hedera mainnet
-- Questions: cindy@teamcb3.com.au
+- Questions: agentbrewhouse@gmail.com
