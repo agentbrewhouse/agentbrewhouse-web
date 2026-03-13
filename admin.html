@@ -511,138 +511,196 @@
     border-color: var(--amber);
   }
 
-  /* ── CHAT MODAL ── */
-  #chat-overlay {
+  /* ── ABH CHAT PANEL (Frank-style slide-in) ── */
+  #abh-chat-scrim {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.72);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
+    background: rgba(0,0,0,0.5);
+    z-index: 998;
+    cursor: pointer;
   }
-  #chat-overlay.open { display: flex; }
-  #chat-modal {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    width: min(540px, 96vw);
-    height: min(620px, 90vh);
+  #abh-chat-scrim.open { display: block; }
+
+  #abh-chat-panel {
+    position: fixed;
+    right: 0; top: 0; bottom: 0;
+    width: 420px;
+    background: linear-gradient(180deg, #111 0%, #141414 100%);
+    border-left: 1px solid rgba(200,135,42,0.2);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+    z-index: 999;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: -8px 0 40px rgba(0,0,0,0.5);
   }
-  #chat-header {
+  #abh-chat-panel.open { transform: translateX(0); }
+
+  #abh-chat-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(200,135,42,0.15);
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 14px 18px;
-    border-bottom: 1px solid var(--border);
-    background: var(--panel2);
+    gap: 12px;
+    background: rgba(200,135,42,0.04);
     flex-shrink: 0;
   }
-  #chat-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--amber);
-    letter-spacing: 0.04em;
+  #abh-chat-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid rgba(200,135,42,0.35);
+    flex-shrink: 0;
+    background: var(--panel2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--amber);
   }
-  #chat-close {
-    background: none;
-    border: none;
+  #abh-chat-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  #abh-chat-info { flex: 1; min-width: 0; }
+  #abh-chat-name { font-size: 13px; font-weight: 700; color: var(--amber); letter-spacing: 0.04em; }
+  #abh-chat-subname { font-size: 10px; color: var(--cream-dim); letter-spacing: 0.06em; }
+  #abh-chat-close {
+    background: none; border: none;
+    color: var(--cream-dim); font-size: 18px;
+    cursor: pointer; padding: 4px 8px; border-radius: 4px; line-height: 1;
+  }
+  #abh-chat-close:hover { color: var(--cream); background: var(--panel); }
+
+  #abh-chat-switcher {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .abh-chat-tab {
+    flex: 1;
+    padding: 9px 10px;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.09em; text-transform: uppercase;
     color: var(--cream-dim);
-    font-size: 18px;
+    background: none; border: none;
     cursor: pointer;
-    line-height: 1;
-    padding: 2px 6px;
-    border-radius: 4px;
+    transition: all 0.15s;
+    border-bottom: 2px solid transparent;
+    font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
   }
-  #chat-close:hover { color: var(--cream); background: var(--panel); }
-  #chat-history {
+  .abh-chat-tab:hover { color: var(--cream); }
+  .abh-chat-tab.active { color: var(--amber); border-bottom-color: var(--amber); background: var(--amber-dim); }
+  .abh-chat-tab-avatar {
+    width: 18px; height: 18px; border-radius: 50%;
+    object-fit: cover; border: 1px solid rgba(200,135,42,0.3);
+  }
+
+  #abh-chat-messages {
     flex: 1;
     overflow-y: auto;
     padding: 16px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 14px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
   }
-  .chat-bubble {
-    max-width: 82%;
-    padding: 9px 13px;
-    border-radius: 10px;
-    font-size: 12px;
-    line-height: 1.55;
-    white-space: pre-wrap;
-    word-break: break-word;
+  .abh-msg-row {
+    display: flex; gap: 8px;
+    animation: abhMsgIn 0.25s ease;
   }
-  .chat-bubble.user {
+  @keyframes abhMsgIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+  .abh-msg-row.user { flex-direction: row-reverse; }
+  .abh-msg-mini-avatar {
+    width: 26px; height: 26px; border-radius: 50%;
+    overflow: hidden; flex-shrink: 0;
+    background: var(--panel2); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; color: var(--cream-dim);
     align-self: flex-end;
+  }
+  .abh-msg-mini-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .abh-msg-body { display: flex; flex-direction: column; gap: 3px; max-width: 80%; }
+  .abh-msg-row.user .abh-msg-body { align-items: flex-end; }
+  .abh-msg-bubble {
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 12px; line-height: 1.65;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .abh-msg-row.user .abh-msg-bubble {
     background: var(--amber-dim);
-    border: 1px solid rgba(200,135,42,0.3);
+    border: 1px solid rgba(200,135,42,0.35);
     color: var(--cream);
+    border-bottom-right-radius: 4px;
   }
-  .chat-bubble.agent {
+  .abh-msg-row.agent .abh-msg-bubble {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    color: var(--cream);
+    border-bottom-left-radius: 4px;
+  }
+  .abh-msg-ts {
+    font-size: 9px; color: var(--cream-dim);
+    letter-spacing: 0.03em; padding: 0 4px; opacity: 0.55;
+  }
+
+  #abh-typing-row {
+    display: none;
+    align-items: center; gap: 8px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px; border-bottom-left-radius: 4px;
     align-self: flex-start;
-    background: var(--panel2);
-    border: 1px solid var(--border);
-    color: var(--cream);
   }
-  .chat-bubble .bubble-label {
-    font-size: 9px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-    color: var(--cream-dim);
+  #abh-typing-row.visible { display: flex; }
+  .abh-typing-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--amber);
+    animation: abhDotBounce 1.2s ease-in-out infinite;
   }
-  .chat-bubble.user .bubble-label { color: var(--amber); }
-  #chat-input-row {
-    display: flex;
-    gap: 8px;
-    padding: 12px 16px;
+  .abh-typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .abh-typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes abhDotBounce {
+    0%,60%,100% { transform:translateY(0); opacity:0.35; }
+    30% { transform:translateY(-5px); opacity:1; }
+  }
+
+  #abh-chat-input-bar {
+    padding: 12px 14px;
     border-top: 1px solid var(--border);
-    background: var(--panel2);
+    background: rgba(0,0,0,0.2);
+    display: flex; gap: 8px;
     flex-shrink: 0;
   }
-  #chat-input {
+  #abh-chat-input {
     flex: 1;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--cream);
-    font-family: inherit;
-    font-size: 12px;
-    padding: 8px 12px;
-    resize: none;
-    outline: none;
-    min-height: 36px;
-    max-height: 100px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px;
+    color: var(--cream); font-family: inherit; font-size: 12px;
+    padding: 10px 14px;
+    resize: none; outline: none;
+    min-height: 38px; max-height: 100px;
+    transition: border-color 0.2s;
   }
-  #chat-input:focus { border-color: var(--amber); }
-  #chat-send {
-    background: var(--amber);
-    color: #0d0d0d;
-    border: none;
-    border-radius: 8px;
-    padding: 8px 16px;
-    font-family: inherit;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    align-self: flex-end;
-    transition: background 0.15s;
+  #abh-chat-input:focus { border-color: rgba(200,135,42,0.5); box-shadow: 0 0 0 3px rgba(200,135,42,0.08); }
+  #abh-chat-send {
+    background: var(--amber); color: #0d0d0d;
+    border: none; border-radius: 10px;
+    padding: 10px 16px; font-family: inherit;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    cursor: pointer; align-self: flex-end; transition: all 0.15s;
   }
-  #chat-send:hover { background: var(--amber-light); }
-  #chat-send:disabled { opacity: 0.5; cursor: not-allowed; }
-  #chat-empty {
-    text-align: center;
-    color: var(--cream-dim);
-    font-size: 11px;
-    margin: auto;
-    padding: 20px;
+  #abh-chat-send:hover { background: var(--amber-light); transform: scale(1.04); }
+  #abh-chat-send:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  #abh-chat-empty {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    flex: 1; color: var(--cream-dim); font-size: 11px;
+    text-align: center; gap: 8px; padding: 24px; opacity: 0.7;
   }
+
+  @media (max-width: 600px) { #abh-chat-panel { width: 100vw; } }
 
   @media (max-width: 700px) {
     .brew-masters-grid { grid-template-columns: 1fr; }
@@ -1708,9 +1766,10 @@ async function loadSeniorStaff() {
         '</div>' +
         '<div class="bm-footer">' +
           '<span class="bm-last-run">' + (s.last_run ? new Date(s.last_run).toLocaleString() : 'Never run') + '</span>' +
-          '<button class="bm-chat-btn" onclick="openChat(\'' + s.id + '\', \'' + s.name.replace(/'/g, '') + '\')">&#128172; Chat</button>' +
+          '<button class="bm-chat-btn" onclick="openChat(\'' + s.id + '\', \'' + s.name.replace(/'/g, '') + '\', \'' + (s.avatar_url || '') + '\')">&#128172; Chat</button>' +
         '</div>' +
       '</div>';
+    _chatAgents[s.id] = { name: s.name, avatar_url: s.avatar_url || '' };
   });
 }
 
@@ -2338,133 +2397,237 @@ function agentLabel(id) {
 
 // ── BREW MASTERS CHAT ──────────────────────────────────────────────────────
 
-var _chatAgentId   = '';
-var _chatAgentName = '';
+var _chatAgentId    = '';
+var _chatAgentName  = '';
+var _chatAvatarUrl  = '';
+var _chatAgents     = {};   // { agentId: { name, avatar_url } }
 
-function _chatKey(agentId) {
-  return 'abh_chat_' + agentId;
-}
+function _chatKey(agentId) { return 'abh_chat_' + agentId; }
 
 function _loadHistory(agentId) {
-  try {
-    return JSON.parse(localStorage.getItem(_chatKey(agentId)) || '[]');
-  } catch(e) {
-    return [];
-  }
+  try { return JSON.parse(localStorage.getItem(_chatKey(agentId)) || '[]'); }
+  catch(e) { return []; }
 }
 
 function _saveHistory(agentId, history) {
-  try {
-    localStorage.setItem(_chatKey(agentId), JSON.stringify(history.slice(-60)));
-  } catch(e) {}
+  try { localStorage.setItem(_chatKey(agentId), JSON.stringify(history.slice(-60))); }
+  catch(e) {}
 }
 
-function _appendBubble(role, content, agentName) {
-  var hist = document.getElementById('chat-history');
-  var empty = document.getElementById('chat-empty');
-  if (empty) empty.style.display = 'none';
-  var label = role === 'user' ? 'You' : agentName;
-  var div = document.createElement('div');
-  div.className = 'chat-bubble ' + role;
-  div.innerHTML = '<div class="bubble-label">' + label + '</div>' +
-    content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  hist.appendChild(div);
-  hist.scrollTop = hist.scrollHeight;
+function _fmtTime(d) {
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-function openChat(agentId, agentName) {
-  _chatAgentId   = agentId;
-  _chatAgentName = agentName;
-  document.getElementById('chat-title').textContent = '&#128172; Chat with ' + agentName;
-  document.getElementById('chat-title').innerHTML = '&#128172; Chat with ' + agentName;
+function _appendMsg(role, content, agentName, avatarUrl) {
+  var messages = document.getElementById('abh-chat-messages');
+  var typingRow = document.getElementById('abh-typing-row');
 
-  var hist = document.getElementById('chat-history');
-  hist.innerHTML = '<div id="chat-empty" style="text-align:center;color:var(--cream-dim);font-size:11px;margin:auto;padding:20px">Start a conversation with ' + agentName + '</div>';
+  // Remove empty state
+  var empty = document.getElementById('abh-chat-empty');
+  if (empty) { empty.style.display = 'none'; }
 
-  var history = _loadHistory(agentId);
-  if (history.length > 0) {
-    document.getElementById('chat-empty').style.display = 'none';
-    history.forEach(function(turn) {
-      _appendBubble(turn.role, turn.content, agentName);
-    });
+  var isUser = role === 'user';
+  var ts     = _fmtTime(new Date());
+  var row    = document.createElement('div');
+  row.className = 'abh-msg-row ' + (isUser ? 'user' : 'agent');
+
+  // Mini avatar
+  var avatarDiv = document.createElement('div');
+  avatarDiv.className = 'abh-msg-mini-avatar';
+  if (!isUser && avatarUrl) {
+    avatarDiv.innerHTML = '<img src="' + avatarUrl + '" alt="" onerror="this.style.display=\'none\'">';
+  } else if (isUser) {
+    avatarDiv.textContent = 'You';
+  } else {
+    avatarDiv.textContent = (agentName || '?').charAt(0);
   }
 
-  document.getElementById('chat-overlay').classList.add('open');
-  setTimeout(function() { document.getElementById('chat-input').focus(); }, 80);
+  var body = document.createElement('div');
+  body.className = 'abh-msg-body';
+
+  var bubble = document.createElement('div');
+  bubble.className = 'abh-msg-bubble';
+  bubble.textContent = content;
+
+  var tsEl = document.createElement('div');
+  tsEl.className = 'abh-msg-ts';
+  tsEl.textContent = ts;
+
+  body.appendChild(bubble);
+  body.appendChild(tsEl);
+  row.appendChild(avatarDiv);
+  row.appendChild(body);
+
+  messages.insertBefore(row, typingRow);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+function _showTyping() {
+  document.getElementById('abh-typing-row').classList.add('visible');
+  var m = document.getElementById('abh-chat-messages');
+  m.scrollTop = m.scrollHeight;
+}
+
+function _hideTyping() {
+  document.getElementById('abh-typing-row').classList.remove('visible');
+}
+
+function _updatePanelHeader(agentId, agentName, avatarUrl) {
+  document.getElementById('abh-chat-name').textContent    = agentName;
+  document.getElementById('abh-chat-subname').textContent = agentId;
+  var av = document.getElementById('abh-chat-avatar');
+  if (avatarUrl) {
+    av.innerHTML = '<img src="' + avatarUrl + '" alt="' + agentName + '" onerror="this.innerHTML=\'' + agentName.charAt(0) + '\'">';
+  } else {
+    av.textContent = agentName.charAt(0);
+  }
+}
+
+function _updateTabs() {
+  document.querySelectorAll('.abh-chat-tab').forEach(function(tab) {
+    var isActive = tab.dataset.agentId === _chatAgentId;
+    tab.classList.toggle('active', isActive);
+  });
+}
+
+function _loadMessagesIntoPanel(agentId, agentName, avatarUrl) {
+  var messages = document.getElementById('abh-chat-messages');
+  var typingRow = document.getElementById('abh-typing-row');
+  // Clear existing messages, keep typing row
+  Array.from(messages.children).forEach(function(c) {
+    if (c !== typingRow) c.remove();
+  });
+  _hideTyping();
+
+  var history = _loadHistory(agentId);
+  if (history.length === 0) {
+    var empty = document.createElement('div');
+    empty.id = 'abh-chat-empty';
+    empty.innerHTML = '&#9749; Start a conversation with ' + agentName;
+    messages.insertBefore(empty, typingRow);
+  } else {
+    history.forEach(function(turn) {
+      _appendMsg(turn.role === 'assistant' ? 'agent' : 'user', turn.content, agentName, avatarUrl);
+    });
+  }
+}
+
+function openChat(agentId, agentName, avatarUrl) {
+  _chatAgentId   = agentId;
+  _chatAgentName = agentName;
+  _chatAvatarUrl = avatarUrl || '';
+
+  _chatAgents[agentId] = { name: agentName, avatar_url: avatarUrl || '' };
+
+  _updatePanelHeader(agentId, agentName, avatarUrl || '');
+  _updateTabs();
+  _loadMessagesIntoPanel(agentId, agentName, avatarUrl || '');
+
+  document.getElementById('abh-chat-scrim').classList.add('open');
+  document.getElementById('abh-chat-panel').classList.add('open');
+  setTimeout(function() { document.getElementById('abh-chat-input').focus(); }, 80);
+}
+
+function switchChatAgent(agentId) {
+  var info = _chatAgents[agentId];
+  if (!info) return;
+  _chatAgentId   = agentId;
+  _chatAgentName = info.name;
+  _chatAvatarUrl = info.avatar_url || '';
+  _updatePanelHeader(agentId, info.name, info.avatar_url || '');
+  _updateTabs();
+  _loadMessagesIntoPanel(agentId, info.name, info.avatar_url || '');
+  document.getElementById('abh-chat-input').focus();
 }
 
 function closeChat() {
-  document.getElementById('chat-overlay').classList.remove('open');
-  document.getElementById('chat-input').value = '';
+  document.getElementById('abh-chat-panel').classList.remove('open');
+  document.getElementById('abh-chat-scrim').classList.remove('open');
 }
 
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeChat();
-});
-
 async function sendChatMessage() {
-  var input = document.getElementById('chat-input');
-  var msg   = input.value.trim();
+  var input   = document.getElementById('abh-chat-input');
+  var sendBtn = document.getElementById('abh-chat-send');
+  var msg     = input.value.trim();
   if (!msg || !_chatAgentId) return;
 
-  var sendBtn = document.getElementById('chat-send');
   sendBtn.disabled = true;
-  input.value = '';
+  input.value      = '';
 
-  _appendBubble('user', msg, _chatAgentName);
+  _appendMsg('user', msg, 'You', '');
 
-  var history = _loadHistory(_chatAgentId);
+  var history    = _loadHistory(_chatAgentId);
   var apiHistory = history.slice(-20);
 
+  _showTyping();
+
   try {
-    var res = await fetch(API + '/api/agents/' + _chatAgentId + '/chat', {
-      method: 'POST',
+    var res  = await fetch(API + '/api/agents/' + _chatAgentId + '/chat', {
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: msg, history: apiHistory })
+      body:    JSON.stringify({ message: msg, history: apiHistory })
     });
     var data = await res.json();
     if (data.error) throw new Error(data.error);
 
-    _appendBubble('agent', data.response, _chatAgentName);
+    _hideTyping();
+    _appendMsg('agent', data.response, _chatAgentName, _chatAvatarUrl);
 
     history.push({ role: 'user',      content: msg });
     history.push({ role: 'assistant', content: data.response });
     _saveHistory(_chatAgentId, history);
   } catch(err) {
-    _appendBubble('agent', 'Error: ' + err.message, _chatAgentName);
+    _hideTyping();
+    _appendMsg('agent', 'Error: ' + err.message, _chatAgentName, _chatAvatarUrl);
   }
 
   sendBtn.disabled = false;
-  document.getElementById('chat-input').focus();
+  document.getElementById('abh-chat-input').focus();
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  var input = document.getElementById('chat-input');
+  var input = document.getElementById('abh-chat-input');
   if (input) {
     input.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        sendChatMessage();
-      }
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChatMessage(); }
     });
   }
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeChat();
+  });
 });
 </script>
 
-<!-- ── CHAT MODAL ── -->
-<div id="chat-overlay" onclick="if(event.target===this)closeChat()">
-  <div id="chat-modal">
-    <div id="chat-header">
-      <span id="chat-title">Chat</span>
-      <button id="chat-close" onclick="closeChat()">&#10005;</button>
+<!-- ── ABH CHAT PANEL ── -->
+<div id="abh-chat-scrim" onclick="closeChat()"></div>
+<div id="abh-chat-panel">
+  <div id="abh-chat-header">
+    <div id="abh-chat-avatar">&#9749;</div>
+    <div id="abh-chat-info">
+      <div id="abh-chat-name">Agent</div>
+      <div id="abh-chat-subname"></div>
     </div>
-    <div id="chat-history">
-      <div id="chat-empty">Start a conversation</div>
+    <button id="abh-chat-close" onclick="closeChat()">&#10005;</button>
+  </div>
+  <div id="abh-chat-switcher">
+    <button class="abh-chat-tab" data-agent-id="abh_cafe_manager" onclick="switchChatAgent('abh_cafe_manager')">
+      &#9749; Maya
+    </button>
+    <button class="abh-chat-tab" data-agent-id="abh_engineer" onclick="switchChatAgent('abh_engineer')">
+      &#9881; The Engineer
+    </button>
+  </div>
+  <div id="abh-chat-messages">
+    <div id="abh-chat-empty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;color:var(--cream-dim);font-size:11px;text-align:center;gap:8px;padding:24px;opacity:0.7">&#9749; Select an agent above to start chatting</div>
+    <div id="abh-typing-row">
+      <div class="abh-typing-dot"></div>
+      <div class="abh-typing-dot"></div>
+      <div class="abh-typing-dot"></div>
     </div>
-    <div id="chat-input-row">
-      <textarea id="chat-input" placeholder="Message..." rows="1"></textarea>
-      <button id="chat-send" onclick="sendChatMessage()">Send</button>
-    </div>
+  </div>
+  <div id="abh-chat-input-bar">
+    <textarea id="abh-chat-input" placeholder="Message..." rows="1"></textarea>
+    <button id="abh-chat-send" onclick="sendChatMessage()">Send</button>
   </div>
 </div>
 
