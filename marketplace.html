@@ -468,6 +468,8 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
 @keyframes fadeup { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 .abh-toast { position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1a1612; border: 1px solid var(--amber); color: var(--cream); font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.08em; padding: 14px 24px; z-index: 9999; opacity: 0; transition: opacity 0.35s ease, transform 0.35s ease; pointer-events: none; white-space: nowrap; max-width: 90vw; text-align: center; }
 .abh-toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+.badge-house { background: rgba(200,131,42,0.15); color: #c8832a; border: 1px solid rgba(200,131,42,0.4); }
+.not-for-hire { font-size: 11px; letter-spacing: 0.12em; color: var(--amber); opacity: 0.7; text-align: center; padding: 10px 0; }
 </style>
 </head>
 <body>
@@ -1098,15 +1100,38 @@ function usdLine(hbar) {
   return '<div class="usd-row">~ $' + (hbar * hbarPrice).toFixed(2) + ' USD</div>';
 }
 
-function cardHtml(agent, i, isLocked) {
-  const c  = cfg(agent.category);
-  const t  = tier(agent.price_hbar);
-  const h  = agent.price_hbar || 0;
-  const av = agent.avatar_url || AVATARS[agent.name];
-  const avHtml = av ? '<img src="' + av + '" alt="' + agent.name + '" />' : (agent.category || '?');
-  const tags = (agent.tags || []).slice(0, 4);
+function cardHtml(agent, idx, isLocked) {
+  const c       = cfg(agent.category);
+  const t       = tier(agent.price_hbar);
+  const h       = agent.price_hbar || 0;
+  const av      = agent.avatar_url || AVATARS[agent.name];
+  const avHtml  = av ? '<img src="' + av + '" alt="' + agent.name + '" />' : (agent.category || '?');
+  const tags    = (agent.tags || []).slice(0, 4);
+  const isHouse = agent.founding_agent === true;
 
-  return '<div class="agent-card" style="--card-accent:' + c.color + '; animation-delay:' + (i * 0.07) + 's">' +
+  // Badge: HOUSE AGENT for founding agents, otherwise tier label
+  var badgeHtml = isHouse
+    ? '<div class="tier-badge badge-house" style="--tier-color:#c8832a">House Agent</div>'
+    : '<div class="tier-badge" style="--tier-color:' + t.color + '">' + t.label + '</div>';
+
+  // Footer price + pay section
+  var priceHtml;
+  var payHtml;
+  if (isHouse) {
+    priceHtml = '';
+    payHtml   = '<div class="not-for-hire">House Agent &mdash; Not for hire</div>';
+  } else {
+    priceHtml = h === 0
+      ? '<div class="hbar-row"><strong>Free</strong></div>'
+      : '<div class="hbar-row"><strong>' + h + '</strong><span>HBAR</span></div>' + usdLine(h);
+    payHtml = h === 0
+      ? '<span class="hire-btn disabled" style="opacity:0.4">Free</span>'
+      : isLocked
+        ? '<span class="hire-btn disabled" style="opacity:0.3">Members only</span>'
+        : '<button class="pay-now-btn" onclick="openPayMenu(event,' + idx + ')">Pay Now</button>';
+  }
+
+  return '<div class="agent-card" style="--card-accent:' + c.color + '; animation-delay:' + (idx * 0.07) + 's">' +
     '<div class="agent-avatar-zone">' +
       '<div class="agent-avatar">' + avHtml + '</div>' +
       '<div class="agent-avatar-info">' +
@@ -1116,28 +1141,18 @@ function cardHtml(agent, i, isLocked) {
           '<span class="live-dot"></span>' +
         '</div>' +
       '</div>' +
-      '<div class="tier-badge" style="--tier-color:' + t.color + '">' + t.label + '</div>' +
+      badgeHtml +
     '</div>' +
     '<div class="agent-body">' +
       '<div>' +
-        '<p class="agent-desc" id="d' + i + '">' + (agent.description || 'No description.') + '</p>' +
-        (!isLocked ? '<button class="expand-btn" onclick="toggleDesc(' + i + ',this)">Read more &#x2193;</button>' : '') +
+        '<p class="agent-desc" id="d' + idx + '">' + (agent.description || 'No description.') + '</p>' +
+        (!isLocked ? '<button class="expand-btn" onclick="toggleDesc(' + idx + ',this)">Read more &#x2193;</button>' : '') +
       '</div>' +
-      (tags.length ? '<div class="agent-tags">' + tags.map(function(t){ return '<span class="agent-tag">' + t + '</span>'; }).join('') + '</div>' : '') +
+      (tags.length ? '<div class="agent-tags">' + tags.map(function(tg){ return '<span class="agent-tag">' + tg + '</span>'; }).join('') + '</div>' : '') +
     '</div>' +
     '<div class="agent-footer">' +
-      '<div class="agent-price">' +
-        (h === 0
-          ? '<div class="hbar-row"><strong>Free</strong></div>'
-          : '<div class="hbar-row"><strong>' + h + '</strong><span>HBAR</span></div>' + usdLine(h)) +
-      '</div>' +
-      '<div class="pay-btns">' +
-        (h === 0
-          ? '<span class="hire-btn disabled" style="opacity:0.4">Free</span>'
-          : isLocked
-            ? '<span class="hire-btn disabled" style="opacity:0.3">Members only</span>'
-            : '<button class="pay-now-btn" onclick="openPayMenu(event,' + i + ')">Pay Now</button>') +
-      '</div>' +
+      '<div class="agent-price">' + priceHtml + '</div>' +
+      '<div class="pay-btns">' + payHtml + '</div>' +
     '</div>' +
     '</div>';
 }
@@ -1163,12 +1178,13 @@ function openPayMenu(event, agentIdx) {
   menu.style.display = 'block';
   overlay.classList.add('open');
 
-  // Position below the button, align right edge
-  var top  = rect.bottom + window.scrollY + 6;
-  var left = rect.left + window.scrollX;
+  // Position below the button, align left edge (menu is position:fixed — viewport coords only)
+  var top  = rect.bottom + 6;
+  var left = rect.left;
   // Clamp so menu doesn't go off screen right
   var menuW = 214;
   if (left + menuW > window.innerWidth - 8) left = window.innerWidth - menuW - 8;
+  if (left < 8) left = 8;
   menu.style.top  = top + 'px';
   menu.style.left = left + 'px';
 }
