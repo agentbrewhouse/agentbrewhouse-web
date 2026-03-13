@@ -501,10 +501,147 @@
     border: 1px solid rgba(200,131,42,0.4);
     border-radius: 6px;
     padding: 6px 14px;
-    cursor: not-allowed;
-    opacity: 0.5;
+    cursor: pointer;
     font-family: inherit;
     font-weight: 600;
+    transition: all 0.18s;
+  }
+  .bm-chat-btn:hover {
+    background: var(--amber-dim);
+    border-color: var(--amber);
+  }
+
+  /* ── CHAT MODAL ── */
+  #chat-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.72);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  #chat-overlay.open { display: flex; }
+  #chat-modal {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: min(540px, 96vw);
+    height: min(620px, 90vh);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+  }
+  #chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel2);
+    flex-shrink: 0;
+  }
+  #chat-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--amber);
+    letter-spacing: 0.04em;
+  }
+  #chat-close {
+    background: none;
+    border: none;
+    color: var(--cream-dim);
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  #chat-close:hover { color: var(--cream); background: var(--panel); }
+  #chat-history {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .chat-bubble {
+    max-width: 82%;
+    padding: 9px 13px;
+    border-radius: 10px;
+    font-size: 12px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .chat-bubble.user {
+    align-self: flex-end;
+    background: var(--amber-dim);
+    border: 1px solid rgba(200,135,42,0.3);
+    color: var(--cream);
+  }
+  .chat-bubble.agent {
+    align-self: flex-start;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    color: var(--cream);
+  }
+  .chat-bubble .bubble-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    color: var(--cream-dim);
+  }
+  .chat-bubble.user .bubble-label { color: var(--amber); }
+  #chat-input-row {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--panel2);
+    flex-shrink: 0;
+  }
+  #chat-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--cream);
+    font-family: inherit;
+    font-size: 12px;
+    padding: 8px 12px;
+    resize: none;
+    outline: none;
+    min-height: 36px;
+    max-height: 100px;
+  }
+  #chat-input:focus { border-color: var(--amber); }
+  #chat-send {
+    background: var(--amber);
+    color: #0d0d0d;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    align-self: flex-end;
+    transition: background 0.15s;
+  }
+  #chat-send:hover { background: var(--amber-light); }
+  #chat-send:disabled { opacity: 0.5; cursor: not-allowed; }
+  #chat-empty {
+    text-align: center;
+    color: var(--cream-dim);
+    font-size: 11px;
+    margin: auto;
+    padding: 20px;
   }
 
   @media (max-width: 700px) {
@@ -1571,7 +1708,7 @@ async function loadSeniorStaff() {
         '</div>' +
         '<div class="bm-footer">' +
           '<span class="bm-last-run">' + (s.last_run ? new Date(s.last_run).toLocaleString() : 'Never run') + '</span>' +
-          '<button class="bm-chat-btn" title="Coming soon">&#128172; Chat</button>' +
+          '<button class="bm-chat-btn" onclick="openChat(\'' + s.id + '\', \'' + s.name.replace(/'/g, '') + '\')">&#128172; Chat</button>' +
         '</div>' +
       '</div>';
   });
@@ -2198,6 +2335,138 @@ function agentLabel(id) {
   };
   return map[id] || id;
 }
+
+// ── BREW MASTERS CHAT ──────────────────────────────────────────────────────
+
+var _chatAgentId   = '';
+var _chatAgentName = '';
+
+function _chatKey(agentId) {
+  return 'abh_chat_' + agentId;
+}
+
+function _loadHistory(agentId) {
+  try {
+    return JSON.parse(localStorage.getItem(_chatKey(agentId)) || '[]');
+  } catch(e) {
+    return [];
+  }
+}
+
+function _saveHistory(agentId, history) {
+  try {
+    localStorage.setItem(_chatKey(agentId), JSON.stringify(history.slice(-60)));
+  } catch(e) {}
+}
+
+function _appendBubble(role, content, agentName) {
+  var hist = document.getElementById('chat-history');
+  var empty = document.getElementById('chat-empty');
+  if (empty) empty.style.display = 'none';
+  var label = role === 'user' ? 'You' : agentName;
+  var div = document.createElement('div');
+  div.className = 'chat-bubble ' + role;
+  div.innerHTML = '<div class="bubble-label">' + label + '</div>' +
+    content.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  hist.appendChild(div);
+  hist.scrollTop = hist.scrollHeight;
+}
+
+function openChat(agentId, agentName) {
+  _chatAgentId   = agentId;
+  _chatAgentName = agentName;
+  document.getElementById('chat-title').textContent = '&#128172; Chat with ' + agentName;
+  document.getElementById('chat-title').innerHTML = '&#128172; Chat with ' + agentName;
+
+  var hist = document.getElementById('chat-history');
+  hist.innerHTML = '<div id="chat-empty" style="text-align:center;color:var(--cream-dim);font-size:11px;margin:auto;padding:20px">Start a conversation with ' + agentName + '</div>';
+
+  var history = _loadHistory(agentId);
+  if (history.length > 0) {
+    document.getElementById('chat-empty').style.display = 'none';
+    history.forEach(function(turn) {
+      _appendBubble(turn.role, turn.content, agentName);
+    });
+  }
+
+  document.getElementById('chat-overlay').classList.add('open');
+  setTimeout(function() { document.getElementById('chat-input').focus(); }, 80);
+}
+
+function closeChat() {
+  document.getElementById('chat-overlay').classList.remove('open');
+  document.getElementById('chat-input').value = '';
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeChat();
+});
+
+async function sendChatMessage() {
+  var input = document.getElementById('chat-input');
+  var msg   = input.value.trim();
+  if (!msg || !_chatAgentId) return;
+
+  var sendBtn = document.getElementById('chat-send');
+  sendBtn.disabled = true;
+  input.value = '';
+
+  _appendBubble('user', msg, _chatAgentName);
+
+  var history = _loadHistory(_chatAgentId);
+  var apiHistory = history.slice(-20);
+
+  try {
+    var res = await fetch(API + '/api/agents/' + _chatAgentId + '/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: msg, history: apiHistory })
+    });
+    var data = await res.json();
+    if (data.error) throw new Error(data.error);
+
+    _appendBubble('agent', data.response, _chatAgentName);
+
+    history.push({ role: 'user',      content: msg });
+    history.push({ role: 'assistant', content: data.response });
+    _saveHistory(_chatAgentId, history);
+  } catch(err) {
+    _appendBubble('agent', 'Error: ' + err.message, _chatAgentName);
+  }
+
+  sendBtn.disabled = false;
+  document.getElementById('chat-input').focus();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var input = document.getElementById('chat-input');
+  if (input) {
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChatMessage();
+      }
+    });
+  }
+});
 </script>
+
+<!-- ── CHAT MODAL ── -->
+<div id="chat-overlay" onclick="if(event.target===this)closeChat()">
+  <div id="chat-modal">
+    <div id="chat-header">
+      <span id="chat-title">Chat</span>
+      <button id="chat-close" onclick="closeChat()">&#10005;</button>
+    </div>
+    <div id="chat-history">
+      <div id="chat-empty">Start a conversation</div>
+    </div>
+    <div id="chat-input-row">
+      <textarea id="chat-input" placeholder="Message..." rows="1"></textarea>
+      <button id="chat-send" onclick="sendChatMessage()">Send</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
