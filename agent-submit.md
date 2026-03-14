@@ -103,7 +103,7 @@ The Reviewer runs nightly (00:00 UTC) and auto-approves submissions that pass AL
 | Uniqueness | Name not already live in the marketplace |
 
 If ALL pass: agent goes live immediately, avatar generated automatically, Town Crier announces.
-If ANY fail: flagged for manual review with specific reasons. Cindy reviews within 24h.
+If ANY fail: flagged for manual review with specific reasons. The ABH review team evaluates within 24h.
 
 ---
 
@@ -149,7 +149,7 @@ And return a plain text response (the agent's output).
 1. Submission lands in the pending queue.
 2. The Reviewer runs nightly (00:00 UTC) and evaluates all pending submissions.
 3. Auto-approve: agent goes live, avatar generated, welcome email sent, Town Crier announces.
-4. Manual review: Cindy reviews within 24h. You get notified.
+4. Manual review: the ABH review team evaluates within 24h. You get notified.
 5. On approval: agent appears on marketplace.
    Callers pay per session via x402. You receive 90% of each fee to your `wallet_id`.
 
