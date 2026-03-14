@@ -703,6 +703,32 @@
   .fin-tile .value { font-size: 18px; font-weight: 700; color: var(--amber); }
   .fin-tile .sub { font-size: 10px; color: var(--cream-dim); margin-top: 2px; }
 
+  /* ── PROFIT DASHBOARD ── */
+  .profit-tiles { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .profit-tile { background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 22px 20px; text-align: center; }
+  .profit-tile .pt-label { font-size: 10px; color: var(--cream-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+  .profit-tile .pt-value { font-size: 34px; font-weight: 700; color: var(--amber); font-family: monospace; }
+  .profit-tile .pt-sub { font-size: 11px; color: var(--cream-dim); margin-top: 4px; }
+  .net-profit-banner { text-align: center; font-size: 38px; font-weight: 700; font-family: monospace; padding: 22px; background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 20px; }
+  .net-profit-banner .net-label { font-size: 11px; color: var(--cream-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 400; font-family: 'Space Grotesk', sans-serif; }
+
+  /* ── COST / REVENUE BREAKDOWN ── */
+  .breakdown-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .breakdown-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .breakdown-table td { padding: 5px 8px; }
+  .breakdown-table tbody tr { border-bottom: 1px solid var(--border); }
+  .breakdown-table tbody tr:last-child { border-top: 2px solid var(--border); font-weight: 700; }
+
+  /* ── COST CONFIG FORM ── */
+  .cost-config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 24px; }
+  .cost-config-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .cost-config-row label { font-size: 12px; color: var(--cream-dim); }
+  .cost-config-row .cost-type { font-size: 10px; color: var(--cream-dim); opacity: 0.6; margin-left: 4px; }
+  .cost-config-row input[type=number] { width: 80px; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; color: var(--cream); padding: 3px 6px; font-size: 12px; text-align: right; }
+  .cost-config-row input[type=number]:focus { outline: 1px solid var(--amber); border-color: var(--amber); }
+  .cost-save-btn { background: var(--amber); color: #000; border: none; border-radius: 6px; padding: 7px 18px; font-size: 12px; font-weight: 700; cursor: pointer; margin-top: 12px; }
+  .cost-save-btn:hover { opacity: 0.85; }
+
   /* ── SUBMISSIONS ── */
   .submission-item { display: flex; align-items: center; gap: 10px; padding: 8px; background: var(--panel2); border-radius: 6px; margin-bottom: 6px; }
   .sub-name { font-size: 12px; font-weight: 600; color: var(--cream); flex: 1; }
@@ -1303,6 +1329,92 @@
       <!-- PAGE: COSTS & REVENUE -->
       <div id="page-costs" class="page">
 
+        <!-- PROFIT DASHBOARD -->
+        <div class="section-header">Profit Dashboard</div>
+        <div class="profit-tiles">
+          <div class="profit-tile">
+            <div class="pt-label">Revenue (7d)</div>
+            <div class="pt-value green" id="profit-tile-revenue">--</div>
+            <div class="pt-sub">HBAR + USDC sessions</div>
+          </div>
+          <div class="profit-tile">
+            <div class="pt-label">Costs (7d)</div>
+            <div class="pt-value red" id="profit-tile-costs">--</div>
+            <div class="pt-sub">fixed + variable, pro-rated</div>
+          </div>
+          <div class="profit-tile">
+            <div class="pt-label">Net Profit / Loss (7d)</div>
+            <div class="pt-value" id="profit-tile-net" style="color:var(--cream);">--</div>
+            <div class="pt-sub">revenue minus costs</div>
+          </div>
+        </div>
+
+        <!-- COST + REVENUE BREAKDOWN -->
+        <div class="breakdown-two-col">
+          <div class="panel">
+            <div class="panel-title">Cost Breakdown <span style="font-size:10px;font-weight:400;color:var(--cream-dim);">(monthly, edit in Settings)</span></div>
+            <table class="breakdown-table">
+              <thead>
+                <tr style="color:var(--cream-dim);font-size:10px;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid var(--border);">
+                  <th style="padding:4px 8px;text-align:left;font-weight:500;">Item</th>
+                  <th style="padding:4px 8px;text-align:right;font-weight:500;">Monthly</th>
+                  <th style="padding:4px 8px;text-align:right;font-weight:500;">Type</th>
+                </tr>
+              </thead>
+              <tbody id="cost-breakdown-tbody">
+                <tr><td colspan="3" class="loading">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="panel">
+            <div class="panel-title">Revenue Breakdown</div>
+            <table class="breakdown-table">
+              <thead>
+                <tr style="color:var(--cream-dim);font-size:10px;text-transform:uppercase;letter-spacing:0.05em;border-bottom:1px solid var(--border);">
+                  <th style="padding:4px 8px;text-align:left;font-weight:500;">Source</th>
+                  <th style="padding:4px 8px;text-align:right;font-weight:500;">Amount</th>
+                  <th style="padding:4px 8px;text-align:right;font-weight:500;">Period</th>
+                </tr>
+              </thead>
+              <tbody id="rev-breakdown-tbody">
+                <tr><td colspan="3" class="loading">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- NET PROFIT BANNER -->
+        <div class="net-profit-banner" style="margin-bottom:20px;">
+          <div class="net-label">Net Profit / Loss (7 days)</div>
+          <div id="net-profit-big" style="color:var(--cream);">--</div>
+        </div>
+
+        <!-- AGENT API COSTS -->
+        <div class="section-header">Agent API Costs</div>
+        <div class="panel" style="margin-bottom:16px;">
+          <div class="panel-title">
+            Per-Agent Cost vs Revenue
+            <span style="font-size:10px;font-weight:400;color:var(--cream-dim);">cost estimates editable in Settings</span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:12px;">
+              <thead>
+                <tr style="border-bottom:1px solid var(--border);color:var(--cream-dim);font-size:10px;text-transform:uppercase;letter-spacing:0.05em;">
+                  <th style="padding:6px 8px;text-align:left;font-weight:500;">Agent</th>
+                  <th style="padding:6px 8px;text-align:right;font-weight:500;">Total Runs</th>
+                  <th style="padding:6px 8px;text-align:right;font-weight:500;">Est. API Cost</th>
+                  <th style="padding:6px 8px;text-align:right;font-weight:500;">Revenue</th>
+                  <th style="padding:6px 8px;text-align:right;font-weight:500;">Net</th>
+                </tr>
+              </thead>
+              <tbody id="agent-cost-tbody">
+                <tr><td colspan="5" class="loading">Loading...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- WALLET & BALANCE -->
         <div class="section-header">Wallet &amp; Balance</div>
         <div class="financial-grid">
           <div class="fin-tile"><div class="label">Wallet Balance</div><div class="value" id="fin-balance">--</div><div class="sub" id="fin-balance-usd">--</div></div>
@@ -1403,6 +1515,72 @@
           </div>
           <div id="pending-queue">
             <div class="loading">Loading submissions...</div>
+          </div>
+        </div>
+
+        <!-- COST CONFIGURATION -->
+        <div class="section-header">Cost Configuration</div>
+        <div class="panel" style="margin-bottom:16px;">
+          <div class="panel-title">Monthly Fixed &amp; Variable Costs <span style="font-size:10px;font-weight:400;color:var(--cream-dim);">stored in browser, used for profit calculations</span></div>
+          <div class="cost-config-grid" id="cost-config-grid">
+
+            <div>
+              <div style="font-size:10px;color:var(--cream-dim);text-transform:uppercase;letter-spacing:0.05em;padding:6px 0 4px;border-bottom:1px solid var(--border);margin-bottom:2px;">Fixed Costs ($/mo)</div>
+              <div class="cost-config-row">
+                <label>Claude Max plan</label>
+                <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--cream-dim);">$</span><input type="number" id="cost-input-claude_max" min="0" step="0.01" value="200"></div>
+              </div>
+              <div class="cost-config-row">
+                <label>Railway hosting</label>
+                <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--cream-dim);">$</span><input type="number" id="cost-input-railway" min="0" step="0.01" value="5"></div>
+              </div>
+              <div class="cost-config-row">
+                <label>Cloudflare</label>
+                <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--cream-dim);">$</span><input type="number" id="cost-input-cloudflare" min="0" step="0.01" value="0"></div>
+              </div>
+              <div class="cost-config-row">
+                <label>Supabase</label>
+                <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--cream-dim);">$</span><input type="number" id="cost-input-supabase" min="0" step="0.01" value="0"></div>
+              </div>
+              <div class="cost-config-row">
+                <label>Domain (agentbrewhouse.io)</label>
+                <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--cream-dim);">$</span><input type="number" id="cost-input-domain" min="0" step="0.01" value="2.50"></div>
+              </div>
+              <div class="cost-config-row">
+                <label>Publer</label>
+                <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--cream-dim);">$</span><input type="number" id="cost-input-publer" min="0" step="0.01" value="19"></div>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-size:10px;color:var(--cream-dim);text-transform:uppercase;letter-spacing:0.05em;padding:6px 0 4px;border-bottom:1px solid var(--border);margin-bottom:2px;">Variable Costs ($/mo, manual entry)</div>
+              <div class="cost-config-row">
+                <label>Anthropic API credits</label>
+                <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--cream-dim);">$</span><input type="number" id="cost-input-anthropic_api" min="0" step="0.01" value="5.46"></div>
+              </div>
+              <div class="cost-config-row">
+                <label>Hedera tx fees</label>
+                <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--cream-dim);">$</span><input type="number" id="cost-input-hedera_fees" min="0" step="0.01" value="0"></div>
+              </div>
+              <div style="font-size:10px;color:var(--cream-dim);text-transform:uppercase;letter-spacing:0.05em;padding:14px 0 4px;border-bottom:1px solid var(--border);margin-bottom:2px;">Agent API Cost Estimates ($/run)</div>
+              <div class="cost-config-row">
+                <label>Light agents <span class="cost-type">(Greeter, Joe Dirt, Cashier)</span></label>
+                <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--cream-dim);">$</span><input type="number" id="cost-input-run_light" min="0" step="0.001" value="0.01"></div>
+              </div>
+              <div class="cost-config-row">
+                <label>Medium agents <span class="cost-type">(Scout, Recruiter, Reviewer, Crier...)</span></label>
+                <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--cream-dim);">$</span><input type="number" id="cost-input-run_medium" min="0" step="0.001" value="0.03"></div>
+              </div>
+              <div class="cost-config-row">
+                <label>Heavy agents <span class="cost-type">(Gossip, Engineer, Maya)</span></label>
+                <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:10px;color:var(--cream-dim);">$</span><input type="number" id="cost-input-run_heavy" min="0" step="0.001" value="0.05"></div>
+              </div>
+            </div>
+
+          </div>
+          <div style="margin-top:14px;display:flex;align-items:center;gap:12px;">
+            <button class="cost-save-btn" onclick="saveCostConfig()">Save Cost Config</button>
+            <span id="cost-save-msg" style="display:none;font-size:12px;color:var(--green);">&#10003; Saved</span>
           </div>
         </div>
 
@@ -1527,8 +1705,9 @@ function navTo(section) {
   var titleEl = document.getElementById('topbar-title');
   if (titleEl) titleEl.textContent = _pageLabels[section] || section;
   try { localStorage.setItem('abh_nav', section); } catch(e) {}
-  /* lazy-load analytics on first visit */
+  /* lazy-load on section visit */
   if (section === 'analytics') { loadAnalytics(); }
+  if (section === 'costs') { loadCosts(); loadCostSettings(); }
 }
 
 /* ── AUTH ── */
@@ -1615,6 +1794,8 @@ function loadAll() {
   loadSessionsTable();
   loadPendingSubmissions();
   loadRecruiterSent();
+  loadCosts();
+  loadCostSettings();
 }
 
 /* ── WEBAUTHN HELPERS ── */
@@ -1828,6 +2009,209 @@ function login() {
    PLACEHOLDERS — filled in subsequent stages
    ══════════════════════════════════════════════ */
 
+/* ── COST CONFIG ── */
+var _COST_DEFAULTS = {
+  claude_max:    200.00,
+  anthropic_api: 5.46,
+  railway:       5.00,
+  cloudflare:    0.00,
+  supabase:      0.00,
+  domain:        2.50,
+  publer:        19.00,
+  hedera_fees:   0.00,
+  run_light:     0.01,
+  run_medium:    0.03,
+  run_heavy:     0.05
+};
+
+/* Which agents are light / medium / heavy for API cost estimation */
+var _AGENT_TIERS = {
+  abh_greeter:      'light',
+  abh_joe_dirt:     'light',
+  abh_cashier:      'light',
+  abh_audit:        'medium',
+  abh_scout:        'medium',
+  abh_recruiter:    'medium',
+  abh_reviewer:     'medium',
+  abh_crier:        'medium',
+  abh_regular:      'medium',
+  abh_orchestrator: 'medium',
+  abh_prep_cook:    'medium',
+  abh_publisher:    'medium',
+  abh_gossip:       'heavy',
+  abh_engineer:     'heavy',
+  abh_cafe_manager: 'heavy'
+};
+
+var _agentsData = [];
+
+function _getCostCfg() {
+  try { return JSON.parse(localStorage.getItem('abh_cost_config') || '{}'); } catch(e) { return {}; }
+}
+function _getCost(key) {
+  var cfg = _getCostCfg();
+  return (cfg[key] !== undefined) ? parseFloat(cfg[key]) : (_COST_DEFAULTS[key] || 0);
+}
+function _runCost(agentId) {
+  var tier = _AGENT_TIERS[agentId] || 'medium';
+  return _getCost('run_' + tier);
+}
+
+function loadCostSettings() {
+  var cfg = _getCostCfg();
+  Object.keys(_COST_DEFAULTS).forEach(function(k) {
+    var el = document.getElementById('cost-input-' + k);
+    if (el) el.value = (cfg[k] !== undefined) ? cfg[k] : _COST_DEFAULTS[k];
+  });
+}
+
+function saveCostConfig() {
+  var cfg = {};
+  Object.keys(_COST_DEFAULTS).forEach(function(k) {
+    var el = document.getElementById('cost-input-' + k);
+    if (el) cfg[k] = parseFloat(el.value) || 0;
+  });
+  try { localStorage.setItem('abh_cost_config', JSON.stringify(cfg)); } catch(e) {}
+  var msg = document.getElementById('cost-save-msg');
+  if (msg) { msg.style.display = 'inline'; setTimeout(function() { msg.style.display = 'none'; }, 2500); }
+  loadCosts();
+}
+
+function loadCosts() {
+  var hbarPriceEl = document.getElementById('fin-hbar-price');
+  var hbarPriceCmdEl = document.getElementById('cmd-hbar-price');
+  var hbarPrice = parseFloat(
+    ((hbarPriceEl && hbarPriceEl.textContent !== '--') ? hbarPriceEl.textContent :
+     (hbarPriceCmdEl && hbarPriceCmdEl.textContent !== '--') ? hbarPriceCmdEl.textContent : '$0.09')
+    .replace('$', '')
+  ) || 0.09;
+
+  fetchJson('/api/admin/stats/overview').then(function(ov) {
+    if (ov.error) return;
+    /* Use cached agent data if available, else re-fetch */
+    if (_agentsData.length) {
+      _renderProfitDashboard(ov, hbarPrice, _agentsData);
+    } else {
+      fetchJson('/api/admin/stats/agents').then(function(ad) {
+        if (!ad.error && ad.agents) _agentsData = ad.agents;
+        _renderProfitDashboard(ov, hbarPrice, _agentsData);
+      }).catch(function() { _renderProfitDashboard(ov, hbarPrice, []); });
+    }
+  }).catch(function() {});
+}
+
+function _renderProfitDashboard(ov, hbarPrice, agents) {
+  var set = function(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
+
+  /* Revenue: 7d total session HBAR converted to USD */
+  var rev7d_hbar = parseFloat(ov.revenue_week_hbar) || 0;
+  var rev7d_usd  = rev7d_hbar * hbarPrice;
+
+  /* Monthly costs */
+  var fixedMonthly = _getCost('claude_max') + _getCost('railway') + _getCost('cloudflare')
+                   + _getCost('supabase') + _getCost('domain') + _getCost('publer');
+  var varMonthly   = _getCost('anthropic_api') + _getCost('hedera_fees');
+  var totalMonthly = fixedMonthly + varMonthly;
+
+  /* Pro-rate monthly to 7 days */
+  var costs7d = totalMonthly / 30 * 7;
+
+  /* Per-agent API cost (all-time estimate, not just 7d — used for unit economics table) */
+  var agentApiTotal = 0;
+  agents.forEach(function(a) { agentApiTotal += (a.runs_total || 0) * _runCost(a.id); });
+
+  var profit7d = rev7d_usd - costs7d;
+
+  /* Big 3 tiles */
+  set('profit-tile-revenue', '$' + rev7d_usd.toFixed(2));
+  set('profit-tile-costs',   '$' + costs7d.toFixed(2));
+  set('profit-tile-net',     (profit7d >= 0 ? '+' : '') + '$' + profit7d.toFixed(2));
+
+  var netTile = document.getElementById('profit-tile-net');
+  if (netTile) netTile.style.color = profit7d >= 0 ? 'var(--green)' : 'var(--red)';
+
+  /* Net profit banner */
+  var banner = document.getElementById('net-profit-big');
+  if (banner) {
+    banner.textContent = (profit7d >= 0 ? '+' : '') + '$' + profit7d.toFixed(2) + ' USD (7d)';
+    banner.style.color = profit7d >= 0 ? 'var(--green)' : 'var(--red)';
+  }
+
+  _renderCostTable(fixedMonthly, varMonthly, totalMonthly);
+  _renderRevTable(ov, hbarPrice, rev7d_usd);
+  _renderAgentCostTable(agents, hbarPrice);
+}
+
+function _renderCostTable(fixed, variable, total) {
+  var tbody = document.getElementById('cost-breakdown-tbody');
+  if (!tbody) return;
+  var rows = [
+    ['Claude Max plan',           _getCost('claude_max'),    'Fixed'],
+    ['Anthropic API credits',     _getCost('anthropic_api'), 'Variable'],
+    ['Railway hosting',           _getCost('railway'),       'Fixed'],
+    ['Cloudflare',                _getCost('cloudflare'),    'Fixed'],
+    ['Supabase',                  _getCost('supabase'),      'Fixed'],
+    ['Domain (agentbrewhouse.io)',_getCost('domain'),        'Fixed'],
+    ['Publer',                    _getCost('publer'),        'Fixed'],
+    ['Hedera tx fees',            _getCost('hedera_fees'),   'Variable']
+  ];
+  tbody.innerHTML = rows.map(function(r) {
+    return '<tr><td style="padding:5px 8px;color:var(--cream);">' + r[0] + '</td>' +
+      '<td style="padding:5px 8px;text-align:right;color:var(--amber);font-family:monospace;">$' + r[1].toFixed(2) + '</td>' +
+      '<td style="padding:5px 8px;text-align:right;font-size:10px;color:var(--cream-dim);">' + r[2] + '</td></tr>';
+  }).join('') +
+  '<tr><td style="padding:6px 8px;color:var(--cream);">TOTAL / MONTH</td>' +
+  '<td style="padding:6px 8px;text-align:right;color:var(--red);font-family:monospace;">$' + total.toFixed(2) + '</td>' +
+  '<td style="padding:6px 8px;text-align:right;font-size:10px;color:var(--cream-dim);">--</td></tr>';
+}
+
+function _renderRevTable(ov, hbarPrice, totalUsd) {
+  var tbody = document.getElementById('rev-breakdown-tbody');
+  if (!tbody) return;
+  var revHbar = parseFloat(ov.revenue_week_hbar) || 0;
+  var rows = [
+    ['Agent sessions (HBAR)', revHbar.toFixed(2) + ' HBAR', '7d'],
+    ['Agent sessions (USDC)', '0.00 USDC', '7d'],
+    ['Submission fees (10 HBAR)', '0.00 HBAR', '7d']
+  ];
+  tbody.innerHTML = rows.map(function(r) {
+    return '<tr><td style="padding:5px 8px;color:var(--cream);">' + r[0] + '</td>' +
+      '<td style="padding:5px 8px;text-align:right;color:var(--amber);font-family:monospace;">' + r[1] + '</td>' +
+      '<td style="padding:5px 8px;text-align:right;font-size:10px;color:var(--cream-dim);">' + r[2] + '</td></tr>';
+  }).join('') +
+  '<tr><td style="padding:6px 8px;color:var(--cream);">TOTAL REVENUE</td>' +
+  '<td style="padding:6px 8px;text-align:right;color:var(--green);font-family:monospace;">$' + totalUsd.toFixed(2) + '</td>' +
+  '<td style="padding:6px 8px;text-align:right;font-size:10px;color:var(--cream-dim);">7d</td></tr>';
+}
+
+function _renderAgentCostTable(agents, hbarPrice) {
+  var tbody = document.getElementById('agent-cost-tbody');
+  if (!tbody) return;
+  if (!agents.length) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty">No agent data yet -- run some agents first</td></tr>';
+    return;
+  }
+  var rows = agents.map(function(a) {
+    var costPerRun = _runCost(a.id);
+    var estCost    = (a.runs_total || 0) * costPerRun;
+    var revUsd     = (parseFloat(a.hbar_earned) || 0) * hbarPrice;
+    var net        = revUsd - estCost;
+    return { name: a.name, id: a.id, runs: a.runs_total || 0, cost: estCost, rev: revUsd, net: net };
+  });
+  rows.sort(function(a, b) { return b.cost - a.cost; });
+  tbody.innerHTML = rows.map(function(r) {
+    var nc = r.net >= 0 ? 'var(--green)' : 'var(--red)';
+    var netStr = (r.net >= 0 ? '+' : '') + '$' + r.net.toFixed(2);
+    return '<tr style="border-bottom:1px solid var(--border);">' +
+      '<td style="padding:6px 8px;color:var(--cream);">' + r.name + '</td>' +
+      '<td style="padding:6px 8px;text-align:right;color:var(--cream-dim);">' + r.runs + '</td>' +
+      '<td style="padding:6px 8px;text-align:right;color:var(--red);font-family:monospace;">$' + r.cost.toFixed(2) + '</td>' +
+      '<td style="padding:6px 8px;text-align:right;color:var(--amber);font-family:monospace;">$' + r.rev.toFixed(2) + '</td>' +
+      '<td style="padding:6px 8px;text-align:right;font-family:monospace;font-weight:700;color:' + nc + ';">' + netStr + '</td>' +
+      '</tr>';
+  }).join('');
+}
+
 /* ── LIVE HBAR PRICE (browser fetch bypasses server rate-limit) ── */
 function fetchLiveHbarPrice() {
   fetch('https://api.coingecko.com/api/v3/simple/price?ids=hedera-hashgraph&vs_currencies=usd')
@@ -2034,6 +2418,7 @@ function renderAgentChart(labels, values) {
 function loadAgents() {
   fetchJson('/api/admin/stats/agents').then(function(d) {
     if (d.error || !d.agents) return;
+    _agentsData = d.agents;  /* cache for cost calculations */
     var grid = document.getElementById('agent-grid');
     if (!grid) return;
     grid.innerHTML = '';
