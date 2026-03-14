@@ -924,7 +924,7 @@
 <div id="login-screen">
   <div class="login-box">
     <div class="logo">AgentBrewHouse</div>
-    <div class="tagline">Mission Control &#8212; Admin</div>
+    <div class="tagline">Mission Control -- Admin</div>
 
     <button id="bio-btn" class="bio-btn" onclick="loginBiometric()" style="display:none">
       &#9654; Use Fingerprint / Touch ID
@@ -937,7 +937,7 @@
 
     <div id="save-device-banner" class="save-device-banner" style="display:none">
       <strong>Save this device?</strong>
-      Use fingerprint or Touch ID next time &#8212; no secret needed.
+      Use fingerprint or Touch ID next time -- no secret needed.
       <div class="save-device-actions">
         <button class="save-device-yes" onclick="registerPasskey()">Yes, save device</button>
         <button class="save-device-no"  onclick="dismissSavePrompt()">Not now</button>
@@ -987,23 +987,23 @@
       <div class="sidebar-stats">
         <div class="sidebar-stat-row">
           <span class="sk">HBAR Price</span>
-          <span class="sv" id="cmd-hbar-price">&#8212;</span>
+          <span class="sv" id="cmd-hbar-price">--</span>
         </div>
         <div class="sidebar-stat-row">
           <span class="sk">Sessions Today</span>
-          <span class="sv" id="cmd-sessions-today">&#8212;</span>
+          <span class="sv" id="cmd-sessions-today">--</span>
         </div>
         <div class="sidebar-stat-row">
           <span class="sk">Success Rate</span>
-          <span class="sv" id="cmd-success-rate">&#8212;</span>
+          <span class="sv" id="cmd-success-rate">--</span>
         </div>
         <div class="sidebar-stat-row">
           <span class="sk">Network</span>
-          <span class="sv" id="cmd-network">&#8212;</span>
+          <span class="sv" id="cmd-network">--</span>
         </div>
         <div class="sidebar-stat-row">
           <span class="sk">7d HBAR Earned</span>
-          <span class="sv" id="cmd-hbar-total">&#8212;</span>
+          <span class="sv" id="cmd-hbar-total">--</span>
         </div>
       </div>
       <div class="status-dot-wrap">
@@ -1019,7 +1019,7 @@
     <!-- TOPBAR -->
     <div class="topbar">
       <div class="topbar-title" id="topbar-title">Dashboard</div>
-      <div class="topbar-meta">Updated <span id="last-updated-time">&#8212;</span></div>
+      <div class="topbar-meta">Updated <span id="last-updated-time">--</span></div>
       <div class="countdown-pill">
         <span id="countdown-seconds">30</span>s
         <div class="progress-bar">
@@ -1038,42 +1038,42 @@
         <div class="tiles">
           <div class="tile highlight">
             <div class="tile-label">Revenue Today</div>
-            <div class="tile-value amber" id="tile-rev-today">&#8212;</div>
-            <div class="tile-sub" id="tile-rev-today-usd">&#8212;</div>
+            <div class="tile-value amber" id="tile-rev-today">--</div>
+            <div class="tile-sub" id="tile-rev-today-usd">--</div>
           </div>
           <div class="tile">
             <div class="tile-label">Revenue This Week</div>
-            <div class="tile-value amber" id="tile-rev-week">&#8212;</div>
-            <div class="tile-sub" id="tile-rev-week-usd">&#8212;</div>
+            <div class="tile-value amber" id="tile-rev-week">--</div>
+            <div class="tile-sub" id="tile-rev-week-usd">--</div>
           </div>
           <div class="tile">
             <div class="tile-label">Total Sessions</div>
-            <div class="tile-value" id="tile-sessions-total">&#8212;</div>
-            <div class="tile-sub" id="tile-sessions-today-sub">&#8212; today</div>
+            <div class="tile-value" id="tile-sessions-total">--</div>
+            <div class="tile-sub" id="tile-sessions-today-sub">-- today</div>
           </div>
           <div class="tile">
             <div class="tile-label">Success Rate</div>
-            <div class="tile-value green" id="tile-success-rate">&#8212;</div>
+            <div class="tile-value green" id="tile-success-rate">--</div>
             <div class="tile-sub">all time</div>
           </div>
           <div class="tile">
             <div class="tile-label">Pending Submissions</div>
-            <div class="tile-value" id="tile-pending">&#8212;</div>
+            <div class="tile-value" id="tile-pending">--</div>
             <div class="tile-sub">awaiting review</div>
           </div>
           <div class="tile">
             <div class="tile-label">Beanz VIP Members</div>
-            <div class="tile-value amber" id="tile-vip">&#8212;</div>
+            <div class="tile-value amber" id="tile-vip">--</div>
             <div class="tile-sub">founding members</div>
           </div>
           <div class="tile">
             <div class="tile-label">Replay Attacks Blocked</div>
-            <div class="tile-value red" id="tile-replays">&#8212;</div>
+            <div class="tile-value red" id="tile-replays">--</div>
             <div class="tile-sub">all time</div>
           </div>
           <div class="tile">
             <div class="tile-label">Agent Memories Logged</div>
-            <div class="tile-value" id="tile-memories">&#8212;</div>
+            <div class="tile-value" id="tile-memories">--</div>
             <div class="tile-sub">across all agents</div>
           </div>
         </div>
@@ -1128,32 +1128,32 @@
         <div class="monitor-row">
           <div class="monitor-panel">
             <div class="monitor-title">The Audit Report</div>
-            <div class="monitor-stat"><span class="key">Last Run</span><span class="val" id="audit-last-run">&#8212;</span></div>
-            <div class="monitor-stat"><span class="key">Risk Score</span><span class="val" id="audit-risk-score">&#8212;</span></div>
-            <div class="monitor-stat"><span class="key">Total Runs</span><span class="val" id="audit-total-runs">&#8212;</span></div>
+            <div class="monitor-stat"><span class="key">Last Run</span><span class="val" id="audit-last-run">--</span></div>
+            <div class="monitor-stat"><span class="key">Risk Score</span><span class="val" id="audit-risk-score">--</span></div>
+            <div class="monitor-stat"><span class="key">Total Runs</span><span class="val" id="audit-total-runs">--</span></div>
             <button class="run-now-btn" onclick="runAudit()">Run Audit Now</button>
           </div>
           <div class="monitor-panel">
             <div class="monitor-title">Marketplace Health</div>
-            <div class="monitor-stat"><span class="key">Pending</span><span class="val amber" id="mp-pending">&#8212;</span></div>
-            <div class="monitor-stat"><span class="key">Approved Agents</span><span class="val green" id="mp-approved">&#8212;</span></div>
-            <div class="monitor-stat"><span class="key">VIP Members</span><span class="val" id="mp-vip">&#8212;</span></div>
+            <div class="monitor-stat"><span class="key">Pending</span><span class="val amber" id="mp-pending">--</span></div>
+            <div class="monitor-stat"><span class="key">Approved Agents</span><span class="val green" id="mp-approved">--</span></div>
+            <div class="monitor-stat"><span class="key">VIP Members</span><span class="val" id="mp-vip">--</span></div>
             <div id="submissions-mini" style="margin-top:8px;"></div>
           </div>
           <div class="monitor-panel">
             <div class="monitor-title">Comms &amp; Delivery</div>
-            <div class="monitor-stat"><span class="key">Town Crier (7d)</span><span class="val" id="crier-count">&#8212;</span></div>
-            <div class="monitor-stat"><span class="key">Crier Success</span><span class="val green" id="crier-rate">&#8212;</span></div>
-            <div class="monitor-stat"><span class="key">Greeter (7d)</span><span class="val" id="greeter-count">&#8212;</span></div>
-            <div class="monitor-stat"><span class="key">Greeter Success</span><span class="val green" id="greeter-rate">&#8212;</span></div>
+            <div class="monitor-stat"><span class="key">Town Crier (7d)</span><span class="val" id="crier-count">--</span></div>
+            <div class="monitor-stat"><span class="key">Crier Success</span><span class="val green" id="crier-rate">--</span></div>
+            <div class="monitor-stat"><span class="key">Greeter (7d)</span><span class="val" id="greeter-count">--</span></div>
+            <div class="monitor-stat"><span class="key">Greeter Success</span><span class="val green" id="greeter-rate">--</span></div>
           </div>
           <div class="monitor-panel">
             <div class="monitor-title">Security</div>
             <div id="recent-replays-alert"></div>
-            <div class="monitor-stat"><span class="key">Replays Today</span><span class="val red" id="sec-replays-today">&#8212;</span></div>
-            <div class="monitor-stat"><span class="key">Error Rate (7d)</span><span class="val" id="sec-error-rate">&#8212;</span></div>
+            <div class="monitor-stat"><span class="key">Replays Today</span><span class="val red" id="sec-replays-today">--</span></div>
+            <div class="monitor-stat"><span class="key">Error Rate (7d)</span><span class="val" id="sec-error-rate">--</span></div>
             <div class="monitor-stat"><span class="key">Railway</span><span class="val green" id="sec-railway">Healthy</span></div>
-            <div class="monitor-stat"><span class="key">Total Blocked</span><span class="val" id="sec-total-blocked">&#8212;</span></div>
+            <div class="monitor-stat"><span class="key">Total Blocked</span><span class="val" id="sec-total-blocked">--</span></div>
           </div>
         </div>
 
@@ -1215,7 +1215,7 @@
         <div class="panel" style="margin-bottom:16px;">
           <div class="panel-title">
             Prospective Agents
-            <span id="scout-count" style="font-size:11px;color:var(--cream-dim);font-weight:400;">&#8212;</span>
+            <span id="scout-count" style="font-size:11px;color:var(--cream-dim);font-weight:400;">--</span>
           </div>
           <div class="feed-filters">
             <span class="feed-filter active" onclick="filterScout('all', this)">All</span>
@@ -1231,7 +1231,7 @@
         <div class="panel" style="margin-bottom:16px;">
           <div class="panel-title">
             VIP Waitlist
-            <span id="signup-count" style="font-size:11px;color:var(--cream-dim);font-weight:400;">&#8212;</span>
+            <span id="signup-count" style="font-size:11px;color:var(--cream-dim);font-weight:400;">--</span>
           </div>
           <div id="signup-feed" style="max-height:320px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;">
             <div class="loading">Loading signups...</div>
@@ -1246,7 +1246,7 @@
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
           <div>
             <div style="font-size:14px;font-weight:600;color:var(--cream);margin-bottom:3px;">Page Analytics</div>
-            <div style="font-size:11px;color:var(--cream-dim);">Powered by Supabase page_views table &#8212; privacy-friendly, session-based</div>
+            <div style="font-size:11px;color:var(--cream-dim);">Powered by Supabase page_views table -- privacy-friendly, session-based</div>
           </div>
           <div style="display:flex;gap:8px;align-items:center;">
             <select id="analytics-period" onchange="loadAnalytics()" style="background:var(--panel2);border:1px solid var(--border);color:var(--cream);border-radius:6px;padding:6px 12px;font-size:12px;outline:none;cursor:pointer;">
@@ -1260,10 +1260,10 @@
 
         <!-- SUMMARY TILES -->
         <div class="tiles" style="margin-bottom:20px;" id="analytics-tiles">
-          <div class="tile"><div class="tile-label">Total Views</div><div class="tile-value amber" id="an-total-views">&#8212;</div><div class="tile-sub">page loads</div></div>
-          <div class="tile"><div class="tile-label">Unique Sessions</div><div class="tile-value" id="an-unique-sessions">&#8212;</div><div class="tile-sub">browser sessions</div></div>
-          <div class="tile"><div class="tile-label">Top Page</div><div class="tile-value" id="an-top-page" style="font-size:14px;">&#8212;</div><div class="tile-sub" id="an-top-page-count">&#8212;</div></div>
-          <div class="tile"><div class="tile-label">Top Source</div><div class="tile-value" id="an-top-source" style="font-size:14px;">&#8212;</div><div class="tile-sub" id="an-top-source-count">&#8212;</div></div>
+          <div class="tile"><div class="tile-label">Total Views</div><div class="tile-value amber" id="an-total-views">--</div><div class="tile-sub">page loads</div></div>
+          <div class="tile"><div class="tile-label">Unique Sessions</div><div class="tile-value" id="an-unique-sessions">--</div><div class="tile-sub">browser sessions</div></div>
+          <div class="tile"><div class="tile-label">Top Page</div><div class="tile-value" id="an-top-page" style="font-size:14px;">--</div><div class="tile-sub" id="an-top-page-count">--</div></div>
+          <div class="tile"><div class="tile-label">Top Source</div><div class="tile-value" id="an-top-source" style="font-size:14px;">--</div><div class="tile-sub" id="an-top-source-count">--</div></div>
         </div>
 
         <!-- VIEWS OVER TIME CHART -->
@@ -1305,11 +1305,11 @@
 
         <div class="section-header">Wallet &amp; Balance</div>
         <div class="financial-grid">
-          <div class="fin-tile"><div class="label">Wallet Balance</div><div class="value" id="fin-balance">&#8212;</div><div class="sub" id="fin-balance-usd">&#8212;</div></div>
-          <div class="fin-tile"><div class="label">House Revenue (10%)</div><div class="value" id="fin-house-rev">&#8212;</div><div class="sub">all time</div></div>
-          <div class="fin-tile"><div class="label">Seller Payouts (90%)</div><div class="value" id="fin-seller-payouts">&#8212;</div><div class="sub">all time</div></div>
-          <div class="fin-tile"><div class="label">HBAR Price</div><div class="value" id="fin-hbar-price">&#8212;</div><div class="sub">live</div></div>
-          <div class="fin-tile"><div class="label">Projected Monthly</div><div class="value" id="fin-projected">&#8212;</div><div class="sub">based on 7d avg</div></div>
+          <div class="fin-tile"><div class="label">Wallet Balance</div><div class="value" id="fin-balance">--</div><div class="sub" id="fin-balance-usd">--</div></div>
+          <div class="fin-tile"><div class="label">House Revenue (10%)</div><div class="value" id="fin-house-rev">--</div><div class="sub">all time</div></div>
+          <div class="fin-tile"><div class="label">Seller Payouts (90%)</div><div class="value" id="fin-seller-payouts">--</div><div class="sub">all time</div></div>
+          <div class="fin-tile"><div class="label">HBAR Price</div><div class="value" id="fin-hbar-price">--</div><div class="sub">live</div></div>
+          <div class="fin-tile"><div class="label">Projected Monthly</div><div class="value" id="fin-projected">--</div><div class="sub">based on 7d avg</div></div>
         </div>
 
         <div class="section-header">Revenue History</div>
@@ -1331,7 +1331,7 @@
         <div class="panel" style="margin-bottom:16px;">
           <div class="panel-title">
             Recent Sessions
-            <span id="sessions-total-label" style="font-size:11px;color:var(--cream-dim);font-weight:400;">&#8212;</span>
+            <span id="sessions-total-label" style="font-size:11px;color:var(--cream-dim);font-weight:400;">--</span>
           </div>
           <div style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;font-size:11px;">
@@ -1362,13 +1362,13 @@
         <div class="two-col" style="margin-bottom:16px;">
           <div class="panel">
             <div class="panel-title">Town Crier</div>
-            <div class="monitor-stat"><span class="key">Emails Sent (7d)</span><span class="val" id="crier-count-2">&#8212;</span></div>
-            <div class="monitor-stat"><span class="key">Success Rate</span><span class="val green" id="crier-rate-2">&#8212;</span></div>
+            <div class="monitor-stat"><span class="key">Emails Sent (7d)</span><span class="val" id="crier-count-2">--</span></div>
+            <div class="monitor-stat"><span class="key">Success Rate</span><span class="val green" id="crier-rate-2">--</span></div>
           </div>
           <div class="panel">
             <div class="panel-title">The Greeter</div>
-            <div class="monitor-stat"><span class="key">Emails Sent (7d)</span><span class="val" id="greeter-count-2">&#8212;</span></div>
-            <div class="monitor-stat"><span class="key">Success Rate</span><span class="val green" id="greeter-rate-2">&#8212;</span></div>
+            <div class="monitor-stat"><span class="key">Emails Sent (7d)</span><span class="val" id="greeter-count-2">--</span></div>
+            <div class="monitor-stat"><span class="key">Success Rate</span><span class="val green" id="greeter-rate-2">--</span></div>
           </div>
         </div>
 
@@ -1376,7 +1376,7 @@
         <div class="panel">
           <div class="panel-title">
             Emails Sent (Last 7 Days)
-            <span id="recruiter-sent-count" style="font-size:11px;color:var(--cream-dim);font-weight:400;">&#8212;</span>
+            <span id="recruiter-sent-count" style="font-size:11px;color:var(--cream-dim);font-weight:400;">--</span>
           </div>
           <div id="recruiter-sent-list">
             <div class="loading">Loading sent emails...</div>
@@ -1393,7 +1393,7 @@
           <div class="panel-title">
             Incoming Agent Submissions
             <div style="display:flex;gap:8px;align-items:center;">
-              <span id="pending-queue-count" style="font-size:11px;color:var(--cream-dim);font-weight:400;">&#8212;</span>
+              <span id="pending-queue-count" style="font-size:11px;color:var(--cream-dim);font-weight:400;">--</span>
               <select id="pending-status-filter" onchange="loadPendingSubmissions()" style="background:var(--panel2);border:1px solid var(--border);color:var(--cream-dim);border-radius:5px;padding:3px 8px;font-size:11px;cursor:pointer;">
                 <option value="pending">Pending</option>
                 <option value="approved">Approved</option>
@@ -1411,21 +1411,21 @@
           <div class="monitor-panel">
             <div class="monitor-title">Replay Protection</div>
             <div id="recent-replays-alert-2"></div>
-            <div class="monitor-stat"><span class="key">Replays Today</span><span class="val red" id="sec-replays-today-2">&#8212;</span></div>
-            <div class="monitor-stat"><span class="key">Error Rate (7d)</span><span class="val" id="sec-error-rate-2">&#8212;</span></div>
-            <div class="monitor-stat"><span class="key">Total Blocked</span><span class="val" id="sec-total-blocked-2">&#8212;</span></div>
+            <div class="monitor-stat"><span class="key">Replays Today</span><span class="val red" id="sec-replays-today-2">--</span></div>
+            <div class="monitor-stat"><span class="key">Error Rate (7d)</span><span class="val" id="sec-error-rate-2">--</span></div>
+            <div class="monitor-stat"><span class="key">Total Blocked</span><span class="val" id="sec-total-blocked-2">--</span></div>
           </div>
           <div class="monitor-panel">
             <div class="monitor-title">Marketplace Health</div>
-            <div class="monitor-stat"><span class="key">Pending</span><span class="val amber" id="mp-pending-2">&#8212;</span></div>
-            <div class="monitor-stat"><span class="key">Approved Agents</span><span class="val green" id="mp-approved-2">&#8212;</span></div>
-            <div class="monitor-stat"><span class="key">VIP Members</span><span class="val" id="mp-vip-2">&#8212;</span></div>
+            <div class="monitor-stat"><span class="key">Pending</span><span class="val amber" id="mp-pending-2">--</span></div>
+            <div class="monitor-stat"><span class="key">Approved Agents</span><span class="val green" id="mp-approved-2">--</span></div>
+            <div class="monitor-stat"><span class="key">VIP Members</span><span class="val" id="mp-vip-2">--</span></div>
           </div>
           <div class="monitor-panel">
             <div class="monitor-title">The Audit</div>
-            <div class="monitor-stat"><span class="key">Last Run</span><span class="val" id="audit-last-run-2">&#8212;</span></div>
-            <div class="monitor-stat"><span class="key">Risk Score</span><span class="val" id="audit-risk-score-2">&#8212;</span></div>
-            <div class="monitor-stat"><span class="key">Total Runs</span><span class="val" id="audit-total-runs-2">&#8212;</span></div>
+            <div class="monitor-stat"><span class="key">Last Run</span><span class="val" id="audit-last-run-2">--</span></div>
+            <div class="monitor-stat"><span class="key">Risk Score</span><span class="val" id="audit-risk-score-2">--</span></div>
+            <div class="monitor-stat"><span class="key">Total Runs</span><span class="val" id="audit-total-runs-2">--</span></div>
             <button class="run-now-btn" onclick="runAudit()">Run Audit Now</button>
           </div>
         </div>
@@ -2112,7 +2112,7 @@ function loadAnalytics() {
 
   supaFetch('/rest/v1/page_views?select=page,referrer,utm_source,utm_medium,utm_campaign,session_id,created_at&created_at=gte.' + encodeURIComponent(cutoff) + '&order=created_at.asc&limit=5000')
     .then(function(rows) {
-      if (!Array.isArray(rows)) { if (pagesTbl) pagesTbl.innerHTML = '<div class="empty">page_views table not found &#8212; run the migration SQL first</div>'; return; }
+      if (!Array.isArray(rows)) { if (pagesTbl) pagesTbl.innerHTML = '<div class="empty">page_views table not found -- run the migration SQL first</div>'; return; }
 
       var set = function(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
 
@@ -2250,7 +2250,7 @@ function loadScoutTargets() {
 function renderScoutTargets(targets) {
   var feed = document.getElementById('scout-feed');
   if (!feed) return;
-  if (!targets.length) { feed.innerHTML = '<div class="empty">No targets yet &#8212; run The Scout</div>'; return; }
+  if (!targets.length) { feed.innerHTML = '<div class="empty">No targets yet -- run The Scout</div>'; return; }
   var platformColor = { moltbook: '#c8872a', x_twitter: '#4a8fe8', github: '#6abf7b' };
   feed.innerHTML = targets.map(function(t) {
     var color       = platformColor[t.platform] || 'var(--cream-dim)';
@@ -2284,8 +2284,8 @@ function loadWallet() {
     set('fin-hbar-price',     '$' + d.hbar_price_usd);
     fetchJson('/api/admin/stats/overview').then(function(ov) {
       if (!ov.error) {
-        set('fin-house-rev',     '&#8212;');
-        set('fin-seller-payouts','&#8212;');
+        set('fin-house-rev',     '--');
+        set('fin-seller-payouts','--');
         set('fin-projected',     (ov.revenue_week_hbar / 7 * 30).toFixed(2) + ' HBAR/mo');
         set('cmd-hbar-total',    ov.revenue_week_hbar + ' (7d)');
       }
@@ -2304,14 +2304,14 @@ function loadSessionsTable() {
     if (!d.sessions.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">No sessions yet</td></tr>'; return; }
     tbody.innerHTML = d.sessions.map(function(s) {
       var statusColor = s.status === 'success' ? 'var(--green)' : s.status === 'replay' ? 'var(--red)' : 'var(--amber)';
-      var buyer  = s.buyer_wallet ? s.buyer_wallet.slice(0, 12) + '...' : '&#8212;';
+      var buyer  = s.buyer_wallet ? s.buyer_wallet.slice(0, 12) + '...' : '--';
       var method = ((s.payment_method || 'x402_hbar').replace('x402_', '')).toUpperCase();
       var currColor = method === 'USDC' ? '#2775ca' : 'var(--amber)';
       return '<tr style="border-bottom:1px solid var(--border);">' +
         '<td style="padding:6px 8px;color:var(--cream);font-weight:600;">' + agentLabel(s.agent_id) + '</td>' +
-        '<td style="padding:6px 8px;color:var(--cream-dim);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (s.task_summary || '&#8212;').replace(/</g,'&lt;') + '</td>' +
+        '<td style="padding:6px 8px;color:var(--cream-dim);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (s.task_summary || '--').replace(/</g,'&lt;') + '</td>' +
         '<td style="padding:6px 8px;"><span style="color:' + statusColor + ';font-size:10px;text-transform:uppercase;">' + s.status + '</span></td>' +
-        '<td style="padding:6px 8px;text-align:right;color:var(--amber);font-weight:600;">' + (s.hbar_amount || '&#8212;') + '</td>' +
+        '<td style="padding:6px 8px;text-align:right;color:var(--amber);font-weight:600;">' + (s.hbar_amount || '--') + '</td>' +
         '<td style="padding:6px 8px;text-align:right;"><span style="color:' + currColor + ';font-size:10px;font-weight:600;">' + method + '</span></td>' +
         '<td style="padding:6px 8px;text-align:right;color:var(--cream-dim);font-size:10px;font-family:monospace;">' + buyer + '</td>' +
         '<td style="padding:6px 8px;text-align:right;color:var(--cream-dim);">' + timeAgo(s.created_at) + '</td>' +
@@ -2386,11 +2386,11 @@ function loadMarketplace() {
       }
     }
     set('audit-last-run',    'See sessions');
-    set('audit-risk-score',  '&#8212;');
-    set('audit-total-runs',  '&#8212;');
+    set('audit-risk-score',  '--');
+    set('audit-total-runs',  '--');
     set('audit-last-run-2',  'See sessions');
-    set('audit-risk-score-2','&#8212;');
-    set('audit-total-runs-2','&#8212;');
+    set('audit-risk-score-2','--');
+    set('audit-total-runs-2','--');
   }).catch(function() {});
 }
 
@@ -2502,7 +2502,7 @@ function loadRecruiterSent() {
     if (d.error) { container.innerHTML = '<div class="empty">Error loading sent emails</div>'; return; }
     var targets = d.targets || [];
     if (countEl) countEl.textContent = targets.length + ' sent';
-    if (!targets.length) { container.innerHTML = '<div class="empty">No emails sent yet &#8212; The Recruiter runs daily at 2am UTC</div>'; return; }
+    if (!targets.length) { container.innerHTML = '<div class="empty">No emails sent yet -- The Recruiter runs daily at 2am UTC</div>'; return; }
     container.innerHTML = targets.map(function(t) {
       var ago          = t.created_at ? timeAgo(t.created_at) : '';
       var emailDisplay = (t.email || '').replace(/</g,'&lt;') || '<span style="color:var(--cream-dim);">no email</span>';
@@ -2522,7 +2522,7 @@ function loadRecruiterSent() {
         '</div>' +
         (t.summary ? '<div style="font-size:11px;color:var(--cream-dim);margin-bottom:8px;line-height:1.5;">' + t.summary.replace(/</g,'&lt;') + '</div>' : '') +
         '<div class="recruiter-field-label">Subject</div>' +
-        '<div class="recruiter-subject">' + (t.email_subject || '&#8212;').replace(/</g,'&lt;') + '</div>' +
+        '<div class="recruiter-subject">' + (t.email_subject || '--').replace(/</g,'&lt;') + '</div>' +
         '<div class="recruiter-field-label" style="display:flex;justify-content:space-between;align-items:center;">Email Sent' +
           '<span style="cursor:pointer;color:var(--amber);font-size:10px;" onclick="toggleRecruiterDraft(\'' + t.id + '\', this)">' + (expanded ? 'Hide' : 'Show full email') + '</span>' +
         '</div>' +
