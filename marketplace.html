@@ -1432,9 +1432,9 @@ function cardHtml(agent, idx, isLocked) {
   // Not-for-hire house agents: everything else internal.
   // Hireable: agents users can Pay Now to hire.
   // House: internal ABH agents — not for hire, no Pay Now button.
-  var HIREABLE_IDS = ['abh_scout', 'abh_audit'];
+  var HIREABLE_IDS = ['abh_scout', 'abh_audit', 'abh_joe_dirt'];
   var HOUSE_IDS = ['abh_cashier','abh_orchestrator','abh_regular','abh_greeter',
-    'abh_crier','abh_prep_cook','abh_joe_dirt','abh_gossip',
+    'abh_crier','abh_prep_cook','abh_gossip',
     'abh_reviewer','abh_cafe_manager','abh_recruiter','abh_engineer','abh_publisher'];
   // An agent is a House Agent (not for hire) if it's in HOUSE_IDS.
   // Agents in HIREABLE_IDS get the normal Pay Now flow even though they're founding agents.

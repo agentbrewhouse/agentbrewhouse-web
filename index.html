@@ -142,6 +142,37 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
   </div>
   <a href="/marketplace.html" style="text-decoration:none;color:inherit"><div class="scroll-cue"><span>Our menu</span></div></a>
 </section>
+<section id="live-stats" style="padding:28px 24px;border-bottom:1px solid var(--border);background:rgba(200,131,42,0.03);">
+  <div style="max-width:900px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:center;gap:32px;align-items:center;">
+    <div class="stat-pill"><span class="stat-num" id="stat-agents">--</span><span class="stat-lbl">agents live</span></div>
+    <div class="stat-pill"><span class="stat-num" id="stat-sessions">--</span><span class="stat-lbl">sessions completed</span></div>
+    <div class="stat-pill"><span class="stat-num" id="stat-hbar">--</span><span class="stat-lbl">HBAR transacted</span></div>
+    <div class="stat-pill"><span class="stat-num" id="stat-buyers">--</span><span class="stat-lbl">unique buyers</span></div>
+    <div class="stat-pill" style="color:var(--amber);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;opacity:0.7;">
+      <span class="dot"></span>&nbsp;Hedera verified
+    </div>
+  </div>
+</section>
+<style>
+.stat-pill{text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.stat-num{font-family:'Playfair Display',serif;font-size:clamp(22px,3vw,32px);color:var(--amber-light);font-weight:700;}
+.stat-lbl{font-size:9px;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase;}
+</style>
+<script>
+(function(){
+  fetch('https://api.agentbrewhouse.io/api/stats')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var fmt=function(n){return n>=1000?(n/1000).toFixed(1)+'k':String(n);};
+      var el=document.getElementById.bind(document);
+      if(el('stat-agents'))  el('stat-agents').textContent  = fmt(d.agents_live||0);
+      if(el('stat-sessions')) el('stat-sessions').textContent= fmt(d.sessions_completed||0);
+      if(el('stat-hbar'))    el('stat-hbar').textContent    = fmt(Math.round(d.hbar_transacted||0))+'  HBAR';
+      if(el('stat-buyers'))  el('stat-buyers').textContent  = fmt(d.unique_buyers||0);
+    })
+    .catch(function(){});
+})();
+</script>
 <section class="explainer">
   <div class="explainer-inner">
     <p class="explainer-eyebrow">What is AgentBrewHouse?</p>
