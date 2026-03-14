@@ -126,19 +126,24 @@
 
   .save-device-banner {
     background: var(--panel2);
-    border: 1px solid var(--border);
-    border-top: 2px solid var(--amber);
+    border: 1px solid var(--amber);
+    border-left: 3px solid var(--amber);
     border-radius: 8px;
-    padding: 16px 20px;
-    margin-top: 16px;
-    text-align: left;
-    font-size: 12px;
+    padding: 12px 18px;
+    margin: 0 0 16px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 13px;
     color: var(--cream-dim);
+    flex-wrap: wrap;
   }
-  .save-device-banner strong { color: var(--cream); display: block; margin-bottom: 6px; }
-  .save-device-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .save-device-banner-text { flex: 1; }
+  .save-device-banner strong { color: var(--cream); font-size: 13px; }
+  .save-device-actions { display: flex; gap: 8px; flex-shrink: 0; }
   .save-device-actions button {
-    flex: 1; padding: 8px; border-radius: 6px; font-size: 12px;
+    padding: 7px 16px; border-radius: 6px; font-size: 12px;
     font-weight: 600; cursor: pointer; border: none; transition: opacity 0.2s;
   }
   .save-device-actions button:hover { opacity: 0.85; }
@@ -961,14 +966,6 @@
     <button onclick="login()">Enter Mission Control</button>
     <div class="login-error" id="login-error"></div>
 
-    <div id="save-device-banner" class="save-device-banner" style="display:none">
-      <strong>Save this device?</strong>
-      Use fingerprint or Touch ID next time -- no secret needed.
-      <div class="save-device-actions">
-        <button class="save-device-yes" onclick="registerPasskey()">Yes, save device</button>
-        <button class="save-device-no"  onclick="dismissSavePrompt()">Not now</button>
-      </div>
-    </div>
   </div>
 </div>
 
@@ -1053,6 +1050,20 @@
         </div>
       </div>
       <button class="topbar-refresh" onclick="loadAll()">&#8635; Refresh</button>
+    </div>
+
+    <!-- BIOMETRIC REGISTRATION BANNER (shown after first password login) -->
+    <div id="save-device-banner" style="display:none;padding:0 0 0 0;">
+      <div class="save-device-banner">
+        <div class="save-device-banner-text">
+          <strong>&#9889; Enable Touch ID / Face ID</strong>
+          Log in with your fingerprint or face next time -- no secret needed.
+        </div>
+        <div class="save-device-actions">
+          <button class="save-device-yes" onclick="registerPasskey()">Enable Biometrics</button>
+          <button class="save-device-no"  onclick="dismissSavePrompt()">Not now</button>
+        </div>
+      </div>
     </div>
 
     <div class="page-wrap">
@@ -1846,6 +1857,7 @@ function resetBiometrics() {
 async function loginBiometric() {
   var err = document.getElementById('login-error');
   err.textContent = '';
+  console.log('[ABH WebAuthn] loginBiometric() called. _waSupported:', _waSupported, '_storedCredId:', _storedCredId ? 'present' : 'missing');
   if (!_waSupported) { err.textContent = 'Biometrics not supported in this browser.'; return; }
   if (!_storedCredId) {
     err.textContent = 'No fingerprint registered. Log in with your secret first.';
@@ -1853,6 +1865,7 @@ async function loginBiometric() {
   }
   try {
     var credIdBytes = Uint8Array.from(atob(_storedCredId), function(c) { return c.charCodeAt(0); });
+    console.log('[ABH WebAuthn] calling navigator.credentials.get() with credId length:', credIdBytes.length);
     var cred = await navigator.credentials.get({
       publicKey: {
         challenge: crypto.getRandomValues(new Uint8Array(32)),
@@ -1862,6 +1875,7 @@ async function loginBiometric() {
         timeout: 60000
       }
     });
+    console.log('[ABH WebAuthn] navigator.credentials.get() succeeded, credential type:', cred.type);
     var saved = '';
     try { saved = localStorage.getItem('abh_admin_secret') || ''; } catch(e) {}
     if (!saved) {
@@ -1872,6 +1886,7 @@ async function loginBiometric() {
     adminSecret = saved;
     _onLoginSuccess();
   } catch(e) {
+    console.error('[ABH WebAuthn] loginBiometric error:', e.name, e.message);
     if (e.name === 'NotAllowedError') {
       err.textContent = 'Biometric cancelled or timed out.';
     } else if (e.name === 'InvalidStateError' || e.name === 'NotFoundError') {
@@ -1884,9 +1899,12 @@ async function loginBiometric() {
 }
 
 async function registerPasskey() {
+  console.log('[ABH WebAuthn] registerPasskey() called from user gesture. _waSupported:', _waSupported);
   var banner = document.getElementById('save-device-banner');
-  banner.innerHTML = '<strong>Waiting for fingerprint...</strong>';
+  var inner = banner.querySelector('.save-device-banner');
+  if (inner) inner.innerHTML = '<div class="save-device-banner-text"><strong>Waiting for fingerprint...</strong></div>';
   try {
+    console.log('[ABH WebAuthn] calling navigator.credentials.create() with rpId: agentbrewhouse.io');
     var cred = await navigator.credentials.create({
       publicKey: {
         rp: { name: 'AgentBrewHouse', id: 'agentbrewhouse.io' },
@@ -1897,6 +1915,7 @@ async function registerPasskey() {
         timeout: 60000
       }
     });
+    console.log('[ABH WebAuthn] navigator.credentials.create() succeeded, storing credential');
     var credIdB64 = btoa(String.fromCharCode.apply(null, new Uint8Array(cred.rawId)));
     try {
       localStorage.setItem('abh_passkey_credential_id', credIdB64);
@@ -1907,13 +1926,18 @@ async function registerPasskey() {
     var bd = document.getElementById('bio-divider');
     if (bb) bb.style.display = 'flex';
     if (bd) bd.style.display = 'flex';
-    banner.innerHTML = '<strong style="color:var(--green)">&#10003; Fingerprint registered! Use biometrics to log in next time.</strong>';
+    var inner2 = banner.querySelector('.save-device-banner');
+    if (inner2) inner2.innerHTML = '<div class="save-device-banner-text"><strong style="color:var(--green)">&#10003; Biometrics enabled! Use Touch ID / Face ID to log in next time.</strong></div>';
     setTimeout(function() { banner.style.display = 'none'; }, 4000);
   } catch(e) {
-    if (e.name === 'NotAllowedError') {
-      banner.innerHTML = '<strong>Cancelled.</strong>';
-    } else {
-      banner.innerHTML = '<strong style="color:var(--red)">Error: ' + e.message + '</strong>';
+    console.error('[ABH WebAuthn] registerPasskey error:', e.name, e.message);
+    var inner3 = banner.querySelector('.save-device-banner');
+    if (inner3) {
+      if (e.name === 'NotAllowedError') {
+        inner3.innerHTML = '<div class="save-device-banner-text"><strong>Cancelled.</strong> Click "Enable Biometrics" again to retry.</div><div class="save-device-actions"><button class="save-device-yes" onclick="registerPasskey()">Try Again</button><button class="save-device-no" onclick="dismissSavePrompt()">Dismiss</button></div>';
+      } else {
+        inner3.innerHTML = '<div class="save-device-banner-text"><strong style="color:var(--red)">Error: ' + e.message + '</strong></div><div class="save-device-actions"><button class="save-device-no" onclick="dismissSavePrompt()">Dismiss</button></div>';
+      }
     }
   }
 }
@@ -1921,6 +1945,7 @@ async function registerPasskey() {
 function dismissSavePrompt() {
   var b = document.getElementById('save-device-banner');
   if (b) b.style.display = 'none';
+  console.log('[ABH WebAuthn] biometric prompt dismissed');
 }
 
 function _onLoginSuccess() {
