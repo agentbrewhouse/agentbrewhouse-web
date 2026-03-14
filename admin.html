@@ -1601,6 +1601,7 @@ function loadAll() {
   var lu = document.getElementById('last-updated-time');
   if (lu) lu.textContent = new Date().toLocaleTimeString();
   loadOverview();
+  fetchLiveHbarPrice();
   loadSeniorStaff();
   loadAgents();
   loadSessions();
@@ -1653,13 +1654,18 @@ function _prepRegOptions(opts) {
   }
   if (!opts.authenticatorSelection) opts.authenticatorSelection = {};
   opts.authenticatorSelection.authenticatorAttachment = 'platform';
+  opts.authenticatorSelection.userVerification = 'required';
   if (!opts.timeout) opts.timeout = 60000;
+  if (!opts.rp) opts.rp = {};
+  opts.rp.id = 'agentbrewhouse.io';
   return opts;
 }
 
 function _prepAuthOptions(opts) {
   opts.challenge = _b64uToBuffer(opts.challenge);
   if (!opts.timeout) opts.timeout = 60000;
+  opts.userVerification = 'required';
+  opts.rpId = 'agentbrewhouse.io';
   if (opts.allowCredentials) {
     opts.allowCredentials = opts.allowCredentials.map(function(c) {
       return Object.assign({}, c, { id: _b64uToBuffer(c.id) });
@@ -1821,6 +1827,21 @@ function login() {
 /* ══════════════════════════════════════════════
    PLACEHOLDERS — filled in subsequent stages
    ══════════════════════════════════════════════ */
+
+/* ── LIVE HBAR PRICE (browser fetch bypasses server rate-limit) ── */
+function fetchLiveHbarPrice() {
+  fetch('https://api.coingecko.com/api/v3/simple/price?ids=hedera-hashgraph&vs_currencies=usd')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var price = (d['hedera-hashgraph'] || {}).usd;
+      if (!price) return;
+      var fmt = '$' + price.toFixed(4);
+      var set = function(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
+      set('cmd-hbar-price', fmt);
+      set('fin-hbar-price', fmt);
+    })
+    .catch(function() {});
+}
 
 /* ── OVERVIEW ── */
 function loadOverview() {
@@ -2080,8 +2101,8 @@ function triggerAgent() {
     headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': adminSecret },
     body: JSON.stringify({ task: task || 'run', context: {} })
   }).then(function(r) { return r.json(); }).then(function(d) {
-    btn.disabled    = false;
-    btn.textContent = '&#9654; Run Agent';
+    btn.disabled   = false;
+    btn.innerHTML  = '&#9654; Run Agent';
     if (d.error) {
       res.style.color = 'var(--red)';
       res.textContent = 'Error: ' + d.error;
@@ -2090,8 +2111,8 @@ function triggerAgent() {
       res.textContent = (d.message || d.status || 'Agent triggered') + (d.session_id ? ' | session: ' + d.session_id : '');
     }
   }).catch(function(e) {
-    btn.disabled    = false;
-    btn.textContent = '&#9654; Run Agent';
+    btn.disabled   = false;
+    btn.innerHTML  = '&#9654; Run Agent';
     res.style.color = 'var(--red)';
     res.textContent = 'Network error: ' + e.message;
   });
