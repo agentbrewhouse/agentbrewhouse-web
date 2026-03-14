@@ -489,6 +489,43 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
 .badge-house { background: rgba(200,131,42,0.15); color: #c8832a; border: 1px solid rgba(200,131,42,0.4); }
 .not-for-hire { font-size: 11px; letter-spacing: 0.12em; color: var(--amber); opacity: 0.7; text-align: center; padding: 10px 0; }
 
+/* ── Wallet connect button ── */
+.nav-wallet-btn { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; background: none; border: 1px solid rgba(200,131,42,0.3); color: var(--muted); padding: 5px 12px; cursor: pointer; font-family: 'DM Mono', monospace; transition: all 0.2s; }
+.nav-wallet-btn:hover { border-color: var(--amber); color: var(--amber); }
+.nav-wallet-btn.connected { border-color: rgba(106,191,123,0.5); color: #6abf7b; }
+
+/* ── HashPack pairing modal ── */
+#hc-pairing-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.82); z-index: 1300; align-items: center; justify-content: center; }
+#hc-pairing-overlay.visible { display: flex; }
+#hc-pairing-card { background: #0f0d0b; border: 1px solid rgba(200,131,42,0.3); max-width: 420px; width: 90%; padding: 32px 28px; position: relative; }
+#hc-pairing-card h3 { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--amber-light); margin: 0 0 6px; }
+#hc-pairing-card p { font-size: 11px; color: var(--muted); letter-spacing: 0.06em; line-height: 1.7; margin: 0 0 16px; }
+#hc-pairing-code { background: rgba(255,255,255,0.04); border: 1px solid rgba(200,131,42,0.2); color: var(--cream); font-family: 'DM Mono', monospace; font-size: 10px; padding: 10px 12px; word-break: break-all; line-height: 1.5; margin-bottom: 12px; }
+.hc-copy-btn { background: transparent; border: 1px solid var(--amber); color: var(--amber); font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; padding: 8px 14px; cursor: pointer; width: 100%; margin-bottom: 10px; transition: background 0.2s, color 0.2s; }
+.hc-copy-btn:hover { background: var(--amber); color: var(--bg); }
+#hc-pairing-status { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-align: center; min-height: 18px; }
+#hc-pairing-close { position: absolute; top: 14px; right: 16px; background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; line-height: 1; }
+
+/* ── Search bar ── */
+.search-bar { max-width: 1160px; margin: 0 auto; padding: 24px 20px 0; display: flex; flex-direction: column; gap: 12px; }
+.search-input-wrap { position: relative; }
+.search-input { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--border); color: var(--cream); font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.04em; padding: 12px 40px 12px 16px; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
+.search-input:focus { border-color: var(--amber); }
+.search-input::placeholder { color: var(--muted); }
+.search-clear { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--muted); font-size: 16px; cursor: pointer; line-height: 1; display: none; }
+.search-clear.visible { display: block; }
+.tag-filters { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag-filter-btn { background: transparent; border: 1px solid rgba(200,131,42,0.18); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; padding: 5px 12px; cursor: pointer; transition: all 0.2s; }
+.tag-filter-btn:hover { border-color: var(--amber); color: var(--amber-light); }
+.tag-filter-btn.active { border-color: var(--amber); color: var(--amber); background: rgba(200,131,42,0.08); }
+.search-empty { text-align: center; padding: 56px 20px; color: var(--muted); font-size: 11px; letter-spacing: 0.1em; }
+
+/* ── Auto-detect payment status ── */
+.detect-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 10px; letter-spacing: 0.1em; color: var(--muted); min-height: 24px; }
+.detect-spinner { width: 12px; height: 12px; border: 1.5px solid rgba(200,131,42,0.3); border-top-color: var(--amber); border-radius: 50%; animation: spin 0.8s linear infinite; flex-shrink: 0; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.detect-found { color: #6abf7b; }
+
 /* ── Public chat widget ── */
 #abh-bubble {
   position: fixed; bottom: 28px; right: 28px; z-index: 900;
@@ -671,8 +708,14 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     <p class="auth-body" style="margin-bottom:12px">After sending, paste your Hedera transaction ID below:</p>
     <input type="text" id="hbar-txid" class="auth-input" placeholder="0.0.XXXXXX@seconds.nanos" autocomplete="off" />
     <button class="auth-submit" id="hbar-verify-btn" onclick="submitHbarSession()">Start session &rarr;</button>
+    <div class="detect-row" id="hbar-detect-row" style="display:none;">
+      <div class="detect-spinner" id="hbar-detect-spinner"></div>
+      <span id="hbar-detect-msg">Scanning for your payment...</span>
+    </div>
     <div class="auth-error" id="hbar-error"></div>
-    <p class="auth-note">Open HashPack &rarr; Send &rarr; HBAR &rarr; paste the wallet address and memo above.</p>
+    <p class="auth-note" id="hbar-pay-note">Open HashPack &rarr; Send &rarr; HBAR &rarr; paste the wallet address and memo above.</p>
+    <p class="auth-note" id="hbar-wallet-note" style="display:none;">Wallet connected. Send the payment then click <strong>Auto-detect</strong> or paste the tx ID manually.</p>
+    <button class="auth-submit" id="hbar-autodetect-btn" onclick="startAutoDetect()" style="display:none; background: transparent; border: 1px solid var(--amber); color: var(--amber); margin-top: 8px;">&#128270; Auto-detect payment</button>
   </div>
 </div>
 
@@ -825,9 +868,22 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
       <span>1 HBAR =</span>
       <span class="price" id="hbar-price">--</span>
     </div>
+    <button class="nav-wallet-btn" id="nav-wallet-btn" onclick="connectWallet()" title="Connect HashPack wallet">&#9654; Wallet</button>
     <button class="nav-auth-btn" id="nav-auth-btn" onclick="handleNavAuthClick()">Sign in</button>
   </div>
 </nav>
+
+<!-- HashPack pairing modal -->
+<div id="hc-pairing-overlay">
+  <div id="hc-pairing-card">
+    <button id="hc-pairing-close" onclick="closePairingModal()" aria-label="Close">&#10005;</button>
+    <h3>Connect HashPack</h3>
+    <p>Copy this pairing code, then open HashPack &rarr; Settings &rarr; Pair &rarr; paste code. Once connected, your wallet auto-detects payments.</p>
+    <div id="hc-pairing-code">Generating...</div>
+    <button class="hc-copy-btn" onclick="copyPairingCode()">Copy pairing code</button>
+    <div id="hc-pairing-status">Waiting for HashPack...</div>
+  </div>
+</div>
 
 <div class="page-header">
   <p class="page-eyebrow">Browse the registry</p>
@@ -845,6 +901,14 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
   <button class="filter-btn" data-filter="security">Security</button>
   <button class="filter-btn" data-filter="data">Data</button>
   <button class="filter-btn" data-filter="quality">Quality</button>
+</div>
+
+<div class="search-bar" id="search-bar">
+  <div class="search-input-wrap">
+    <input class="search-input" id="search-input" type="text" placeholder="Search agents by name, description, or capability..." oninput="onSearchInput(this.value)" autocomplete="off" />
+    <button class="search-clear" id="search-clear" onclick="clearSearch()" title="Clear search">&#10005;</button>
+  </div>
+  <div class="tag-filters" id="tag-filters"></div>
 </div>
 
 <section class="marketplace">
@@ -1509,6 +1573,10 @@ function payHbar(agentIdx) {
   document.getElementById('hbar-verify-btn').disabled      = false;
   document.getElementById('hbar-verify-btn').textContent   = 'Start session \u2192';
   setHbarMode('task');
+  stopAutoDetect();
+  var detectRow = document.getElementById('hbar-detect-row');
+  if (detectRow) detectRow.style.display = 'none';
+  updateWalletBtn();
   document.getElementById('hbar-overlay').classList.add('visible');
 }
 
@@ -2006,6 +2074,325 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   _pubUpdateLimit();
+});
+
+// ---------------------------------------------------------------------------
+// Search + tag filter (Item 9)
+// ---------------------------------------------------------------------------
+var _searchText = '';
+var _activeTags = [];
+
+function onSearchInput(val) {
+  _searchText = (val || '').toLowerCase().trim();
+  var clearBtn = document.getElementById('search-clear');
+  if (clearBtn) clearBtn.className = 'search-clear' + (_searchText ? ' visible' : '');
+  _applySearchFilter();
+}
+
+function clearSearch() {
+  var inp = document.getElementById('search-input');
+  if (inp) inp.value = '';
+  _searchText = '';
+  var clearBtn = document.getElementById('search-clear');
+  if (clearBtn) clearBtn.className = 'search-clear';
+  _applySearchFilter();
+}
+
+function toggleTagFilter(tag) {
+  var idx = _activeTags.indexOf(tag);
+  if (idx >= 0) {
+    _activeTags.splice(idx, 1);
+  } else {
+    _activeTags.push(tag);
+  }
+  document.querySelectorAll('.tag-filter-btn').forEach(function(b) {
+    b.className = 'tag-filter-btn' + (_activeTags.indexOf(b.dataset.tag) >= 0 ? ' active' : '');
+  });
+  _applySearchFilter();
+}
+
+function _applySearchFilter() {
+  var filtered = allAgents;
+  if (_searchText) {
+    filtered = filtered.filter(function(a) {
+      var name = (a.name || '').toLowerCase();
+      var desc = (a.description || '').toLowerCase();
+      var tags = (a.tags || []).join(' ').toLowerCase();
+      var skills = (a.skills || []).join(' ').toLowerCase();
+      return (
+        name.indexOf(_searchText) >= 0 ||
+        desc.indexOf(_searchText) >= 0 ||
+        tags.indexOf(_searchText) >= 0 ||
+        skills.indexOf(_searchText) >= 0
+      );
+    });
+  }
+  if (_activeTags.length > 0) {
+    filtered = filtered.filter(function(a) {
+      var agentTags = (a.tags || []).concat(a.skills || []).map(function(t) { return (t || '').toLowerCase(); });
+      return _activeTags.every(function(t) { return agentTags.indexOf(t.toLowerCase()) >= 0; });
+    });
+  }
+  // Show empty state if no results
+  var grid   = document.getElementById('grid');
+  var locked = document.getElementById('locked-section');
+  if ((_searchText || _activeTags.length > 0) && filtered.length === 0) {
+    if (grid) grid.innerHTML = '<div class="search-empty">No agents match your search.</div>';
+    if (locked) locked.style.display = 'none';
+    return;
+  }
+  renderGrid(filtered);
+}
+
+function buildTagFilters() {
+  var tagSet = {};
+  allAgents.forEach(function(a) {
+    var combined = (a.tags || []).concat(a.skills || []);
+    combined.forEach(function(t) {
+      if (t && t.trim()) tagSet[t.trim().toLowerCase()] = true;
+    });
+  });
+  var tags = Object.keys(tagSet).sort().slice(0, 20);
+  var wrap = document.getElementById('tag-filters');
+  if (!wrap || !tags.length) return;
+  wrap.innerHTML = tags.map(function(t) {
+    return '<button class="tag-filter-btn" data-tag="' + t + '" onclick="toggleTagFilter(\'' + t.replace(/'/g, '') + '\')">' + t + '</button>';
+  }).join('');
+}
+
+// Patch loadAgents to build tag filters after load
+var _origLoadAgents = loadAgents;
+loadAgents = async function() {
+  await _origLoadAgents();
+  buildTagFilters();
+};
+
+// Patch applyFilter to also respect search/tag state
+var _origApplyFilter = applyFilter;
+applyFilter = function(f) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.filter === f);
+  });
+  if (_searchText || _activeTags.length > 0) {
+    _applySearchFilter();
+  } else {
+    renderGrid(f === 'all' ? allAgents : allAgents.filter(function(a) { return a.category === f; }));
+  }
+};
+
+// ---------------------------------------------------------------------------
+// HashPack / HashConnect wallet integration (Item 1)
+// ---------------------------------------------------------------------------
+var _hcLoaded      = false;
+var _hcInitialized = false;
+var _hcPaired      = false;
+var _hcAccountId   = null;
+var _hcTopic       = null;
+var _hcPairingStr  = null;
+var _hcInstance    = null;
+var _hcPostPair    = null;   // callback after successful pairing
+var _hcDetectTimer = null;
+var _hcDetectIdx   = 0;
+var HC_APP_META    = {
+  name:        'AgentBrewHouse',
+  description: 'AI Agent Marketplace on Hedera',
+  icon:        'https://agentbrewhouse.io/favicon.ico',
+  url:         'https://agentbrewhouse.io',
+};
+
+function _loadHCScript(cb) {
+  if (window.HashConnect) { cb(); return; }
+  var s = document.createElement('script');
+  s.src = 'https://cdn.jsdelivr.net/npm/hashconnect@2.3.3/dist/umd/index.min.js';
+  s.onload  = function() { _hcLoaded = true; cb(); };
+  s.onerror = function() { showToast('HashConnect unavailable. Use manual tx flow.'); };
+  document.head.appendChild(s);
+}
+
+async function _initHC(afterInit) {
+  if (_hcInitialized && _hcInstance) { afterInit && afterInit(); return; }
+  _loadHCScript(async function() {
+    try {
+      _hcInstance = new window.HashConnect(true);
+      _hcInstance.pairingEvent.once(function(data) {
+        _hcAccountId = (data.accountIds || [])[0] || null;
+        _hcPaired    = true;
+        _hcTopic     = data.topic;
+        try { localStorage.setItem('abh_hc', JSON.stringify({ topic: data.topic, accountIds: data.accountIds || [] })); } catch(e) {}
+        closePairingModal();
+        updateWalletBtn();
+        showToast('Wallet connected: ' + _hcAccountId);
+        if (_hcPostPair) { var fn = _hcPostPair; _hcPostPair = null; fn(); }
+      });
+      var initData    = await _hcInstance.init(HC_APP_META, 'mainnet', false);
+      _hcInitialized  = true;
+      // Restore previous pairing
+      var saved = null;
+      try { saved = JSON.parse(localStorage.getItem('abh_hc') || 'null'); } catch(e) {}
+      if (saved && saved.topic && (saved.accountIds || []).length) {
+        _hcTopic     = saved.topic;
+        _hcAccountId = saved.accountIds[0];
+        _hcPaired    = true;
+        _hcInstance.loadLocalData();
+        updateWalletBtn();
+      } else {
+        _hcTopic      = initData.topic;
+        _hcPairingStr = _hcInstance.generatePairingString(_hcTopic, 'mainnet', false);
+      }
+      afterInit && afterInit();
+    } catch(initErr) {
+      showToast('Wallet init failed. Use manual tx flow.');
+    }
+  });
+}
+
+function connectWallet() {
+  if (_hcPaired && _hcAccountId) {
+    if (confirm('Wallet ' + _hcAccountId + ' connected. Disconnect?')) {
+      try { localStorage.removeItem('abh_hc'); } catch(e) {}
+      _hcPaired = false; _hcAccountId = null; _hcTopic = null;
+      updateWalletBtn();
+    }
+    return;
+  }
+  _initHC(function() {
+    if (_hcPaired) { updateWalletBtn(); return; }
+    if (!_hcPairingStr) {
+      _hcPairingStr = _hcInstance ? _hcInstance.generatePairingString(_hcTopic, 'mainnet', false) : '';
+    }
+    showPairingModal();
+  });
+}
+
+function showPairingModal() {
+  var codeEl  = document.getElementById('hc-pairing-code');
+  var statEl  = document.getElementById('hc-pairing-status');
+  if (codeEl) codeEl.textContent = _hcPairingStr || 'Generating...';
+  if (statEl) statEl.textContent = 'Waiting for HashPack...';
+  document.getElementById('hc-pairing-overlay').classList.add('visible');
+}
+
+function closePairingModal() {
+  document.getElementById('hc-pairing-overlay').classList.remove('visible');
+}
+
+function copyPairingCode() {
+  if (!_hcPairingStr) return;
+  navigator.clipboard.writeText(_hcPairingStr).then(function() {
+    showToast('Pairing code copied.');
+  }).catch(function() { showToast('Copy failed.'); });
+}
+
+function updateWalletBtn() {
+  var btn = document.getElementById('nav-wallet-btn');
+  if (!btn) return;
+  if (_hcPaired && _hcAccountId) {
+    btn.textContent = '&#9654; ' + _hcAccountId.slice(0, 14) + '...';
+    btn.className   = 'nav-wallet-btn connected';
+  } else {
+    btn.textContent = '&#9654; Wallet';
+    btn.className   = 'nav-wallet-btn';
+  }
+  // Update HBAR modal wallet note visibility
+  var note     = document.getElementById('hbar-wallet-note');
+  var payNote  = document.getElementById('hbar-pay-note');
+  var autoBtn  = document.getElementById('hbar-autodetect-btn');
+  if (note)    note.style.display    = _hcPaired ? '' : 'none';
+  if (payNote) payNote.style.display = _hcPaired ? 'none' : '';
+  if (autoBtn) autoBtn.style.display = _hcPaired ? '' : 'none';
+}
+
+// Auto-detect payment via Mirror Node polling
+function startAutoDetect() {
+  if (!_hcAccountId) { showToast('Connect your wallet first.'); return; }
+  var agent = _hbarAgentIdx !== null ? allAgents[_hbarAgentIdx] : null;
+  if (!agent) return;
+  var amount = parseFloat(agent.price_hbar || 0);
+  var detectRow = document.getElementById('hbar-detect-row');
+  var detectMsg = document.getElementById('hbar-detect-msg');
+  var autoBtn   = document.getElementById('hbar-autodetect-btn');
+  if (detectRow) detectRow.style.display = 'flex';
+  if (detectMsg) detectMsg.textContent   = 'Scanning Mirror Node...';
+  if (autoBtn)   autoBtn.disabled        = true;
+  _hcDetectIdx = 0;
+  _runAutoDetect(amount, detectMsg, autoBtn);
+}
+
+function _runAutoDetect(amount, msgEl, autoBtn) {
+  _hcDetectIdx++;
+  if (_hcDetectIdx > 36) {
+    // 3 min timeout
+    if (msgEl) { msgEl.textContent = 'Not found. Enter tx ID manually.'; msgEl.className = ''; }
+    if (autoBtn) { autoBtn.disabled = false; }
+    var row = document.getElementById('hbar-detect-row');
+    var spinner = document.getElementById('hbar-detect-spinner');
+    if (spinner) spinner.style.display = 'none';
+    return;
+  }
+  var url = 'https://mainnet-public.mirrornode.hedera.com/api/v1/transactions';
+  url += '?account.id=' + _hcAccountId + '&order=desc&limit=20';
+  fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+    var txs = data.transactions || [];
+    var now = Date.now() / 1000;
+    for (var i = 0; i < txs.length; i++) {
+      var tx = txs[i];
+      if (tx.result !== 'SUCCESS') continue;
+      var ts = parseFloat(tx.consensus_timestamp || 0);
+      if ((now - ts) > 600) continue; // only last 10 min
+      var transfers = tx.transfers || [];
+      var toAbh = null;
+      for (var j = 0; j < transfers.length; j++) {
+        if (transfers[j].account === '0.0.10358210' && transfers[j].amount > 0) {
+          toAbh = transfers[j]; break;
+        }
+      }
+      if (!toAbh) continue;
+      var hbarSent = toAbh.amount / 1e8;
+      if (Math.abs(hbarSent - amount) < 0.01) {
+        // Found matching tx
+        var rawId = tx.transaction_id || '';
+        // Mirror Node format: "0.0.123456-1234567890-000000000" -> "0.0.123456@1234567890.000000000"
+        var txId = rawId.replace(/^(\d+\.\d+\.\d+)-(\d+)-(\d+)$/, '$1@$2.$3');
+        var txInput = document.getElementById('hbar-txid');
+        if (txInput) txInput.value = txId;
+        if (msgEl) { msgEl.textContent = 'Payment found! Submitting...'; msgEl.className = 'detect-found'; }
+        var spinner = document.getElementById('hbar-detect-spinner');
+        if (spinner) spinner.style.display = 'none';
+        // Auto-submit session
+        setTimeout(function() { submitHbarSession(); }, 400);
+        return;
+      }
+    }
+    // Not found yet -- retry in 5s
+    _hcDetectTimer = setTimeout(function() { _runAutoDetect(amount, msgEl, autoBtn); }, 5000);
+  }).catch(function() {
+    _hcDetectTimer = setTimeout(function() { _runAutoDetect(amount, msgEl, autoBtn); }, 5000);
+  });
+}
+
+function stopAutoDetect() {
+  if (_hcDetectTimer) { clearTimeout(_hcDetectTimer); _hcDetectTimer = null; }
+}
+
+// Update closeHbarModal to also stop auto-detect
+var _origCloseHbar = closeHbarModal;
+closeHbarModal = function() {
+  stopAutoDetect();
+  var detectRow = document.getElementById('hbar-detect-row');
+  if (detectRow) detectRow.style.display = 'none';
+  _origCloseHbar();
+};
+
+// Eagerly try to restore previous HC pairing on page load
+window.addEventListener('load', function() {
+  try {
+    var saved = JSON.parse(localStorage.getItem('abh_hc') || 'null');
+    if (saved && saved.topic && (saved.accountIds || []).length) {
+      // Restore without showing modal
+      _initHC(function() {}); // will restore from localStorage inside
+    }
+  } catch(e) {}
 });
 
 // ---------------------------------------------------------------------------
