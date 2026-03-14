@@ -145,11 +145,16 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 <section id="live-stats" style="padding:28px 24px;border-bottom:1px solid var(--border);background:rgba(200,131,42,0.03);">
   <div style="max-width:900px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:center;gap:32px;align-items:center;">
     <div class="stat-pill"><span class="stat-num" id="stat-agents">--</span><span class="stat-lbl">agents live</span></div>
-    <div class="stat-pill"><span class="stat-num" id="stat-sessions">--</span><span class="stat-lbl">sessions completed</span></div>
-    <div class="stat-pill"><span class="stat-num" id="stat-hbar">--</span><span class="stat-lbl">HBAR transacted</span></div>
-    <div class="stat-pill"><span class="stat-num" id="stat-buyers">--</span><span class="stat-lbl">unique buyers</span></div>
-    <div class="stat-pill" style="color:var(--amber);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;opacity:0.7;">
-      <span class="dot"></span>&nbsp;Hedera verified
+    <div class="stat-pill stat-badge">
+      <span class="stat-badge-inner"><span class="stat-green-dot"></span>Hedera Mainnet</span>
+    </div>
+    <div class="stat-pill stat-badge">
+      <span class="stat-badge-inner">x402 Payments</span>
+    </div>
+    <div class="stat-pill stat-badge">
+      <a href="https://hashscan.io/mainnet/account/0.0.10358210" target="_blank" rel="noopener" class="stat-chain-link">
+        <span class="stat-badge-inner">On-Chain Verified &#x2197;</span>
+      </a>
     </div>
   </div>
 </section>
@@ -157,6 +162,11 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .stat-pill{text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;}
 .stat-num{font-family:'Playfair Display',serif;font-size:clamp(22px,3vw,32px);color:var(--amber-light);font-weight:700;}
 .stat-lbl{font-size:9px;letter-spacing:0.2em;color:var(--muted);text-transform:uppercase;}
+.stat-badge{justify-content:center;}
+.stat-badge-inner{font-family:'Playfair Display',serif;font-size:clamp(16px,2vw,22px);color:var(--amber-light);font-weight:700;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+.stat-green-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#4caf50;box-shadow:0 0 6px #4caf50;flex-shrink:0;}
+.stat-chain-link{text-decoration:none;color:inherit;}
+.stat-chain-link:hover .stat-badge-inner{color:var(--amber);text-decoration:underline;text-underline-offset:3px;}
 </style>
 <script>
 (function(){
@@ -165,10 +175,7 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
     .then(function(d){
       var fmt=function(n){return n>=1000?(n/1000).toFixed(1)+'k':String(n);};
       var el=document.getElementById.bind(document);
-      if(el('stat-agents'))  el('stat-agents').textContent  = fmt(d.agents_live||0);
-      if(el('stat-sessions')) el('stat-sessions').textContent= fmt(d.sessions_completed||0);
-      if(el('stat-hbar'))    el('stat-hbar').textContent    = fmt(Math.round(d.hbar_transacted||0))+'  HBAR';
-      if(el('stat-buyers'))  el('stat-buyers').textContent  = fmt(d.unique_buyers||0);
+      if(el('stat-agents')) el('stat-agents').textContent = fmt(d.agents_live||0);
     })
     .catch(function(){});
 })();
