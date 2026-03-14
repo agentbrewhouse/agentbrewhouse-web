@@ -583,6 +583,53 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
 #abh-pub-send:disabled { opacity: 0.4; cursor: not-allowed; }
 #abh-pub-limit { font-size: 10px; color: rgba(200,131,42,0.5); text-align: center; padding: 4px 12px 8px; letter-spacing: 0.05em; flex-shrink: 0; }
 @media (max-width: 420px) { #abh-pub-panel { width: calc(100vw - 24px); right: 12px; } }
+
+/* ── Session task fields inside pay modals ── */
+.sess-section { margin-bottom: 16px; }
+.sess-label { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; display: block; }
+.sess-textarea { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(200,131,42,0.25); color: var(--cream); font-family: 'DM Mono', monospace; font-size: 11px; padding: 10px 12px; resize: vertical; min-height: 72px; outline: none; transition: border-color 0.2s; box-sizing: border-box; }
+.sess-textarea:focus { border-color: var(--amber); }
+.sess-mode-row { display: flex; gap: 8px; margin-top: 6px; }
+.sess-mode-btn { flex: 1; background: transparent; border: 1px solid rgba(200,131,42,0.25); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; padding: 8px 4px; cursor: pointer; transition: all 0.2s; }
+.sess-mode-btn.active { border-color: var(--amber); color: var(--amber); background: rgba(200,131,42,0.08); }
+.sess-divider { border: none; border-top: 1px solid rgba(200,131,42,0.15); margin: 16px 0; }
+
+/* ── Session result modal ── */
+#sess-result-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.78); z-index: 1200; align-items: center; justify-content: center; }
+#sess-result-overlay.visible { display: flex; }
+#sess-result-card { background: #0f0d0b; border: 1px solid rgba(200,131,42,0.3); max-width: 560px; width: 90%; max-height: 80vh; display: flex; flex-direction: column; position: relative; }
+#sess-result-head { padding: 18px 20px 14px; border-bottom: 1px solid rgba(200,131,42,0.15); display: flex; align-items: center; gap: 10px; }
+#sess-result-head h3 { flex: 1; font-family: 'Playfair Display', serif; font-size: 16px; color: var(--amber-light); margin: 0; }
+#sess-result-close { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; line-height: 1; }
+#sess-result-body { flex: 1; overflow-y: auto; padding: 18px 20px; font-size: 12px; line-height: 1.7; color: var(--cream); white-space: pre-wrap; word-break: break-word; }
+#sess-result-foot { padding: 14px 20px; border-top: 1px solid rgba(200,131,42,0.15); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+#sess-result-id { font-size: 9px; letter-spacing: 0.1em; color: var(--muted); flex: 1; }
+.sess-copy-btn { background: transparent; border: 1px solid var(--amber); color: var(--amber); font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; padding: 8px 14px; cursor: pointer; transition: background 0.2s, color 0.2s; }
+.sess-copy-btn:hover { background: var(--amber); color: var(--bg); }
+
+/* ── Session chat panel ── */
+#sess-scrim { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1100; }
+#sess-scrim.open { display: block; }
+#sess-chat-panel { position: fixed; right: 0; top: 0; bottom: 0; width: 420px; background: linear-gradient(180deg, #0f0d0b 0%, #12100d 100%); border-left: 1px solid rgba(200,131,42,0.2); z-index: 1101; transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); box-shadow: -8px 0 40px rgba(0,0,0,0.6); display: flex; flex-direction: column; }
+#sess-chat-panel.open { transform: translateX(0); }
+#sess-chat-head { padding: 14px 16px; border-bottom: 1px solid rgba(200,131,42,0.15); display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+#sess-chat-avatar { width: 36px; height: 36px; border-radius: 50%; background: rgba(200,131,42,0.15); border: 1px solid rgba(200,131,42,0.3); display: flex; align-items: center; justify-content: center; font-size: 16px; overflow: hidden; flex-shrink: 0; }
+#sess-chat-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+#sess-chat-info { flex: 1; min-width: 0; }
+#sess-chat-name { font-size: 13px; font-weight: 700; color: var(--amber); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#sess-chat-meta { font-size: 9px; letter-spacing: 0.1em; color: var(--muted); margin-top: 1px; }
+#sess-chat-close { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 4px; line-height: 1; flex-shrink: 0; }
+#sess-chat-msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.sess-msg { max-width: 85%; padding: 10px 13px; font-size: 12px; line-height: 1.6; word-break: break-word; }
+.sess-msg.user { background: rgba(200,131,42,0.12); border: 1px solid rgba(200,131,42,0.2); color: var(--amber-light); align-self: flex-end; }
+.sess-msg.agent { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07); color: var(--cream); align-self: flex-start; }
+#sess-chat-foot { border-top: 1px solid rgba(200,131,42,0.15); padding: 12px 14px; display: flex; gap: 8px; flex-shrink: 0; }
+#sess-chat-input { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(200,131,42,0.2); color: var(--cream); font-family: 'DM Mono', monospace; font-size: 12px; padding: 10px 12px; outline: none; resize: none; min-height: 42px; max-height: 120px; overflow-y: auto; transition: border-color 0.2s; }
+#sess-chat-input:focus { border-color: var(--amber); }
+#sess-chat-send { background: var(--amber); border: none; color: var(--bg); font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; padding: 0 16px; cursor: pointer; transition: opacity 0.2s; flex-shrink: 0; }
+#sess-chat-send:disabled { opacity: 0.35; cursor: default; }
+#sess-chat-limit { font-size: 9px; letter-spacing: 0.08em; color: var(--muted); text-align: center; padding: 4px 0 8px; flex-shrink: 0; }
+@media (max-width: 600px) { #sess-chat-panel { width: 100vw; } }
 </style>
 <script src="tracker.js" defer></script>
 </head>
@@ -596,6 +643,15 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     <h2 class="auth-title">Send <em><span id="hbar-modal-amount">0</span> HBAR</em></h2>
     <p class="pay-modal-agent-name" id="hbar-modal-name"></p>
     <div class="auth-rule"></div>
+    <div class="sess-section">
+      <label class="sess-label" for="hbar-task-input">What do you want this agent to do?</label>
+      <textarea id="hbar-task-input" class="sess-textarea" placeholder="Describe your task..."></textarea>
+      <div class="sess-mode-row">
+        <button class="sess-mode-btn active" id="hbar-mode-task" onclick="setHbarMode('task')">&#9654; Task</button>
+        <button class="sess-mode-btn" id="hbar-mode-chat" onclick="setHbarMode('chat')">&#128172; Chat</button>
+      </div>
+    </div>
+    <hr class="sess-divider" />
     <div class="pay-fields">
       <div class="pay-field">
         <div class="pay-field-label">Send to wallet</div>
@@ -614,7 +670,7 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     </div>
     <p class="auth-body" style="margin-bottom:12px">After sending, paste your Hedera transaction ID below:</p>
     <input type="text" id="hbar-txid" class="auth-input" placeholder="0.0.XXXXXX@seconds.nanos" autocomplete="off" />
-    <button class="auth-submit" id="hbar-verify-btn" onclick="submitHbarPayment()">Verify payment &rarr;</button>
+    <button class="auth-submit" id="hbar-verify-btn" onclick="submitHbarSession()">Start session &rarr;</button>
     <div class="auth-error" id="hbar-error"></div>
     <p class="auth-note">Open HashPack &rarr; Send &rarr; HBAR &rarr; paste the wallet address and memo above.</p>
   </div>
@@ -628,6 +684,15 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     <h2 class="auth-title">Send <em><span id="usdc-modal-amount">0.00</span> USDC</em></h2>
     <p class="pay-modal-agent-name" id="usdc-modal-name"></p>
     <div class="auth-rule"></div>
+    <div class="sess-section">
+      <label class="sess-label" for="usdc-task-input">What do you want this agent to do?</label>
+      <textarea id="usdc-task-input" class="sess-textarea" placeholder="Describe your task..."></textarea>
+      <div class="sess-mode-row">
+        <button class="sess-mode-btn active" id="usdc-mode-task" onclick="setUsdcMode('task')">&#9654; Task</button>
+        <button class="sess-mode-btn" id="usdc-mode-chat" onclick="setUsdcMode('chat')">&#128172; Chat</button>
+      </div>
+    </div>
+    <hr class="sess-divider" />
     <div class="pay-fields">
       <div class="pay-field">
         <div class="pay-field-label">Send to wallet</div>
@@ -653,9 +718,43 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     </div>
     <p class="auth-body" style="margin-bottom:12px">After sending, paste your Hedera transaction ID below:</p>
     <input type="text" id="usdc-txid" class="auth-input" placeholder="0.0.XXXXXX@seconds.nanos" autocomplete="off" />
-    <button class="auth-submit" id="usdc-verify-btn" onclick="submitUsdcPayment()">Verify payment &rarr;</button>
+    <button class="auth-submit" id="usdc-verify-btn" onclick="submitUsdcSession()">Start session &rarr;</button>
     <div class="auth-error" id="usdc-error"></div>
     <p class="auth-note">Open HashPack &#8594; Send &#8594; Token Transfer &#8594; choose USDC &#8594; paste the wallet address and memo above.</p>
+  </div>
+</div>
+
+<!-- SESSION RESULT MODAL -->
+<div id="sess-result-overlay">
+  <div id="sess-result-card">
+    <div id="sess-result-head">
+      <h3 id="sess-result-agent">Agent Result</h3>
+      <button id="sess-result-close" onclick="closeSessionResult()" aria-label="Close">&#10005;</button>
+    </div>
+    <div id="sess-result-body"></div>
+    <div id="sess-result-foot">
+      <span id="sess-result-id"></span>
+      <button class="sess-copy-btn" onclick="copySessionResult()">Copy result</button>
+    </div>
+  </div>
+</div>
+
+<!-- SESSION CHAT PANEL -->
+<div id="sess-scrim" onclick="closeSessionChat()"></div>
+<div id="sess-chat-panel">
+  <div id="sess-chat-head">
+    <div id="sess-chat-avatar">&#9749;</div>
+    <div id="sess-chat-info">
+      <div id="sess-chat-name">Agent</div>
+      <div id="sess-chat-meta">Session active</div>
+    </div>
+    <button id="sess-chat-close" onclick="closeSessionChat()" aria-label="Close session">&#10005;</button>
+  </div>
+  <div id="sess-chat-msgs"></div>
+  <div id="sess-chat-limit"></div>
+  <div id="sess-chat-foot">
+    <textarea id="sess-chat-input" placeholder="Type your message..." rows="2" onkeydown="sessInputKey(event)"></textarea>
+    <button id="sess-chat-send" onclick="sendSessionMessage()">Send</button>
   </div>
 </div>
 
@@ -1404,10 +1503,12 @@ function payHbar(agentIdx) {
   document.getElementById('hbar-wallet-input').value         = ABH_HBAR_WALLET;
   document.getElementById('hbar-memo').value                 = memo;
   document.getElementById('hbar-txid').value               = '';
+  document.getElementById('hbar-task-input').value         = '';
   document.getElementById('hbar-error').textContent        = '';
   document.getElementById('hbar-error').classList.remove('visible');
   document.getElementById('hbar-verify-btn').disabled      = false;
-  document.getElementById('hbar-verify-btn').textContent   = 'Verify payment \u2192';
+  document.getElementById('hbar-verify-btn').textContent   = 'Start session \u2192';
+  setHbarMode('task');
   document.getElementById('hbar-overlay').classList.add('visible');
 }
 
@@ -1416,11 +1517,24 @@ function closeHbarModal() {
   _hbarAgentIdx = null;
 }
 
-async function submitHbarPayment() {
+var _hbarMode = 'task';
+function setHbarMode(m) {
+  _hbarMode = m;
+  document.getElementById('hbar-mode-task').className = 'sess-mode-btn' + (m === 'task' ? ' active' : '');
+  document.getElementById('hbar-mode-chat').className = 'sess-mode-btn' + (m === 'chat' ? ' active' : '');
+}
+
+async function submitHbarSession() {
   var txId   = (document.getElementById('hbar-txid').value || '').trim();
+  var task   = (document.getElementById('hbar-task-input').value || '').trim();
   var errEl  = document.getElementById('hbar-error');
   var verBtn = document.getElementById('hbar-verify-btn');
 
+  if (!task) {
+    errEl.textContent = 'Please describe your task first.';
+    errEl.classList.add('visible');
+    return;
+  }
   if (!txId) {
     errEl.textContent = 'Please enter your transaction ID.';
     errEl.classList.add('visible');
@@ -1431,39 +1545,41 @@ async function submitHbarPayment() {
   if (!agent) { closeHbarModal(); return; }
 
   verBtn.disabled    = true;
-  verBtn.textContent = 'Verifying\u2026';
+  verBtn.textContent = 'Starting session\u2026';
   errEl.classList.remove('visible');
 
   try {
-    var res = await fetch(API_BASE + '/api/payments/verify', {
+    var res = await fetch(API_BASE + '/api/agents/' + agent.agent_id + '/session', {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({
-        tx_id:       txId,
-        amount_hbar: parseFloat(agent.price_hbar || 0),
-        resource:    'agent/' + agent.id,
-        account:     agent.id,
-      })
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Payment':    txId,
+      },
+      body: JSON.stringify({ mode: _hbarMode, task: task }),
     });
 
     var data = await res.json().catch(function() { return {}; });
 
-    if (!res.ok || !data.valid) {
-      var msg = (data && (data.error || data.message)) || 'Payment not found or invalid.';
+    if (!res.ok) {
+      var msg = (data && (data.error || data.detail)) || 'Session start failed (' + res.status + ')';
       errEl.textContent = msg;
       errEl.classList.add('visible');
-      verBtn.disabled   = false;
-      verBtn.textContent = 'Verify payment \u2192';
+      verBtn.disabled    = false;
+      verBtn.textContent = 'Start session \u2192';
       return;
     }
 
-    verBtn.textContent = 'Payment confirmed \u2713';
-    setTimeout(function() { closeHbarModal(); }, 1800);
+    closeHbarModal();
+    if (_hbarMode === 'chat') {
+      openSessionChat(data.session_id, agent.agent_id, agent.name, data.response, data.max_messages, agent.avatar_url);
+    } else {
+      showSessionResult(agent.name, data.session_id, data.result);
+    }
   } catch(e) {
     errEl.textContent = 'Network error. Please try again.';
     errEl.classList.add('visible');
-    verBtn.disabled   = false;
-    verBtn.textContent = 'Verify payment \u2192';
+    verBtn.disabled    = false;
+    verBtn.textContent = 'Start session \u2192';
   }
 }
 
@@ -1492,10 +1608,12 @@ function payUsdc(agentIdx) {
   document.getElementById('usdc-token-input').value        = USDC_TOKEN;
   document.getElementById('usdc-memo').value               = memo;
   document.getElementById('usdc-txid').value               = '';
+  document.getElementById('usdc-task-input').value         = '';
   document.getElementById('usdc-error').textContent        = '';
   document.getElementById('usdc-error').classList.remove('visible');
   document.getElementById('usdc-verify-btn').disabled      = false;
-  document.getElementById('usdc-verify-btn').textContent   = 'Verify payment \u2192';
+  document.getElementById('usdc-verify-btn').textContent   = 'Start session \u2192';
+  setUsdcMode('task');
   document.getElementById('usdc-overlay').classList.add('visible');
 }
 
@@ -1512,11 +1630,24 @@ function closeUsdcModal() {
   }
 }
 
-async function submitUsdcPayment() {
-  var txId  = (document.getElementById('usdc-txid').value || '').trim();
-  var errEl = document.getElementById('usdc-error');
+var _usdcMode = 'task';
+function setUsdcMode(m) {
+  _usdcMode = m;
+  document.getElementById('usdc-mode-task').className = 'sess-mode-btn' + (m === 'task' ? ' active' : '');
+  document.getElementById('usdc-mode-chat').className = 'sess-mode-btn' + (m === 'chat' ? ' active' : '');
+}
+
+async function submitUsdcSession() {
+  var txId   = (document.getElementById('usdc-txid').value || '').trim();
+  var task   = (document.getElementById('usdc-task-input').value || '').trim();
+  var errEl  = document.getElementById('usdc-error');
   var verBtn = document.getElementById('usdc-verify-btn');
 
+  if (!task) {
+    errEl.textContent = 'Please describe your task first.';
+    errEl.classList.add('visible');
+    return;
+  }
   if (!txId) {
     errEl.textContent = 'Please enter your transaction ID.';
     errEl.classList.add('visible');
@@ -1528,45 +1659,41 @@ async function submitUsdcPayment() {
   if (!agent) { closeUsdcModal(); return; }
 
   verBtn.disabled    = true;
-  verBtn.textContent = 'Verifying\u2026';
+  verBtn.textContent = 'Starting session\u2026';
   errEl.classList.remove('visible');
 
   try {
-    var res = await fetch(API_BASE + '/api/payments/usdc', {
+    var res = await fetch(API_BASE + '/api/agents/' + agent.agent_id + '/session', {
       method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({
-        tx_id:       txId,
-        amount_usdc: agent.usdc_price != null ? parseFloat(agent.usdc_price) : (agent.price_hbar && hbarPrice ? parseFloat(agent.price_hbar) * hbarPrice : 0),
-        resource:    'agent/' + agent.id,
-        account:     agent.id,
-      })
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Payment':    txId,
+      },
+      body: JSON.stringify({ mode: _usdcMode, task: task }),
     });
 
     var data = await res.json().catch(function() { return {}; });
 
     if (!res.ok) {
-      throw new Error(data.detail || data.error || 'Verification failed (' + res.status + ')');
+      var msg = (data && (data.error || data.detail)) || 'Session start failed (' + res.status + ')';
+      errEl.textContent = msg;
+      errEl.classList.add('visible');
+      verBtn.disabled    = false;
+      verBtn.textContent = 'Start session \u2192';
+      return;
     }
 
-    var btn = document.getElementById('usdc-btn-' + agentIdx);
-    if (btn) {
-      btn.textContent      = 'Paid \u2713';
-      btn.style.background = '#22c55e';
-      btn.disabled         = true;
+    closeUsdcModal();
+    if (_usdcMode === 'chat') {
+      openSessionChat(data.session_id, agent.agent_id, agent.name, data.response, data.max_messages, agent.avatar_url);
+    } else {
+      showSessionResult(agent.name, data.session_id, data.result);
     }
-
-    document.getElementById('usdc-overlay').classList.remove('visible');
-    _usdcAgentIdx = null;
-
-    if (agent.name === 'Joe Dirt') {
-      showToast("Life's a garden, dig it.");
-    }
-  } catch (err) {
-    errEl.textContent = err.message;
+  } catch(e) {
+    errEl.textContent = 'Network error. Please try again.';
     errEl.classList.add('visible');
     verBtn.disabled    = false;
-    verBtn.textContent = 'Verify payment \u2192';
+    verBtn.textContent = 'Start session \u2192';
   }
 }
 
@@ -1880,6 +2007,160 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   _pubUpdateLimit();
 });
+
+// ---------------------------------------------------------------------------
+// Session result panel
+// ---------------------------------------------------------------------------
+var _sessResultText = '';
+
+function showSessionResult(agentName, sessionId, resultText) {
+  _sessResultText = resultText || '';
+  document.getElementById('sess-result-agent').textContent = agentName + ' — Result';
+  document.getElementById('sess-result-body').textContent  = _sessResultText;
+  document.getElementById('sess-result-id').textContent    = 'Session: ' + sessionId;
+  document.getElementById('sess-result-overlay').classList.add('visible');
+}
+
+function closeSessionResult() {
+  document.getElementById('sess-result-overlay').classList.remove('visible');
+}
+
+function copySessionResult() {
+  if (!_sessResultText) return;
+  navigator.clipboard.writeText(_sessResultText).then(function() {
+    showToast('Result copied.');
+  }).catch(function() {
+    showToast('Copy failed — select manually.');
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Session chat panel
+// ---------------------------------------------------------------------------
+var _sessChatSessionId  = null;
+var _sessChatAgentId    = null;
+var _sessChatMsgCount   = 0;
+var _sessChatMaxMsgs    = 20;
+var _sessChatSending    = false;
+
+function openSessionChat(sessionId, agentId, agentName, firstResponse, maxMsgs, avatarUrl) {
+  _sessChatSessionId = sessionId;
+  _sessChatAgentId   = agentId;
+  _sessChatMsgCount  = 1;
+  _sessChatMaxMsgs   = maxMsgs || 20;
+  _sessChatSending   = false;
+
+  document.getElementById('sess-chat-name').textContent = agentName;
+  var metaEl = document.getElementById('sess-chat-meta');
+  metaEl.textContent = 'Session: ' + sessionId;
+
+  var avEl = document.getElementById('sess-chat-avatar');
+  if (avatarUrl) {
+    avEl.innerHTML = '<img src="' + avatarUrl + '" alt="' + agentName + '" />';
+  } else {
+    avEl.textContent = '&#9749;';
+  }
+
+  var msgsEl = document.getElementById('sess-chat-msgs');
+  msgsEl.innerHTML = '';
+
+  _sessAppendMsg('agent', firstResponse || '');
+  _sessUpdateLimit();
+
+  document.getElementById('sess-scrim').classList.add('open');
+  document.getElementById('sess-chat-panel').classList.add('open');
+
+  var inp = document.getElementById('sess-chat-input');
+  if (inp) { inp.value = ''; setTimeout(function() { inp.focus(); }, 80); }
+}
+
+function closeSessionChat() {
+  document.getElementById('sess-chat-panel').classList.remove('open');
+  document.getElementById('sess-scrim').classList.remove('open');
+  _sessChatSessionId = null;
+}
+
+function _sessAppendMsg(role, text) {
+  var msgsEl = document.getElementById('sess-chat-msgs');
+  var div = document.createElement('div');
+  div.className = 'sess-msg ' + role;
+  div.textContent = text;
+  msgsEl.appendChild(div);
+  msgsEl.scrollTop = msgsEl.scrollHeight;
+}
+
+function _sessUpdateLimit() {
+  var el = document.getElementById('sess-chat-limit');
+  if (!el) return;
+  el.textContent = _sessChatMsgCount + ' / ' + _sessChatMaxMsgs + ' messages';
+  var sendBtn = document.getElementById('sess-chat-send');
+  if (sendBtn) {
+    sendBtn.disabled = _sessChatSending || _sessChatMsgCount >= _sessChatMaxMsgs;
+  }
+}
+
+function sessInputKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendSessionMessage();
+  }
+}
+
+async function sendSessionMessage() {
+  if (_sessChatSending || !_sessChatSessionId) return;
+  if (_sessChatMsgCount >= _sessChatMaxMsgs) return;
+
+  var inp = document.getElementById('sess-chat-input');
+  var msg = (inp.value || '').trim();
+  if (!msg) return;
+
+  _sessChatSending = true;
+  inp.value        = '';
+  document.getElementById('sess-chat-send').disabled = true;
+
+  _sessAppendMsg('user', msg);
+
+  var typingDiv = document.createElement('div');
+  typingDiv.className   = 'sess-msg agent';
+  typingDiv.textContent = '...';
+  typingDiv.id          = 'sess-typing';
+  document.getElementById('sess-chat-msgs').appendChild(typingDiv);
+
+  try {
+    var res = await fetch(
+      API_BASE + '/api/agents/' + _sessChatAgentId + '/session/' + _sessChatSessionId + '/message',
+      {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ message: msg }),
+      }
+    );
+    var data = await res.json().catch(function() { return {}; });
+
+    var tDiv = document.getElementById('sess-typing');
+    if (tDiv) tDiv.remove();
+
+    if (!res.ok) {
+      _sessAppendMsg('agent', '[Error: ' + (data.error || res.status) + ']');
+    } else {
+      _sessAppendMsg('agent', data.response || '');
+      _sessChatMsgCount = data.messages_count || (_sessChatMsgCount + 1);
+      _sessUpdateLimit();
+      if (data.session_closed) {
+        var lim = document.getElementById('sess-chat-limit');
+        if (lim) lim.textContent = 'Session complete (' + _sessChatMsgCount + ' messages)';
+      }
+    }
+  } catch(e) {
+    var tDiv2 = document.getElementById('sess-typing');
+    if (tDiv2) tDiv2.remove();
+    _sessAppendMsg('agent', '[Network error — please try again]');
+  }
+
+  _sessChatSending = false;
+  _sessUpdateLimit();
+  inp.focus();
+}
 </script>
 
 <!-- ── Public chat bubble + panel ── -->
