@@ -1584,6 +1584,20 @@
           </div>
         </div>
 
+        <!-- BIOMETRICS -->
+        <div class="section-header">Device &amp; Biometrics</div>
+        <div class="panel" style="margin-bottom:16px;">
+          <div class="panel-title">Fingerprint / Touch ID Login</div>
+          <div style="font-size:13px;color:var(--cream-dim);margin-bottom:12px;">
+            After logging in with your Admin Secret, you will be prompted to register your fingerprint for faster logins.
+            Use the button below to remove the saved credential from this device.
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <button class="cost-save-btn" style="background:var(--red,#ef4444);" onclick="resetBiometrics()">Reset Biometrics</button>
+            <span id="bio-reset-msg" style="display:none;font-size:12px;color:var(--green);">&#10003; Biometrics cleared -- log in with your secret to re-register.</span>
+          </div>
+        </div>
+
         <div class="section-header">Security &amp; Infrastructure</div>
         <div class="monitor-row" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:16px;">
           <div class="monitor-panel">
@@ -1798,12 +1812,12 @@ function loadAll() {
   loadCostSettings();
 }
 
-/* ── WEBAUTHN HELPERS ── */
+/* ── WEBAUTHN (pure client-side -- no server roundtrip needed) ── */
 var _waSupported = (typeof window !== 'undefined' && window.PublicKeyCredential != null);
-var _waHasKey    = (function() { try { return localStorage.getItem('abh_passkey_registered') === 'true'; } catch(e) { return false; } })();
+var _storedCredId = (function() { try { return localStorage.getItem('abh_passkey_credential_id') || ''; } catch(e) { return ''; } })();
 
 (function() {
-  if (_waSupported && _waHasKey) {
+  if (_waSupported && _storedCredId) {
     var bb = document.getElementById('bio-btn');
     var bd = document.getElementById('bio-divider');
     if (bb) bb.style.display = 'flex';
@@ -1811,107 +1825,47 @@ var _waHasKey    = (function() { try { return localStorage.getItem('abh_passkey_
   }
 })();
 
-function _b64uToBuffer(b64u) {
-  var b64 = b64u.replace(/-/g, '+').replace(/_/g, '/');
-  while (b64.length % 4) b64 += '=';
-  var bin = atob(b64), buf = new Uint8Array(bin.length);
-  for (var i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
-  return buf.buffer;
-}
-
-function _bufToB64u(buf) {
-  var bytes = new Uint8Array(buf), bin = '';
-  bytes.forEach(function(b) { bin += String.fromCharCode(b); });
-  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-}
-
-function _prepRegOptions(opts) {
-  opts.challenge = _b64uToBuffer(opts.challenge);
-  opts.user.id   = _b64uToBuffer(opts.user.id);
-  if (opts.excludeCredentials) {
-    opts.excludeCredentials = opts.excludeCredentials.map(function(c) {
-      return Object.assign({}, c, { id: _b64uToBuffer(c.id) });
-    });
-  }
-  if (!opts.authenticatorSelection) opts.authenticatorSelection = {};
-  opts.authenticatorSelection.authenticatorAttachment = 'platform';
-  opts.authenticatorSelection.userVerification = 'required';
-  if (!opts.timeout) opts.timeout = 60000;
-  if (!opts.rp) opts.rp = {};
-  opts.rp.id = 'agentbrewhouse.io';
-  return opts;
-}
-
-function _prepAuthOptions(opts) {
-  opts.challenge = _b64uToBuffer(opts.challenge);
-  if (!opts.timeout) opts.timeout = 60000;
-  opts.userVerification = 'required';
-  opts.rpId = 'agentbrewhouse.io';
-  if (opts.allowCredentials) {
-    opts.allowCredentials = opts.allowCredentials.map(function(c) {
-      return Object.assign({}, c, { id: _b64uToBuffer(c.id) });
-    });
-  }
-  return opts;
-}
-
-function _serializeRegCred(cred) {
-  var r = cred.response;
-  return {
-    id: cred.id, rawId: _bufToB64u(cred.rawId), type: cred.type,
-    response: {
-      clientDataJSON:    _bufToB64u(r.clientDataJSON),
-      attestationObject: _bufToB64u(r.attestationObject)
-    }
-  };
-}
-
-function _serializeAuthCred(cred) {
-  var r = cred.response;
-  var out = {
-    id: cred.id, rawId: _bufToB64u(cred.rawId), type: cred.type,
-    response: {
-      clientDataJSON:    _bufToB64u(r.clientDataJSON),
-      authenticatorData: _bufToB64u(r.authenticatorData),
-      signature:         _bufToB64u(r.signature)
-    }
-  };
-  if (r.userHandle) out.response.userHandle = _bufToB64u(r.userHandle);
-  return out;
-}
-
 function _clearPasskeyLocal() {
-  try { localStorage.removeItem('abh_passkey_registered'); localStorage.removeItem('abh_admin_secret'); } catch(e) {}
+  try {
+    localStorage.removeItem('abh_passkey_credential_id');
+    localStorage.removeItem('abh_admin_secret');
+    _storedCredId = '';
+  } catch(e) {}
   var bb = document.getElementById('bio-btn');
   var bd = document.getElementById('bio-divider');
   if (bb) bb.style.display = 'none';
   if (bd) bd.style.display = 'none';
 }
 
+function resetBiometrics() {
+  _clearPasskeyLocal();
+  var msg = document.getElementById('bio-reset-msg');
+  if (msg) { msg.style.display = 'inline'; setTimeout(function() { msg.style.display = 'none'; }, 3000); }
+}
+
 async function loginBiometric() {
   var err = document.getElementById('login-error');
   err.textContent = '';
   if (!_waSupported) { err.textContent = 'Biometrics not supported in this browser.'; return; }
+  if (!_storedCredId) {
+    err.textContent = 'No fingerprint registered. Log in with your secret first.';
+    return;
+  }
   try {
-    var beginRes = await fetch(API + '/api/admin/webauthn/authenticate/begin', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}'
+    var credIdBytes = Uint8Array.from(atob(_storedCredId), function(c) { return c.charCodeAt(0); });
+    var cred = await navigator.credentials.get({
+      publicKey: {
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        rpId: 'agentbrewhouse.io',
+        allowCredentials: [{ type: 'public-key', id: credIdBytes, transports: ['internal'] }],
+        userVerification: 'required',
+        timeout: 60000
+      }
     });
-    var opts = await beginRes.json();
-    if (opts.error) { err.textContent = 'Biometric error: ' + opts.error; return; }
-
-    var cred = await navigator.credentials.get({ publicKey: _prepAuthOptions(opts) });
-
-    var completeRes = await fetch(API + '/api/admin/webauthn/authenticate/complete', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(_serializeAuthCred(cred))
-    });
-    var result = await completeRes.json();
-    if (!result.ok) { err.textContent = 'Biometric verification failed.'; return; }
-
     var saved = '';
     try { saved = localStorage.getItem('abh_admin_secret') || ''; } catch(e) {}
     if (!saved) {
-      err.textContent = 'Device key missing — please log in with your secret once to re-link.';
+      err.textContent = 'Device key missing -- please log in with your secret once to re-link.';
       _clearPasskeyLocal();
       return;
     }
@@ -1920,8 +1874,8 @@ async function loginBiometric() {
   } catch(e) {
     if (e.name === 'NotAllowedError') {
       err.textContent = 'Biometric cancelled or timed out.';
-    } else if (e.name === 'InvalidStateError') {
-      err.textContent = 'No passkey found on this device.';
+    } else if (e.name === 'InvalidStateError' || e.name === 'NotFoundError') {
+      err.textContent = 'Passkey not found on this device. Re-register or use your secret.';
       _clearPasskeyLocal();
     } else {
       err.textContent = 'Biometric failed: ' + e.message;
@@ -1931,32 +1885,30 @@ async function loginBiometric() {
 
 async function registerPasskey() {
   var banner = document.getElementById('save-device-banner');
-  banner.innerHTML = '<strong>Registering...</strong>';
+  banner.innerHTML = '<strong>Waiting for fingerprint...</strong>';
   try {
-    var beginRes = await fetch(API + '/api/admin/webauthn/register/begin', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': adminSecret },
-      body: '{}'
+    var cred = await navigator.credentials.create({
+      publicKey: {
+        rp: { name: 'AgentBrewHouse', id: 'agentbrewhouse.io' },
+        user: { id: new Uint8Array(16), name: 'admin', displayName: 'ABH Admin' },
+        challenge: crypto.getRandomValues(new Uint8Array(32)),
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+        authenticatorSelection: { authenticatorAttachment: 'platform', userVerification: 'required' },
+        timeout: 60000
+      }
     });
-    var opts = await beginRes.json();
-    if (opts.error) { banner.innerHTML = '<strong style="color:var(--red)">Registration error: ' + opts.error + '</strong>'; return; }
-
-    var cred = await navigator.credentials.create({ publicKey: _prepRegOptions(opts) });
-
-    var completeRes = await fetch(API + '/api/admin/webauthn/register/complete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Admin-Secret': adminSecret },
-      body: JSON.stringify(_serializeRegCred(cred))
-    });
-    var result = await completeRes.json();
-    if (!result.ok) { banner.innerHTML = '<strong style="color:var(--red)">Registration failed.</strong>'; return; }
-
+    var credIdB64 = btoa(String.fromCharCode.apply(null, new Uint8Array(cred.rawId)));
     try {
+      localStorage.setItem('abh_passkey_credential_id', credIdB64);
       localStorage.setItem('abh_admin_secret', adminSecret);
-      localStorage.setItem('abh_passkey_registered', 'true');
+      _storedCredId = credIdB64;
     } catch(e) {}
-    banner.innerHTML = '<strong style="color:var(--green)">&#10003; Device saved. Use fingerprint next time.</strong>';
-    setTimeout(function() { banner.style.display = 'none'; }, 3000);
+    var bb = document.getElementById('bio-btn');
+    var bd = document.getElementById('bio-divider');
+    if (bb) bb.style.display = 'flex';
+    if (bd) bd.style.display = 'flex';
+    banner.innerHTML = '<strong style="color:var(--green)">&#10003; Fingerprint registered! Use biometrics to log in next time.</strong>';
+    setTimeout(function() { banner.style.display = 'none'; }, 4000);
   } catch(e) {
     if (e.name === 'NotAllowedError') {
       banner.innerHTML = '<strong>Cancelled.</strong>';
@@ -1994,7 +1946,7 @@ function login() {
     } else {
       err.textContent = '';
       _onLoginSuccess();
-      if (_waSupported && !_waHasKey) {
+      if (_waSupported && !_storedCredId) {
         var b = document.getElementById('save-device-banner');
         if (b) b.style.display = 'block';
       }
