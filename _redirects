@@ -1,4 +1,5 @@
 /list         /list.html         200
 /agent-submit /agent-submit.md   200
 /agent/*      /agent.html        200
+/connect      /connect.html      200
 
