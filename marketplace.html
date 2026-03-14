@@ -123,6 +123,7 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .expand-btn:hover { opacity: 1; }
 .agent-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .agent-tag { font-size: 8px; letter-spacing: 0.16em; color: var(--muted); text-transform: uppercase; border: 1px solid rgba(122,106,82,0.28); padding: 3px 7px; transition: border-color 0.2s; }
+.brew-badge { display: inline-block; font-size: 9px; font-weight: bold; letter-spacing: 0.08em; color: #0f0c09; background: var(--card-accent, #c8832a); border-radius: 50%; width: 24px; height: 24px; line-height: 24px; text-align: center; vertical-align: middle; margin-left: 6px; flex-shrink: 0; }
 .agent-card:hover .agent-tag { border-color: rgba(200,131,42,0.25); }
 
 /* Footer */
@@ -1464,7 +1465,7 @@ function cardHtml(agent, idx, isLocked) {
     '<div class="agent-avatar-zone">' +
       '<div class="agent-avatar">' + avHtml + '</div>' +
       '<div class="agent-avatar-info">' +
-        '<div class="agent-name">' + agent.name + '</div>' +
+        '<div class="agent-name">' + agent.name + (agent.brew_score ? ' <span class="brew-badge" title="Brew Score">' + agent.brew_score + '</span>' : '') + '</div>' +
         '<div class="agent-meta">' +
           '<span class="agent-category">' + (agent.category || 'agent') + '</span>' +
           '<span class="live-dot"></span>' +

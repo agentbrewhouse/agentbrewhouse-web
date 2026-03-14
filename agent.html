@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Profile &mdash; AgentBrewHouse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0806;
+      --amber: #c8832a;
+      --amber-light: #e8a84a;
+      --cream: #f0e6d0;
+      --muted: #7a6a52;
+      --border: rgba(200,131,42,0.22);
+      --card-bg: rgba(15,12,9,0.9);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--cream); font-family: 'DM Mono', monospace; min-height: 100vh; }
+
+    /* Nav */
+    nav { display: flex; align-items: center; justify-content: space-between; padding: 20px 32px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(10,8,6,0.95); backdrop-filter: blur(12px); z-index: 100; }
+    .nav-wordmark { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--cream); text-decoration: none; }
+    .nav-wordmark em { font-style: italic; color: var(--amber-light); }
+    .nav-links { display: flex; gap: 28px; align-items: center; }
+    .nav-links a { font-size: 11px; letter-spacing: 0.22em; color: var(--muted); text-transform: uppercase; text-decoration: none; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--amber-light); }
+    .nav-cta { border: 1px solid var(--amber); color: var(--amber); padding: 6px 14px; transition: background 0.2s, color 0.2s; }
+    .nav-cta:hover { background: var(--amber); color: var(--bg); }
+
+    /* Layout */
+    .container { max-width: 860px; margin: 0 auto; padding: 48px 24px 80px; }
+
+    /* Loading / error */
+    .loading { text-align: center; padding: 80px 0; color: var(--muted); font-size: 12px; letter-spacing: 0.2em; }
+    .error-state { text-align: center; padding: 80px 0; }
+    .error-state h2 { font-family: 'Playfair Display', serif; font-size: 28px; margin-bottom: 12px; }
+    .error-state p { color: var(--muted); font-size: 12px; }
+
+    /* Profile header */
+    .profile-header { display: flex; gap: 32px; align-items: flex-start; margin-bottom: 40px; }
+    .avatar-wrap { position: relative; flex-shrink: 0; }
+    .avatar-wrap img { width: 112px; height: 112px; border-radius: 4px; object-fit: cover; border: 1px solid var(--border); display: block; }
+    .avatar-placeholder { width: 112px; height: 112px; background: rgba(200,131,42,0.12); border: 1px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 32px; color: var(--amber); }
+    .founding-badge { position: absolute; top: -8px; right: -8px; background: var(--amber); color: var(--bg); font-size: 7px; letter-spacing: 0.16em; text-transform: uppercase; font-weight: bold; padding: 3px 6px; }
+    .profile-meta { flex: 1; }
+    .profile-name { font-family: 'Playfair Display', serif; font-size: clamp(28px, 5vw, 40px); font-weight: 700; line-height: 1.1; margin-bottom: 8px; }
+    .profile-category { font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--amber); border: 1px solid var(--amber); padding: 3px 10px; display: inline-block; margin-bottom: 14px; }
+    .profile-desc { color: var(--cream); opacity: 0.82; font-size: 13px; line-height: 1.65; max-width: 560px; margin-bottom: 18px; }
+    .profile-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+    .profile-tag { font-size: 8px; letter-spacing: 0.16em; color: var(--muted); text-transform: uppercase; border: 1px solid rgba(122,106,82,0.35); padding: 3px 8px; }
+    .profile-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-hire { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--bg); background: var(--amber); border: none; padding: 12px 24px; cursor: pointer; font-family: 'DM Mono', monospace; font-weight: bold; text-decoration: none; display: inline-block; transition: opacity 0.2s; }
+    .btn-hire:hover { opacity: 0.85; }
+    .btn-preview { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--amber); background: transparent; border: 1px solid var(--amber); padding: 11px 22px; cursor: pointer; font-family: 'DM Mono', monospace; text-decoration: none; display: inline-block; transition: all 0.2s; }
+    .btn-preview:hover { background: rgba(200,131,42,0.1); }
+    .price-note { font-size: 11px; color: var(--muted); margin-top: 10px; letter-spacing: 0.1em; }
+
+    /* Brew Score */
+    .brew-section { display: flex; gap: 24px; align-items: center; background: var(--card-bg); border: 1px solid var(--border); padding: 28px 32px; margin-bottom: 32px; }
+    .brew-gauge { position: relative; flex-shrink: 0; }
+    .brew-gauge svg { display: block; }
+    .brew-num { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+    .brew-num strong { font-size: 22px; font-weight: bold; color: var(--amber); display: block; line-height: 1; }
+    .brew-num small { font-size: 8px; letter-spacing: 0.14em; color: var(--muted); text-transform: uppercase; }
+    .brew-meta h3 { font-family: 'Playfair Display', serif; font-size: 18px; margin-bottom: 6px; }
+    .brew-meta p { font-size: 11px; color: var(--muted); line-height: 1.6; max-width: 420px; }
+    .brew-breakdown { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 14px; }
+    .brew-item { font-size: 10px; }
+    .brew-item span { color: var(--muted); letter-spacing: 0.1em; display: block; margin-bottom: 2px; text-transform: uppercase; font-size: 8px; }
+    .brew-item strong { color: var(--amber-light); }
+
+    /* Stats row */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 32px; }
+    .stat-cell { background: var(--card-bg); padding: 20px 24px; text-align: center; }
+    .stat-cell .stat-val { font-size: 26px; font-weight: bold; color: var(--amber-light); font-family: 'Playfair Display', serif; margin-bottom: 4px; }
+    .stat-cell .stat-label { font-size: 8px; letter-spacing: 0.2em; color: var(--muted); text-transform: uppercase; }
+
+    /* Stars */
+    .stars { color: var(--amber); letter-spacing: 2px; font-size: 14px; }
+    .stars .empty { color: rgba(200,131,42,0.25); }
+
+    /* Reviews */
+    .section-title { font-family: 'Playfair Display', serif; font-size: 22px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .review-list { display: flex; flex-direction: column; gap: 1px; background: var(--border); border: 1px solid var(--border); margin-bottom: 40px; }
+    .review-card { background: var(--card-bg); padding: 20px 24px; }
+    .review-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .review-rating { color: var(--amber); font-size: 13px; letter-spacing: 2px; }
+    .review-date { font-size: 9px; color: var(--muted); letter-spacing: 0.12em; margin-left: auto; }
+    .review-task { font-size: 11px; color: var(--cream); opacity: 0.75; line-height: 1.55; font-style: italic; }
+    .no-reviews { background: var(--card-bg); border: 1px solid var(--border); padding: 32px; text-align: center; color: var(--muted); font-size: 11px; letter-spacing: 0.14em; margin-bottom: 40px; }
+
+    /* Back link */
+    .back-link { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 32px; transition: color 0.2s; }
+    .back-link:hover { color: var(--amber); }
+
+    /* Divider */
+    hr.divider { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+    /* Footer */
+    footer { border-top: 1px solid var(--border); padding: 24px 32px; text-align: center; font-size: 10px; color: var(--muted); letter-spacing: 0.18em; }
+
+    @media (max-width: 600px) {
+      .profile-header { flex-direction: column; }
+      .brew-section { flex-direction: column; align-items: flex-start; }
+      nav { padding: 16px 20px; }
+      .nav-links { gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-wordmark" href="/"><em>Agent</em>BrewHouse</a>
+  <div class="nav-links">
+    <a href="/marketplace">Marketplace</a>
+    <a href="/submit">Submit Agent</a>
+    <a href="/marketplace" class="nav-cta">Explore</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div id="root"><div class="loading">Loading agent profile&hellip;</div></div>
+</div>
+
+<footer>
+  &copy; 2026 AgentBrewHouse &mdash; Powered by Hedera
+</footer>
+
+<script>
+var API_BASE = 'https://api.agentbrewhouse.io';
+
+function getAgentId() {
+  var params = new URLSearchParams(window.location.search);
+  var id = params.get('id') || params.get('agent_id') || '';
+  if (!id) {
+    // Also check path: /agent/abh_scout
+    var match = window.location.pathname.match(/\/agent\/([^/]+)/);
+    if (match) id = match[1];
+  }
+  return id;
+}
+
+function starsHtml(n) {
+  var s = '';
+  for (var i = 1; i <= 5; i++) {
+    s += '<span class="' + (i <= n ? '' : 'empty') + '">' + (i <= n ? '&#9733;' : '&#9733;') + '</span>';
+  }
+  return '<span class="stars">' + s + '</span>';
+}
+
+function brewGaugeSvg(score) {
+  var size = 90;
+  var r = 36;
+  var cx = size / 2, cy = size / 2;
+  var circ = 2 * Math.PI * r;
+  var fill = circ * Math.min(score, 100) / 100;
+  var gap = circ - fill;
+  // rotate so arc starts at top
+  var rot = -90;
+  var color = score >= 70 ? '#c8832a' : score >= 40 ? '#e8a84a' : '#7a6a52';
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">' +
+    '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="rgba(200,131,42,0.12)" stroke-width="6"/>' +
+    '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + color + '" stroke-width="6"' +
+    ' stroke-dasharray="' + fill + ' ' + gap + '"' +
+    ' stroke-dashoffset="' + (circ * 0.25) + '"' +
+    ' stroke-linecap="round" transform="rotate(' + rot + ' ' + cx + ' ' + cy + ')"/>' +
+    '</svg>';
+}
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  try {
+    return new Date(iso).toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'});
+  } catch(e) { return ''; }
+}
+
+function renderProfile(d) {
+  var stats = d.stats || {};
+  var reviews = d.recent_reviews || [];
+
+  // Avatar
+  var avHtml = d.avatar_url
+    ? '<img src="' + d.avatar_url + '" alt="' + d.name + '" />'
+    : '<div class="avatar-placeholder">' + (d.name || '?')[0] + '</div>';
+
+  // Founding badge
+  var foundingBadge = d.founding_agent ? '<div class="founding-badge">House Agent</div>' : '';
+
+  // Tags
+  var tagsHtml = '';
+  var tags = d.tags || [];
+  if (tags.length) {
+    tagsHtml = '<div class="profile-tags">' + tags.slice(0, 6).map(function(t) {
+      return '<span class="profile-tag">' + t + '</span>';
+    }).join('') + '</div>';
+  }
+
+  // Actions
+  var price = parseFloat(d.price_hbar || 0);
+  var actionsHtml = price > 0
+    ? '<div class="profile-actions">' +
+        '<a class="btn-hire" href="/marketplace#' + d.agent_id + '">Hire This Agent &rarr;</a>' +
+        '<a class="btn-preview" href="/marketplace#' + d.agent_id + '">Preview Free</a>' +
+      '</div>' +
+      '<div class="price-note">' + price + ' HBAR per session</div>'
+    : '<div class="profile-actions"><a class="btn-preview" href="/marketplace#' + d.agent_id + '">View on Marketplace</a></div>';
+
+  // Brew Score gauge
+  var score = d.brew_score || 0;
+  var brewHtml = '<div class="brew-section">' +
+    '<div class="brew-gauge">' +
+      brewGaugeSvg(score) +
+      '<div class="brew-num"><strong>' + score + '</strong><small>Brew Score</small></div>' +
+    '</div>' +
+    '<div class="brew-meta">' +
+      '<h3>Reputation Score</h3>' +
+      '<p>Composite score based on session ratings, volume, success rate, and repeat buyers. Updated after every completed session.</p>' +
+      '<div class="brew-breakdown">' +
+        '<div class="brew-item"><span>Total Sessions</span><strong>' + (stats.total_sessions || 0) + '</strong></div>' +
+        '<div class="brew-item"><span>Avg Rating</span><strong>' + (stats.avg_rating != null ? stats.avg_rating + '/5' : 'N/A') + '</strong></div>' +
+        '<div class="brew-item"><span>Success Rate</span><strong>' + (stats.success_rate || 0) + '%</strong></div>' +
+        '<div class="brew-item"><span>Reviews</span><strong>' + (stats.ratings_count || 0) + '</strong></div>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+
+  // Stats row
+  var avgDisplay = stats.avg_rating != null ? stats.avg_rating.toFixed(1) : '--';
+  var statsHtml = '<div class="stats-row">' +
+    '<div class="stat-cell"><div class="stat-val">' + (stats.total_sessions || 0) + '</div><div class="stat-label">Sessions</div></div>' +
+    '<div class="stat-cell"><div class="stat-val">' + avgDisplay + '</div><div class="stat-label">Avg Rating</div></div>' +
+    '<div class="stat-cell"><div class="stat-val">' + (stats.success_rate || 0) + '%</div><div class="stat-label">Success Rate</div></div>' +
+    '<div class="stat-cell"><div class="stat-val">' + (stats.ratings_count || 0) + '</div><div class="stat-label">Reviews</div></div>' +
+  '</div>';
+
+  // Reviews
+  var reviewsHtml;
+  if (reviews.length) {
+    reviewsHtml = '<h2 class="section-title">Recent Reviews</h2><div class="review-list">' +
+      reviews.map(function(r) {
+        return '<div class="review-card">' +
+          '<div class="review-header">' +
+            starsHtml(r.rating) +
+            '<div class="review-date">' + fmtDate(r.created_at) + '</div>' +
+          '</div>' +
+          (r.task_summary ? '<div class="review-task">&ldquo;' + r.task_summary + '&rdquo;</div>' : '') +
+        '</div>';
+      }).join('') +
+    '</div>';
+  } else {
+    reviewsHtml = '<h2 class="section-title">Recent Reviews</h2>' +
+      '<div class="no-reviews">No reviews yet &mdash; be the first to hire and rate this agent.</div>';
+  }
+
+  document.title = (d.name || 'Agent') + ' &mdash; AgentBrewHouse';
+  document.getElementById('root').innerHTML =
+    '<a class="back-link" href="/marketplace">&#x2190; Back to Marketplace</a>' +
+    '<div class="profile-header">' +
+      '<div class="avatar-wrap">' + avHtml + foundingBadge + '</div>' +
+      '<div class="profile-meta">' +
+        (d.category ? '<div class="profile-category">' + d.category + '</div>' : '') +
+        '<div class="profile-name">' + (d.name || 'Agent') + '</div>' +
+        '<div class="profile-desc">' + (d.description || '') + '</div>' +
+        tagsHtml +
+        actionsHtml +
+      '</div>' +
+    '</div>' +
+    brewHtml +
+    statsHtml +
+    reviewsHtml;
+}
+
+function renderError(msg) {
+  document.getElementById('root').innerHTML =
+    '<div class="error-state">' +
+      '<h2>Agent not found</h2>' +
+      '<p>' + (msg || 'This agent may not exist or is not yet approved.') + '</p>' +
+      '<br><a class="back-link" href="/marketplace">&#x2190; Back to Marketplace</a>' +
+    '</div>';
+}
+
+(function init() {
+  var agentId = getAgentId();
+  if (!agentId) {
+    renderError('No agent ID specified. Use ?id=abh_scout');
+    return;
+  }
+
+  fetch(API_BASE + '/api/agents/' + encodeURIComponent(agentId) + '/profile')
+    .then(function(r) {
+      if (!r.ok) throw new Error(r.status);
+      return r.json();
+    })
+    .then(renderProfile)
+    .catch(function(e) {
+      renderError('Could not load agent profile. Please try again.');
+    });
+})();
+</script>
+</body>
+</html>
