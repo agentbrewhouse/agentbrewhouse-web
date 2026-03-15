@@ -1121,6 +1121,27 @@
           <div class="loading">Loading senior staff...</div>
         </div>
 
+        <!-- TODAY'S INTELLIGENCE -->
+        <div class="section-header">Today's Intelligence</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;" id="intel-grid">
+          <div class="panel">
+            <div class="panel-title">&#128202; Gossip Intel</div>
+            <div id="intel-gossip"><div class="loading">Loading...</div></div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">&#128269; Scout Finds</div>
+            <div id="intel-scout"><div class="loading">Loading...</div></div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">&#128279; Publisher Posts</div>
+            <div id="intel-publisher"><div class="loading">Loading...</div></div>
+          </div>
+          <div class="panel">
+            <div class="panel-title">&#9993; Recruiter Outreach</div>
+            <div id="intel-recruiter"><div class="loading">Loading...</div></div>
+          </div>
+        </div>
+
         <!-- LIVE ACTIVITY + REVENUE CHART -->
         <div class="section-header">Live Activity</div>
         <div class="two-col">
@@ -1799,6 +1820,58 @@ function resetCountdown() {
   if (pf) pf.style.width = '100%';
 }
 
+/* ── TODAY'S INTELLIGENCE ── */
+function loadIntelligence() {
+  fetchJson('/api/admin/stats/intelligence').then(function(d) {
+    if (d.error) return;
+
+    function renderIntelItems(containerId, items, fallback) {
+      var el = document.getElementById(containerId);
+      if (!el) return;
+      if (!items || !items.length) {
+        el.innerHTML = '<div class="empty">' + fallback + '</div>';
+        return;
+      }
+      el.innerHTML = items.map(function(item) {
+        var txt = (item.text || '').replace(/</g, '&lt;');
+        var ago = item.ts ? timeAgo(item.ts) : '';
+        return '<div style="padding:7px 0;border-bottom:1px solid var(--border);">' +
+          '<div style="font-size:11px;color:var(--cream);line-height:1.55;">' + txt + '</div>' +
+          (ago ? '<div style="font-size:10px;color:var(--cream-dim);margin-top:3px;">' + ago + '</div>' : '') +
+          '</div>';
+      }).join('');
+    }
+
+    renderIntelItems('intel-gossip', d.gossip_intel, 'No intel yet -- run The Gossip');
+    renderIntelItems('intel-publisher', d.publisher_posts, 'No posts yet -- run The Publisher');
+    renderIntelItems('intel-recruiter', d.recruiter_outreach, 'No outreach yet -- run The Recruiter');
+
+    // Scout finds: show name + platform + url
+    var scoutEl = document.getElementById('intel-scout');
+    if (scoutEl) {
+      var finds = d.scout_finds || [];
+      if (!finds.length) {
+        scoutEl.innerHTML = '<div class="empty">No targets yet -- run The Scout</div>';
+      } else {
+        scoutEl.innerHTML = finds.map(function(f) {
+          var label = (f.name || 'Unknown').replace(/</g, '&lt;');
+          if (f.platform) label += ' (' + f.platform.replace(/</g, '&lt;') + ')';
+          var urlPart = f.url ? ' <span style="color:var(--blue);font-size:10px;">' + f.url.replace(/^https?:\/\//, '').slice(0, 50).replace(/</g, '&lt;') + '</span>' : '';
+          var statusColor = f.status === 'contacted' ? 'var(--green)' : f.status === 'converted' ? 'var(--amber)' : 'var(--cream-dim)';
+          var ago = f.ts ? timeAgo(f.ts) : '';
+          return '<div style="padding:7px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">' +
+            '<div>' +
+              '<div style="font-size:11px;color:var(--cream);">' + label + urlPart + '</div>' +
+              (ago ? '<div style="font-size:10px;color:var(--cream-dim);margin-top:2px;">' + ago + '</div>' : '') +
+            '</div>' +
+            '<span style="font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid ' + statusColor + ';color:' + statusColor + ';flex-shrink:0;">' + (f.status || 'new') + '</span>' +
+            '</div>';
+        }).join('');
+      }
+    }
+  }).catch(function() {});
+}
+
 /* ── LOAD ALL ── */
 function loadAll() {
   resetCountdown();
@@ -1807,6 +1880,7 @@ function loadAll() {
   loadOverview();
   fetchLiveHbarPrice();
   loadSeniorStaff();
+  loadIntelligence();
   loadAgents();
   loadSessions();
   loadRevenue('7d');
