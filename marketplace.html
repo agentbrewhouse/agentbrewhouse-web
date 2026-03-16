@@ -674,6 +674,25 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
 .sess-back-btn { background: transparent; border: 1px solid rgba(200,131,42,0.4); color: var(--amber); font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; padding: 9px 16px; cursor: pointer; transition: background 0.2s, color 0.2s; }
 .sess-back-btn:hover { background: var(--amber); color: var(--bg); }
 
+/* ── Escrow step indicator ── */
+#sess-escrow-steps { padding: 16px 20px 4px; border-top: 1px solid rgba(200,131,42,0.12); }
+.escrow-step { display: flex; align-items: center; gap: 10px; padding: 7px 0; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.08em; color: var(--muted); border-left: 2px solid transparent; padding-left: 10px; }
+.escrow-step.done { color: #6abf7b; border-left-color: #6abf7b; }
+.escrow-step.active { color: var(--amber); border-left-color: var(--amber); }
+.escrow-step.failed { color: #e05252; border-left-color: #e05252; }
+.escrow-step.pending { color: var(--muted); border-left-color: rgba(200,131,42,0.2); }
+.escrow-step-icon { font-size: 13px; min-width: 18px; }
+.escrow-step-label { flex: 1; }
+.escrow-step-link { font-size: 9px; letter-spacing: 0.1em; color: var(--amber); text-decoration: none; opacity: 0.7; }
+.escrow-step-link:hover { opacity: 1; }
+.escrow-spinner { display: inline-block; font-size: 11px; animation: brewpulse 1s ease-in-out infinite; }
+/* ── Dispute form ── */
+#sess-dispute-form { display: none; padding: 14px 20px; border-top: 1px solid rgba(200,131,42,0.12); }
+#sess-dispute-form textarea { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid rgba(200,131,42,0.2); color: var(--cream); font-family: 'DM Mono', monospace; font-size: 11px; padding: 8px 10px; resize: none; min-height: 58px; outline: none; box-sizing: border-box; }
+#sess-dispute-form textarea:focus { border-color: var(--amber); }
+.dispute-submit-btn { margin-top: 8px; background: transparent; border: 1px solid #e05252; color: #e05252; font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; padding: 8px 14px; cursor: pointer; transition: all 0.2s; }
+.dispute-submit-btn:hover { background: #e05252; color: #fff; }
+.dispute-cancel-btn { margin-top: 8px; margin-left: 8px; background: transparent; border: 1px solid rgba(200,131,42,0.3); color: var(--muted); font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; padding: 8px 14px; cursor: pointer; }
 /* ── Session chat panel ── */
 #sess-scrim { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1100; }
 #sess-scrim.open { display: block; }
@@ -822,6 +841,23 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
       <h3 id="sess-result-agent">Agent Result</h3>
       <button id="sess-result-close" onclick="closeSessionResult()" aria-label="Close">&#10005;</button>
     </div>
+    <!-- Escrow step indicator (shown for paid sessions) -->
+    <div id="sess-escrow-steps" style="display:none">
+      <div class="escrow-step pending" id="escrow-step-1">
+        <span class="escrow-step-icon" id="escrow-icon-1">&#9675;</span>
+        <span class="escrow-step-label">Payment secured in escrow</span>
+        <a id="escrow-link-1" class="escrow-step-link" href="#" target="_blank" rel="noopener" style="display:none">HashScan &#8599;</a>
+      </div>
+      <div class="escrow-step pending" id="escrow-step-2">
+        <span class="escrow-step-icon" id="escrow-icon-2">&#9675;</span>
+        <span class="escrow-step-label" id="escrow-label-2">Agent working...</span>
+      </div>
+      <div class="escrow-step pending" id="escrow-step-3">
+        <span class="escrow-step-icon" id="escrow-icon-3">&#9675;</span>
+        <span class="escrow-step-label" id="escrow-label-3">Finalizing...</span>
+        <a id="escrow-link-3" class="escrow-step-link" href="#" target="_blank" rel="noopener" style="display:none">HashScan &#8599;</a>
+      </div>
+    </div>
     <div id="sess-result-body"></div>
     <div id="sess-complete-row" style="display:none">
       <div class="sess-complete-hdr">&#10003; Session Complete</div>
@@ -835,9 +871,20 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
       <div class="sess-rated-msg" id="sess-rated-msg">Thank you for rating this session.</div>
       <button class="sess-back-btn" onclick="closeSessionResult()">&#8592; Back to Marketplace</button>
     </div>
+    <!-- Dispute form -->
+    <div id="sess-dispute-form">
+      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.14em;color:var(--muted);margin-bottom:8px;">REPORT ISSUE WITH THIS SESSION</div>
+      <textarea id="sess-dispute-reason" placeholder="Describe the issue (minimum 10 characters)..." rows="3"></textarea>
+      <div>
+        <button class="dispute-submit-btn" onclick="submitDispute()">Submit Report</button>
+        <button class="dispute-cancel-btn" onclick="cancelDispute()">Cancel</button>
+      </div>
+      <div id="sess-dispute-msg" style="font-size:9px;letter-spacing:0.1em;color:#6abf7b;margin-top:8px;display:none"></div>
+    </div>
     <div id="sess-result-foot">
       <span id="sess-result-id"></span>
       <button class="sess-copy-btn" onclick="copySessionResult()">Copy result</button>
+      <button class="sess-copy-btn" id="sess-report-btn" onclick="openDispute()" style="border-color:rgba(224,82,82,0.5);color:#e05252;display:none">Report Issue</button>
     </div>
   </div>
 </div>
@@ -1707,7 +1754,7 @@ async function submitHbarSession() {
     if (_hbarMode === 'chat') {
       openSessionChat(data.session_id, agent.agent_id, agent.name, data.response, data.max_messages, agent.avatar_url);
     } else {
-      showSessionResult(agent.name, agent.agent_id, data.session_id, data.result);
+      showSessionResult(agent.name, agent.agent_id, data.session_id, data.result, data.escrow_active);
     }
   } catch(e) {
     hideBrewing('hbar');
@@ -1825,7 +1872,7 @@ async function submitUsdcSession() {
     if (_usdcMode === 'chat') {
       openSessionChat(data.session_id, agent.agent_id, agent.name, data.response, data.max_messages, agent.avatar_url);
     } else {
-      showSessionResult(agent.name, agent.agent_id, data.session_id, data.result);
+      showSessionResult(agent.name, agent.agent_id, data.session_id, data.result, data.escrow_active);
     }
   } catch(e) {
     hideBrewing('usdc');
@@ -2486,24 +2533,183 @@ function hideBrewing(pfx) {
   if (brew) brew.style.display = 'none';
 }
 
-function showSessionResult(agentName, agentId, sessionId, resultText) {
+// Escrow polling state
+var _escrowPollTimer   = null;
+var _escrowPollCount   = 0;
+var _escrowPollMax     = 60;  // max 60 polls = 3 min at 3s interval
+var _escrowSessionId   = null;
+var _escrowAgentId     = null;
+var _escrowAgentName   = null;
+var _escrowActive      = false;
+
+function _setEscrowStep(stepNum, state, labelOverride, linkHref) {
+  // state: 'done' | 'active' | 'failed' | 'pending'
+  var icons = { done: '&#10003;', active: '<span class="escrow-spinner">&#9711;</span>', failed: '&#10005;', pending: '&#9675;' };
+  var el    = document.getElementById('escrow-step-' + stepNum);
+  var icon  = document.getElementById('escrow-icon-' + stepNum);
+  if (!el || !icon) return;
+  el.className = 'escrow-step ' + state;
+  icon.innerHTML = icons[state] || '&#9675;';
+  if (labelOverride) {
+    var lbl = document.getElementById('escrow-label-' + stepNum);
+    if (lbl) lbl.textContent = labelOverride;
+  }
+  if (linkHref) {
+    var lnk = document.getElementById('escrow-link-' + stepNum);
+    if (lnk) { lnk.href = linkHref; lnk.style.display = ''; }
+  }
+}
+
+function _openResultModal(agentName, agentId, sessionId, resultText) {
   _sessResultText    = resultText || '';
   _sessResultId      = sessionId  || '';
   _sessResultAgentId = agentId    || '';
   document.getElementById('sess-result-agent').textContent = agentName + ' \u2014 Result';
   document.getElementById('sess-result-body').textContent  = _sessResultText;
   document.getElementById('sess-result-id').textContent    = 'Session: ' + sessionId;
-  // reset stars and rating message
   var stars = document.querySelectorAll('.sess-star');
   for (var i = 0; i < stars.length; i++) { stars[i].className = 'sess-star'; }
-  document.getElementById('sess-rated-msg').style.display = 'none';
+  document.getElementById('sess-rated-msg').style.display   = 'none';
   document.getElementById('sess-complete-row').style.display = '';
   document.getElementById('sess-result-overlay').classList.add('visible');
 }
 
+function showSessionResult(agentName, agentId, sessionId, resultText, escrowActive) {
+  _escrowAgentId   = agentId;
+  _escrowAgentName = agentName;
+  _escrowSessionId = sessionId;
+  _escrowActive    = !!escrowActive;
+
+  // Reset dispute form
+  document.getElementById('sess-dispute-form').style.display = 'none';
+  document.getElementById('sess-dispute-msg').style.display  = 'none';
+  var rBtn = document.getElementById('sess-report-btn');
+  if (rBtn) rBtn.style.display = 'none';
+
+  if (!escrowActive || resultText) {
+    // No escrow / already released -- show result immediately
+    document.getElementById('sess-escrow-steps').style.display = 'none';
+    _openResultModal(agentName, agentId, sessionId, resultText);
+    if (rBtn) rBtn.style.display = '';
+    return;
+  }
+
+  // Show escrow progress indicator, no result yet
+  document.getElementById('sess-escrow-steps').style.display = '';
+  document.getElementById('sess-result-agent').textContent = agentName + ' \u2014 Verifying on-chain...';
+  document.getElementById('sess-result-body').textContent  = 'Verifying escrow status...';
+  document.getElementById('sess-complete-row').style.display = 'none';
+  document.getElementById('sess-result-id').textContent    = 'Session: ' + sessionId;
+  document.getElementById('sess-result-overlay').classList.add('visible');
+
+  _setEscrowStep(1, 'done', null, null);
+  _setEscrowStep(2, 'active', 'Agent working...', null);
+  _setEscrowStep(3, 'pending', 'Finalizing...', null);
+
+  // Start polling
+  _escrowPollCount = 0;
+  _pollEscrowStatus();
+}
+
+function _pollEscrowStatus() {
+  if (!_escrowSessionId) return;
+  _escrowPollCount++;
+  if (_escrowPollCount > _escrowPollMax) {
+    // Timed out -- show partial result with note
+    document.getElementById('sess-result-body').textContent =
+      'Escrow verification timed out. Check HashScan for session ' + _escrowSessionId + '.';
+    return;
+  }
+
+  fetch(API_BASE + '/api/agents/status/' + _escrowSessionId)
+    .then(function(r) { return r.json().catch(function() { return {}; }); })
+    .then(function(data) {
+      var status = data.status || '';
+      if (status === 'released') {
+        // Escrow released -- show result
+        _setEscrowStep(2, 'done', 'Agent delivered result', null);
+        _setEscrowStep(3, 'done', 'Funds released', null);
+        var resultText = data.result || '';
+        document.getElementById('sess-result-agent').textContent = _escrowAgentName + ' \u2014 Result';
+        _sessResultText    = resultText;
+        _sessResultId      = _escrowSessionId;
+        _sessResultAgentId = _escrowAgentId;
+        document.getElementById('sess-result-body').textContent = resultText;
+        document.getElementById('sess-result-id').textContent   = 'Session: ' + _escrowSessionId;
+        var stars = document.querySelectorAll('.sess-star');
+        for (var i = 0; i < stars.length; i++) { stars[i].className = 'sess-star'; }
+        document.getElementById('sess-rated-msg').style.display    = 'none';
+        document.getElementById('sess-complete-row').style.display = '';
+        var rBtn = document.getElementById('sess-report-btn');
+        if (rBtn) rBtn.style.display = '';
+      } else if (status === 'refunded' || status === 'failed') {
+        // Something went wrong -- refunded
+        _setEscrowStep(2, 'failed', 'Agent encountered an issue', null);
+        _setEscrowStep(3, 'done', 'HBAR refunded to your wallet', null);
+        document.getElementById('sess-result-agent').textContent = _escrowAgentName + ' \u2014 Refunded';
+        document.getElementById('sess-result-body').textContent  =
+          'Something went wrong with this session. Your HBAR has been refunded.\n\n' +
+          'Session ID: ' + _escrowSessionId + '\n' +
+          'Check HashScan: https://hashscan.io/mainnet/account/0.0.10358210';
+        document.getElementById('sess-complete-row').style.display = 'none';
+      } else {
+        // Still processing -- poll again
+        _escrowPollTimer = setTimeout(_pollEscrowStatus, 3000);
+      }
+    })
+    .catch(function() {
+      // Network error -- retry
+      _escrowPollTimer = setTimeout(_pollEscrowStatus, 3000);
+    });
+}
+
 function closeSessionResult() {
+  if (_escrowPollTimer) { clearTimeout(_escrowPollTimer); _escrowPollTimer = null; }
+  _escrowSessionId = null;
   document.getElementById('sess-result-overlay').classList.remove('visible');
   document.getElementById('sess-complete-row').style.display = 'none';
+  document.getElementById('sess-escrow-steps').style.display = 'none';
+  document.getElementById('sess-dispute-form').style.display = 'none';
+}
+
+// Dispute form helpers
+function openDispute() {
+  document.getElementById('sess-dispute-form').style.display = '';
+  document.getElementById('sess-dispute-reason').value = '';
+  document.getElementById('sess-dispute-msg').style.display = 'none';
+}
+function cancelDispute() {
+  document.getElementById('sess-dispute-form').style.display = 'none';
+}
+function submitDispute() {
+  var reason = (document.getElementById('sess-dispute-reason').value || '').trim();
+  if (!reason || reason.length < 10) {
+    showToast('Please describe the issue (at least 10 characters).');
+    return;
+  }
+  if (!_sessResultAgentId || !_sessResultId) return;
+  fetch(API_BASE + '/api/agents/' + _sessResultAgentId + '/session/' + _sessResultId + '/dispute', {
+    method:  'POST',
+    headers: {'Content-Type': 'application/json'},
+    body:    JSON.stringify({reason: reason}),
+  }).then(function(r) { return r.json().catch(function() { return {}; }); })
+    .then(function(d) {
+      var msgEl = document.getElementById('sess-dispute-msg');
+      if (d.ok || d.status === 'disputed') {
+        msgEl.textContent    = 'Report submitted. The Reviewer will follow up within 24h.';
+        msgEl.style.display  = '';
+        msgEl.style.color    = '#6abf7b';
+        document.getElementById('sess-dispute-form').querySelector('textarea').disabled = true;
+        document.querySelector('.dispute-submit-btn').disabled = true;
+      } else {
+        msgEl.textContent   = d.error || 'Submission failed. Please try again.';
+        msgEl.style.display = '';
+        msgEl.style.color   = '#e05252';
+      }
+    })
+    .catch(function() {
+      showToast('Network error. Please try again.');
+    });
 }
 
 function rateSession(n) {
