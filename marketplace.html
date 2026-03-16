@@ -1479,7 +1479,7 @@ function cardHtml(agent, idx, isLocked) {
       ? '<span class="hire-btn disabled" style="opacity:0.4">Free</span>'
       : isLocked
         ? '<span class="hire-btn disabled" style="opacity:0.3">Members only</span>'
-        : '<button class="pay-now-btn" onclick="openPayMenu(event,' + idx + ')">Pay Now</button>';
+        : '<button class="pay-now-btn" onclick="openPayMenu(event,' + idx + ')">Hire Me</button>';
   }
 
   return '<div class="agent-card" style="--card-accent:' + c.color + '; animation-delay:' + (idx * 0.07) + 's">' +
