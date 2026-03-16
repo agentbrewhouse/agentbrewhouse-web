@@ -1765,16 +1765,42 @@ function doLogout() {
 }
 
 /* ── FETCH HELPER ── */
-function fetchJson(path) {
-  return fetch(API + path, {
-    headers: { 'X-Admin-Secret': adminSecret }
-  }).then(function(r) { return r.json(); });
+function fetchJson(path, timeoutMs) {
+  timeoutMs = timeoutMs || 20000;
+  var controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  var timer = controller ? setTimeout(function() { controller.abort(); }, timeoutMs) : null;
+  var opts = { headers: { 'X-Admin-Secret': adminSecret } };
+  if (controller) opts.signal = controller.signal;
+  return fetch(API + path, opts)
+    .then(function(r) {
+      if (timer) clearTimeout(timer);
+      return r.json();
+    })
+    .catch(function(err) {
+      if (timer) clearTimeout(timer);
+      var isAbort = (err && err.name === 'AbortError');
+      if (isAbort) {
+        console.warn('[ABH] fetchJson timeout (>' + timeoutMs + 'ms):', path);
+      }
+      return { error: isAbort ? 'timeout' : 'network_error' };
+    });
 }
 
 function supaFetch(path) {
-  return fetch(SUPA + path, {
-    headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
-  }).then(function(r) { return r.json(); });
+  var controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  var timer = controller ? setTimeout(function() { controller.abort(); }, 15000) : null;
+  var opts = { headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY } };
+  if (controller) opts.signal = controller.signal;
+  return fetch(SUPA + path, opts)
+    .then(function(r) {
+      if (timer) clearTimeout(timer);
+      return r.json();
+    })
+    .catch(function(err) {
+      if (timer) clearTimeout(timer);
+      console.warn('[ABH] supaFetch error:', path, err && err.name);
+      return [];
+    });
 }
 
 /* ── HELPERS ── */
@@ -2038,9 +2064,12 @@ function login() {
   var err = document.getElementById('login-error');
   err.textContent = 'Checking...';
   adminSecret = val;
-  fetchJson('/api/admin/stats/overview').then(function(data) {
-    if (data.error && data.error === 'Unauthorized') {
+  fetchJson('/api/admin/stats/overview', 15000).then(function(data) {
+    if (data.error === 'Unauthorized') {
       err.textContent = 'Invalid secret.';
+      adminSecret = '';
+    } else if (data.error === 'timeout' || data.error === 'network_error') {
+      err.textContent = 'Could not connect to API. Check Railway service status.';
       adminSecret = '';
     } else {
       err.textContent = '';
