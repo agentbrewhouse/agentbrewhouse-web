@@ -2513,7 +2513,7 @@ function rateSession(n) {
   }
   document.getElementById('sess-rated-msg').style.display = '';
   if (_sessResultAgentId && _sessResultId) {
-    fetch(API_BASE + '/api/agents/' + _sessResultAgentId + '/sessions/' + _sessResultId + '/rate', {
+    fetch(API_BASE + '/api/agents/' + _sessResultAgentId + '/session/' + _sessResultId + '/rate', {
       method:  'POST',
       headers: {'Content-Type': 'application/json'},
       body:    JSON.stringify({rating: n}),
