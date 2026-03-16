@@ -657,6 +657,23 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
 .sess-copy-btn { background: transparent; border: 1px solid var(--amber); color: var(--amber); font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; padding: 8px 14px; cursor: pointer; transition: background 0.2s, color 0.2s; }
 .sess-copy-btn:hover { background: var(--amber); color: var(--bg); }
 
+/* ── Brewing loader (shown inside payment modals while API call is in flight) ── */
+.sess-brewing { display: none; text-align: center; padding: 36px 20px 28px; }
+.sess-brew-icon { font-size: 38px; display: inline-block; animation: brewpulse 1.4s ease-in-out infinite; }
+.sess-brew-text { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--amber); margin-top: 16px; }
+@keyframes brewpulse { 0%,100% { opacity: 0.35; transform: scale(0.92); } 50% { opacity: 1; transform: scale(1.1); } }
+
+/* ── Session complete / rating row ── */
+#sess-complete-row { padding: 16px 20px 12px; border-top: 1px solid rgba(200,131,42,0.15); }
+.sess-complete-hdr { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #6abf7b; margin-bottom: 12px; }
+.sess-stars { display: flex; gap: 5px; margin-bottom: 10px; }
+.sess-star { background: none; border: none; cursor: pointer; font-size: 24px; color: rgba(200,131,42,0.2); padding: 0; line-height: 1; transition: color 0.1s; }
+.sess-star.lit { color: var(--amber); }
+.sess-star:hover { color: rgba(200,131,42,0.65); }
+.sess-rated-msg { font-size: 9px; letter-spacing: 0.14em; color: var(--muted); margin-bottom: 12px; display: none; }
+.sess-back-btn { background: transparent; border: 1px solid rgba(200,131,42,0.4); color: var(--amber); font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; padding: 9px 16px; cursor: pointer; transition: background 0.2s, color 0.2s; }
+.sess-back-btn:hover { background: var(--amber); color: var(--bg); }
+
 /* ── Session chat panel ── */
 #sess-scrim { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1100; }
 #sess-scrim.open { display: block; }
@@ -697,6 +714,7 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     <h2 class="auth-title">Send <em><span id="hbar-modal-amount">0</span> HBAR</em></h2>
     <p class="pay-modal-agent-name" id="hbar-modal-name"></p>
     <div class="auth-rule"></div>
+    <div id="hbar-form-body">
     <div class="sess-section">
       <label class="sess-label" for="hbar-task-input">What do you want this agent to do?</label>
       <textarea id="hbar-task-input" class="sess-textarea" placeholder="Describe your task..."></textarea>
@@ -734,6 +752,11 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     <p class="auth-note" id="hbar-pay-note">Open HashPack &rarr; Send &rarr; HBAR &rarr; paste the wallet address and memo above.</p>
     <p class="auth-note" id="hbar-wallet-note" style="display:none;">Wallet connected. Send the payment then click <strong>Auto-detect</strong> or paste the tx ID manually.</p>
     <button class="auth-submit" id="hbar-autodetect-btn" onclick="startAutoDetect()" style="display:none; background: transparent; border: 1px solid var(--amber); color: var(--amber); margin-top: 8px;">&#128270; Auto-detect payment</button>
+    </div><!-- /hbar-form-body -->
+    <div class="sess-brewing" id="hbar-brewing">
+      <div class="sess-brew-icon">&#9749;</div>
+      <div class="sess-brew-text">Brewing your session...</div>
+    </div>
   </div>
 </div>
 
@@ -745,6 +768,7 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     <h2 class="auth-title">Send <em><span id="usdc-modal-amount">0.00</span> USDC</em></h2>
     <p class="pay-modal-agent-name" id="usdc-modal-name"></p>
     <div class="auth-rule"></div>
+    <div id="usdc-form-body">
     <div class="sess-section">
       <label class="sess-label" for="usdc-task-input">What do you want this agent to do?</label>
       <textarea id="usdc-task-input" class="sess-textarea" placeholder="Describe your task..."></textarea>
@@ -783,6 +807,11 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     <button class="auth-submit" id="usdc-verify-btn" onclick="submitUsdcSession()">Start session &rarr;</button>
     <div class="auth-error" id="usdc-error"></div>
     <p class="auth-note">Open HashPack &#8594; Send &#8594; Token Transfer &#8594; choose USDC &#8594; paste the wallet address and memo above.</p>
+    </div><!-- /usdc-form-body -->
+    <div class="sess-brewing" id="usdc-brewing">
+      <div class="sess-brew-icon">&#9749;</div>
+      <div class="sess-brew-text">Brewing your session...</div>
+    </div>
   </div>
 </div>
 
@@ -794,6 +823,18 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
       <button id="sess-result-close" onclick="closeSessionResult()" aria-label="Close">&#10005;</button>
     </div>
     <div id="sess-result-body"></div>
+    <div id="sess-complete-row" style="display:none">
+      <div class="sess-complete-hdr">&#10003; Session Complete</div>
+      <div class="sess-stars" id="sess-stars">
+        <button class="sess-star" onclick="rateSession(1)">&#9733;</button>
+        <button class="sess-star" onclick="rateSession(2)">&#9733;</button>
+        <button class="sess-star" onclick="rateSession(3)">&#9733;</button>
+        <button class="sess-star" onclick="rateSession(4)">&#9733;</button>
+        <button class="sess-star" onclick="rateSession(5)">&#9733;</button>
+      </div>
+      <div class="sess-rated-msg" id="sess-rated-msg">Thank you for rating this session.</div>
+      <button class="sess-back-btn" onclick="closeSessionResult()">&#8592; Back to Marketplace</button>
+    </div>
     <div id="sess-result-foot">
       <span id="sess-result-id"></span>
       <button class="sess-copy-btn" onclick="copySessionResult()">Copy result</button>
@@ -1603,6 +1644,7 @@ function payHbar(agentIdx) {
 }
 
 function closeHbarModal() {
+  hideBrewing('hbar');
   document.getElementById('hbar-overlay').classList.remove('visible');
   _hbarAgentIdx = null;
 }
@@ -1637,6 +1679,7 @@ async function submitHbarSession() {
   verBtn.disabled    = true;
   verBtn.textContent = 'Starting session\u2026';
   errEl.classList.remove('visible');
+  showBrewing('hbar');
 
   try {
     var res = await fetch(API_BASE + '/api/agents/' + agent.agent_id + '/session', {
@@ -1651,6 +1694,7 @@ async function submitHbarSession() {
     var data = await res.json().catch(function() { return {}; });
 
     if (!res.ok) {
+      hideBrewing('hbar');
       var msg = (data && (data.error || data.detail)) || 'Session start failed (' + res.status + ')';
       errEl.textContent = msg;
       errEl.classList.add('visible');
@@ -1663,9 +1707,10 @@ async function submitHbarSession() {
     if (_hbarMode === 'chat') {
       openSessionChat(data.session_id, agent.agent_id, agent.name, data.response, data.max_messages, agent.avatar_url);
     } else {
-      showSessionResult(agent.name, data.session_id, data.result);
+      showSessionResult(agent.name, agent.agent_id, data.session_id, data.result);
     }
   } catch(e) {
+    hideBrewing('hbar');
     errEl.textContent = 'Network error. Please try again.';
     errEl.classList.add('visible');
     verBtn.disabled    = false;
@@ -1708,6 +1753,7 @@ function payUsdc(agentIdx) {
 }
 
 function closeUsdcModal() {
+  hideBrewing('usdc');
   document.getElementById('usdc-overlay').classList.remove('visible');
   var idx = _usdcAgentIdx;
   _usdcAgentIdx = null;
@@ -1751,6 +1797,7 @@ async function submitUsdcSession() {
   verBtn.disabled    = true;
   verBtn.textContent = 'Starting session\u2026';
   errEl.classList.remove('visible');
+  showBrewing('usdc');
 
   try {
     var res = await fetch(API_BASE + '/api/agents/' + agent.agent_id + '/session', {
@@ -1765,6 +1812,7 @@ async function submitUsdcSession() {
     var data = await res.json().catch(function() { return {}; });
 
     if (!res.ok) {
+      hideBrewing('usdc');
       var msg = (data && (data.error || data.detail)) || 'Session start failed (' + res.status + ')';
       errEl.textContent = msg;
       errEl.classList.add('visible');
@@ -1777,9 +1825,10 @@ async function submitUsdcSession() {
     if (_usdcMode === 'chat') {
       openSessionChat(data.session_id, agent.agent_id, agent.name, data.response, data.max_messages, agent.avatar_url);
     } else {
-      showSessionResult(agent.name, data.session_id, data.result);
+      showSessionResult(agent.name, agent.agent_id, data.session_id, data.result);
     }
   } catch(e) {
+    hideBrewing('usdc');
     errEl.textContent = 'Network error. Please try again.';
     errEl.classList.add('visible');
     verBtn.disabled    = false;
@@ -2420,18 +2469,56 @@ window.addEventListener('load', function() {
 // ---------------------------------------------------------------------------
 // Session result panel
 // ---------------------------------------------------------------------------
-var _sessResultText = '';
+var _sessResultText    = '';
+var _sessResultId      = '';
+var _sessResultAgentId = '';
 
-function showSessionResult(agentName, sessionId, resultText) {
-  _sessResultText = resultText || '';
-  document.getElementById('sess-result-agent').textContent = agentName + ' — Result';
+function showBrewing(pfx) {
+  var form = document.getElementById(pfx + '-form-body');
+  var brew = document.getElementById(pfx + '-brewing');
+  if (form) form.style.display = 'none';
+  if (brew) brew.style.display = 'block';
+}
+function hideBrewing(pfx) {
+  var form = document.getElementById(pfx + '-form-body');
+  var brew = document.getElementById(pfx + '-brewing');
+  if (form) form.style.display = '';
+  if (brew) brew.style.display = 'none';
+}
+
+function showSessionResult(agentName, agentId, sessionId, resultText) {
+  _sessResultText    = resultText || '';
+  _sessResultId      = sessionId  || '';
+  _sessResultAgentId = agentId    || '';
+  document.getElementById('sess-result-agent').textContent = agentName + ' \u2014 Result';
   document.getElementById('sess-result-body').textContent  = _sessResultText;
   document.getElementById('sess-result-id').textContent    = 'Session: ' + sessionId;
+  // reset stars and rating message
+  var stars = document.querySelectorAll('.sess-star');
+  for (var i = 0; i < stars.length; i++) { stars[i].className = 'sess-star'; }
+  document.getElementById('sess-rated-msg').style.display = 'none';
+  document.getElementById('sess-complete-row').style.display = '';
   document.getElementById('sess-result-overlay').classList.add('visible');
 }
 
 function closeSessionResult() {
   document.getElementById('sess-result-overlay').classList.remove('visible');
+  document.getElementById('sess-complete-row').style.display = 'none';
+}
+
+function rateSession(n) {
+  var stars = document.querySelectorAll('.sess-star');
+  for (var i = 0; i < stars.length; i++) {
+    stars[i].className = 'sess-star' + (i < n ? ' lit' : '');
+  }
+  document.getElementById('sess-rated-msg').style.display = '';
+  if (_sessResultAgentId && _sessResultId) {
+    fetch(API_BASE + '/api/agents/' + _sessResultAgentId + '/sessions/' + _sessResultId + '/rate', {
+      method:  'POST',
+      headers: {'Content-Type': 'application/json'},
+      body:    JSON.stringify({rating: n}),
+    }).catch(function() {});
+  }
 }
 
 function copySessionResult() {
