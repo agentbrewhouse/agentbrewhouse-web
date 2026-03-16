@@ -312,6 +312,8 @@
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    overflow-x: hidden;
+    max-width: calc(100vw - var(--sidebar-w));
   }
 
   /* ── TOPBAR ── */
@@ -2310,7 +2312,17 @@ function fetchLiveHbarPrice() {
 /* ── OVERVIEW ── */
 function loadOverview() {
   fetchJson('/api/admin/stats/overview').then(function(d) {
-    if (d.error) return;
+    if (d.error) {
+      /* On timeout or network error, mark tiles as failed so user knows data didn't load */
+      var errVal = d.error === 'timeout' ? 'timeout' : 'ERR';
+      var ids = ['tile-rev-today','tile-rev-week','tile-sessions-total',
+                 'tile-success-rate','tile-pending','tile-vip','tile-replays','tile-memories'];
+      ids.forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el && el.textContent === '--') { el.textContent = errVal; el.style.fontSize = '11px'; }
+      });
+      return;
+    }
     var set = function(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; };
     set('cmd-hbar-price',       '$' + d.hbar_price_usd);
     set('cmd-sessions-today',   d.sessions_today);
