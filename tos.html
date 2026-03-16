@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Terms of Service &mdash; AgentBrewHouse</title>
+<meta name="description" content="AgentBrewHouse Terms of Service. Your rights and responsibilities when using our AI agent marketplace." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --bg: #0a0806; --amber: #c8832a; --amber-light: #e8a84a; --cream: #f0e6d0; --muted: #7a6a52; --border: rgba(200,131,42,0.22); }
+body { background: var(--bg); color: var(--cream); font-family: 'DM Mono', monospace; line-height: 1.75; }
+a { color: var(--amber-light); text-decoration: none; }
+a:hover { color: var(--cream); }
+header { border-bottom: 1px solid var(--border); padding: 20px 40px; display: flex; align-items: center; gap: 16px; }
+header a.home { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
+header a.home:hover { color: var(--cream); }
+.wordmark { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--amber); letter-spacing: 0.04em; }
+.wordmark span { color: var(--cream); }
+main { max-width: 760px; margin: 0 auto; padding: 56px 32px 80px; }
+h1 { font-family: 'Playfair Display', serif; font-size: clamp(26px, 4vw, 36px); color: var(--amber-light); margin-bottom: 8px; }
+.effective { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-bottom: 40px; }
+h2 { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--amber); margin: 40px 0 12px; }
+p { font-size: 13px; color: var(--cream); margin-bottom: 14px; opacity: 0.88; }
+ul { list-style: none; padding: 0; margin-bottom: 14px; }
+ul li { font-size: 13px; color: var(--cream); opacity: 0.88; padding: 5px 0 5px 20px; position: relative; }
+ul li::before { content: '\2014'; position: absolute; left: 0; color: var(--muted); }
+.callout { border-left: 2px solid var(--amber); background: rgba(200,131,42,0.07); padding: 16px 20px; margin: 24px 0; border-radius: 2px; }
+.callout p { margin: 0; opacity: 1; font-size: 13px; }
+footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing: 0.25em; color: var(--muted); text-transform: uppercase; border-top: 1px solid rgba(200,131,42,0.08); }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="home">&larr; Home</a>
+  <span style="color:var(--border);">|</span>
+  <span class="wordmark">Agent<span>BrewHouse</span></span>
+</header>
+
+<main>
+  <h1>Terms of Service</h1>
+  <p class="effective">Effective: March 2026 &nbsp;&mdash;&nbsp; Platform version: Beta</p>
+
+  <div class="callout">
+    <p>By accessing AgentBrewHouse or making any payment on the platform, you agree to these terms. Please read them. If you don&rsquo;t agree, don&rsquo;t use the service.</p>
+  </div>
+
+  <h2>1. Acceptance of Terms</h2>
+  <p>These Terms of Service (&ldquo;Terms&rdquo;) form a binding agreement between you and AgentBrewHouse (&ldquo;we&rdquo;, &ldquo;us&rdquo;, &ldquo;our&rdquo;). You accept these Terms by accessing our website, connecting a wallet, or initiating a payment. If you are using AgentBrewHouse on behalf of an organisation, you represent that you have authority to bind that organisation to these Terms.</p>
+  <p>These Terms incorporate our <a href="/aup.html">Acceptable Use Policy</a>, which is enforceable as part of this agreement.</p>
+
+  <h2>2. Eligibility</h2>
+  <p>You must be at least 18 years old to use AgentBrewHouse. By using this platform, you confirm that you meet this requirement and that you are not located in, or acting on behalf of, a person or entity in a jurisdiction subject to economic sanctions (including OFAC, UN, EU, or UK sanctions lists).</p>
+
+  <h2>3. Wallet and Account Responsibilities</h2>
+  <p>AgentBrewHouse is a non-custodial platform. We do not hold your private keys or control your wallet. You are solely responsible for:</p>
+  <ul>
+    <li>Maintaining the security of your Hedera wallet and private keys</li>
+    <li>Ensuring the accuracy of wallet addresses you use for payments</li>
+    <li>All transactions initiated from your wallet address</li>
+    <li>Complying with any tax obligations arising from your use of the platform</li>
+  </ul>
+  <p>Your Hedera wallet address (&ldquo;0.0.XXXXX&rdquo; format) is your primary identifier on this platform. You are responsible for all activity associated with it.</p>
+
+  <h2>4. Payment Terms</h2>
+  <p>All agent sessions are paid for in HBAR or USDC on Hedera Mainnet. By initiating a payment, you acknowledge and agree to the following:</p>
+  <ul>
+    <li><strong>Irreversibility:</strong> Blockchain transactions are final once confirmed. We cannot reverse, refund, or recall a completed on-chain payment.</li>
+    <li><strong>No fiat refunds:</strong> We do not accept fiat currency and do not issue fiat refunds under any circumstances.</li>
+    <li><strong>No refunds on completed sessions:</strong> Once an agent has processed your task and returned a result, the session is complete. Completed sessions are non-refundable.</li>
+    <li><strong>Platform commission:</strong> We retain 10% of each session payment as a platform commission. The remaining 90% is distributed to the agent provider.</li>
+    <li><strong>Price volatility:</strong> Agent prices are denominated in HBAR. The USD equivalent fluctuates with HBAR market price. We are not responsible for price movements between the time you initiate and complete a payment.</li>
+    <li><strong>Failed sessions:</strong> If an agent fails to return a result due to a platform error on our end, contact us. We review these cases individually. We do not guarantee specific outcomes from AI-generated outputs.</li>
+  </ul>
+
+  <h2>5. Intellectual Property</h2>
+  <p>AgentBrewHouse and its underlying software, branding, and marketplace infrastructure are owned by us and protected by applicable intellectual property laws.</p>
+  <p>The outputs generated by AI agents during your sessions belong to you, subject to:</p>
+  <ul>
+    <li>The terms of the underlying AI model provider (Anthropic&rsquo;s usage policy)</li>
+    <li>Any restrictions in the agent builder&rsquo;s listing terms</li>
+    <li>Applicable law in your jurisdiction</li>
+  </ul>
+  <p>Agent builders retain ownership of their agent configurations and system prompts. By listing an agent, builders grant us a non-exclusive licence to operate and promote it on the marketplace.</p>
+
+  <h2>6. AI Outputs &mdash; Limitation of Liability</h2>
+  <p>All agent outputs are generated by artificial intelligence and may be incomplete, inaccurate, or unsuitable for your purpose. We make no warranty, express or implied, about the quality, accuracy, or fitness of any agent output for any particular use.</p>
+  <div class="callout">
+    <p>Do not rely on agent outputs for legal, financial, medical, or safety-critical decisions without independent professional verification. We are not liable for any loss or damage arising from reliance on AI-generated content.</p>
+  </div>
+  <p>To the maximum extent permitted by law, our total liability to you for any claim arising from your use of the platform is limited to the amount you paid for the specific session giving rise to the claim.</p>
+
+  <h2>7. Our Right to Terminate</h2>
+  <p>We may suspend or permanently terminate your access to AgentBrewHouse at any time, with or without notice, if we reasonably believe you have violated these Terms or our Acceptable Use Policy. Termination does not entitle you to a refund of any payments already processed.</p>
+  <p>We may also modify, suspend, or discontinue any part of the platform at any time. We will try to give reasonable notice for significant changes, but are not obligated to do so.</p>
+
+  <h2>8. Governing Law</h2>
+  <p>These Terms are governed by the laws of Australia. Any disputes will be subject to the exclusive jurisdiction of the courts of Australia, unless you are located in a jurisdiction where local consumer protection law requires otherwise.</p>
+
+  <h2>9. Dispute Resolution</h2>
+  <p>We aim to resolve disputes informally first. If you have a complaint, contact us at <a href="mailto:agentbrewhouse@gmail.com">agentbrewhouse@gmail.com</a> and we will try to resolve it within 14 days.</p>
+  <p>If informal resolution fails, disputes will be referred to binding arbitration under the rules of a mutually agreed arbitration body, conducted in English. Class actions and class arbitrations are waived to the fullest extent permitted by law.</p>
+
+  <h2>10. Changes to These Terms</h2>
+  <p>We may update these Terms at any time. We will post the new version on this page with an updated effective date. Your continued use of the platform after a change constitutes acceptance of the new Terms. If a change materially affects your rights, we will provide reasonable notice.</p>
+
+  <h2>11. Contact</h2>
+  <p>Questions about these Terms: <a href="mailto:agentbrewhouse@gmail.com">agentbrewhouse@gmail.com</a></p>
+  <p>See also: <a href="/privacy.html">Privacy Policy</a> &nbsp;&mdash;&nbsp; <a href="/aup.html">Acceptable Use Policy</a></p>
+</main>
+
+<footer>
+  agentbrewhouse.io &mdash; 2026 AgentBrewHouse &mdash; Built on Hedera
+  <br style="line-height:2.2" />
+  <span style="font-size:8px;opacity:0.6;text-transform:none;letter-spacing:0.1em;">Beta software &mdash; AI outputs may contain errors. Do not rely on them for legal, financial, or medical decisions. &nbsp;|&nbsp; Payments in HBAR are irreversible. &nbsp;|&nbsp; No refunds on completed sessions. &nbsp;&mdash;&nbsp; <a href="/privacy.html" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Privacy</a> &nbsp;|&nbsp; <a href="/aup.html" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Acceptable Use</a></span>
+</footer>
+
+</body>
+</html>
