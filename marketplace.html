@@ -884,6 +884,7 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     <div id="sess-result-foot">
       <span id="sess-result-id"></span>
       <button class="sess-copy-btn" onclick="copySessionResult()">Copy result</button>
+      <a id="sess-history-link" href="/history.html" target="_blank" rel="noopener" class="sess-copy-btn" style="display:none;text-decoration:none;">View My Sessions &#8594;</a>
       <button class="sess-copy-btn" id="sess-report-btn" onclick="openDispute()" style="border-color:rgba(224,82,82,0.5);color:#e05252;display:none">Report Issue</button>
     </div>
   </div>
@@ -1754,7 +1755,7 @@ async function submitHbarSession() {
     if (_hbarMode === 'chat') {
       openSessionChat(data.session_id, agent.agent_id, agent.name, data.response, data.max_messages, agent.avatar_url);
     } else {
-      showSessionResult(agent.name, agent.agent_id, data.session_id, data.result, data.escrow_active);
+      showSessionResult(agent.name, agent.agent_id, data.session_id, data.result, data.escrow_active, data.caller_wallet || '');
     }
   } catch(e) {
     hideBrewing('hbar');
@@ -1872,7 +1873,7 @@ async function submitUsdcSession() {
     if (_usdcMode === 'chat') {
       openSessionChat(data.session_id, agent.agent_id, agent.name, data.response, data.max_messages, agent.avatar_url);
     } else {
-      showSessionResult(agent.name, agent.agent_id, data.session_id, data.result, data.escrow_active);
+      showSessionResult(agent.name, agent.agent_id, data.session_id, data.result, data.escrow_active, data.caller_wallet || '');
     }
   } catch(e) {
     hideBrewing('usdc');
@@ -2541,6 +2542,18 @@ var _escrowSessionId   = null;
 var _escrowAgentId     = null;
 var _escrowAgentName   = null;
 var _escrowActive      = false;
+var _sessCallerWallet  = '';
+
+function _setHistoryLink(wallet) {
+  var el = document.getElementById('sess-history-link');
+  if (!el) return;
+  if (wallet && wallet.indexOf('0.0.') === 0) {
+    el.href = '/history.html?wallet=' + encodeURIComponent(wallet);
+    el.style.display = '';
+  } else {
+    el.style.display = 'none';
+  }
+}
 
 function _setEscrowStep(stepNum, state, labelOverride, linkHref) {
   // state: 'done' | 'active' | 'failed' | 'pending'
@@ -2571,14 +2584,16 @@ function _openResultModal(agentName, agentId, sessionId, resultText) {
   for (var i = 0; i < stars.length; i++) { stars[i].className = 'sess-star'; }
   document.getElementById('sess-rated-msg').style.display   = 'none';
   document.getElementById('sess-complete-row').style.display = '';
+  _setHistoryLink(_sessCallerWallet);
   document.getElementById('sess-result-overlay').classList.add('visible');
 }
 
-function showSessionResult(agentName, agentId, sessionId, resultText, escrowActive) {
-  _escrowAgentId   = agentId;
-  _escrowAgentName = agentName;
-  _escrowSessionId = sessionId;
-  _escrowActive    = !!escrowActive;
+function showSessionResult(agentName, agentId, sessionId, resultText, escrowActive, callerWallet) {
+  _escrowAgentId    = agentId;
+  _escrowAgentName  = agentName;
+  _escrowSessionId  = sessionId;
+  _escrowActive     = !!escrowActive;
+  _sessCallerWallet = callerWallet || '';
 
   // Reset dispute form
   document.getElementById('sess-dispute-form').style.display = 'none';
@@ -2653,6 +2668,7 @@ function _pollEscrowStatus() {
         for (var i = 0; i < stars.length; i++) { stars[i].className = 'sess-star'; }
         document.getElementById('sess-rated-msg').style.display    = 'none';
         document.getElementById('sess-complete-row').style.display = '';
+        _setHistoryLink(_sessCallerWallet);
         var rBtn = document.getElementById('sess-report-btn');
         if (rBtn) rBtn.style.display = '';
       } else if (status === 'refunded' || status === 'failed') {
