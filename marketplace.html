@@ -2586,16 +2586,29 @@ function showSessionResult(agentName, agentId, sessionId, resultText, escrowActi
   var rBtn = document.getElementById('sess-report-btn');
   if (rBtn) rBtn.style.display = 'none';
 
-  if (!escrowActive || resultText) {
-    // No escrow / already released -- show result immediately
+  if (!escrowActive) {
+    // Free session -- show result immediately, no escrow steps
     document.getElementById('sess-escrow-steps').style.display = 'none';
     _openResultModal(agentName, agentId, sessionId, resultText);
     if (rBtn) rBtn.style.display = '';
     return;
   }
 
-  // Show escrow progress indicator, no result yet
+  // Paid session with escrow -- always show the step indicator
   document.getElementById('sess-escrow-steps').style.display = '';
+
+  if (resultText) {
+    // Escrow completed synchronously (create + release in same request).
+    // Show all three steps as done, then reveal the result.
+    _setEscrowStep(1, 'done', 'Payment secured in escrow', null);
+    _setEscrowStep(2, 'done', 'Agent delivered result', null);
+    _setEscrowStep(3, 'done', 'Funds released on-chain', null);
+    _openResultModal(agentName, agentId, sessionId, resultText);
+    if (rBtn) rBtn.style.display = '';
+    return;
+  }
+
+  // Escrow active but no result yet -- start polling
   document.getElementById('sess-result-agent').textContent = agentName + ' \u2014 Verifying on-chain...';
   document.getElementById('sess-result-body').textContent  = 'Verifying escrow status...';
   document.getElementById('sess-complete-row').style.display = 'none';
