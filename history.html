@@ -177,7 +177,6 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
   <div class="nav-links">
     <a href="/marketplace.html">Marketplace</a>
     <a href="/history.html" class="active">My Sessions</a>
-    <a href="/connect.html">Connect MCP</a>
   </div>
 </nav>
 
@@ -336,6 +335,8 @@ function lookupHistory() {
   document.getElementById('load-more-btn').className = 'load-more-btn hidden';
   document.getElementById('results-wallet').textContent = _wallet;
   showState('state-loading');
+  var _rs = document.getElementById('results-section');
+  if (_rs) _rs.scrollIntoView({ behavior: 'smooth' });
   fetchSessions(false);
 }
 
