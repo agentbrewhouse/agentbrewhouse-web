@@ -679,15 +679,11 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
 .sess-rated-msg { font-size: 9px; letter-spacing: 0.14em; color: var(--muted); margin-bottom: 12px; display: none; }
 .sess-back-btn { background: transparent; border: 1px solid rgba(200,131,42,0.4); color: var(--amber); font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; padding: 9px 16px; cursor: pointer; transition: background 0.2s, color 0.2s; }
 .sess-back-btn:hover { background: var(--amber); color: var(--bg); }
-
-/* Buyer confirm: payment stays held until the buyer releases it. */
-#sess-hold-row { padding: 16px 20px 14px; border-top: 1px solid rgba(200,131,42,0.15); }
-#sess-chat-hold { padding: 12px 14px 4px; border-top: 1px solid rgba(200,131,42,0.15); }
-.sess-hold-note { font-family: 'Playfair Display', serif; font-size: 16px; line-height: 1.45; color: var(--cream); margin: 0 0 14px; }
-.sess-confirm-btn { background: var(--amber); border: none; color: #1a1208; font-family: 'DM Mono', monospace; font-size: 12px; line-height: 1.35; padding: 12px 16px; cursor: pointer; text-transform: none; letter-spacing: 0.01em; }
-.sess-confirm-btn:hover { filter: brightness(1.06); }
-.sess-confirm-btn:disabled { opacity: 0.55; cursor: default; filter: none; }
-.sess-confirm-msg { font-size: 12px; line-height: 1.45; margin-top: 10px; }
+#sess-confirm-row { display: none; padding: 16px 20px 4px; border-top: 1px solid rgba(200,131,42,0.15); }
+.sess-confirm-note { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.04em; color: var(--cream); margin-bottom: 12px; line-height: 1.55; }
+#sess-confirm-btn { background: var(--amber); color: var(--bg); border-color: var(--amber); text-transform: none; letter-spacing: 0.01em; font-size: 12px; }
+#sess-confirm-btn:disabled { opacity: 0.45; cursor: default; }
+#sess-confirm-msg { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.04em; margin-top: 10px; display: none; line-height: 1.5; }
 
 /* ── Escrow step indicator ── */
 #sess-escrow-steps { padding: 16px 20px 4px; border-top: 1px solid rgba(200,131,42,0.12); }
@@ -874,10 +870,10 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
       </div>
     </div>
     <div id="sess-result-body"></div>
-    <div id="sess-hold-row" style="display:none">
-      <p class="sess-hold-note">The payment is held. Read the result, then release it when you are happy.</p>
-      <button type="button" class="sess-confirm-btn" id="sess-confirm-btn" onclick="confirmRelease()">I'm happy, release payment</button>
-      <div class="sess-confirm-msg" id="sess-confirm-msg" style="display:none"></div>
+    <div id="sess-confirm-row">
+      <div class="sess-confirm-note">Payment is held. Release it when you are happy with this result. If you do nothing, it goes to the seller when the hold ends. If something is wrong, use Report Issue and we refund you.</div>
+      <button class="sess-back-btn" id="sess-confirm-btn" type="button" onclick="confirmRelease()">I'm happy, release payment</button>
+      <div id="sess-confirm-msg"></div>
     </div>
     <div id="sess-complete-row" style="display:none">
       <div class="sess-complete-hdr">&#10003; Session Complete</div>
@@ -923,11 +919,6 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
   </div>
   <div id="sess-chat-msgs"></div>
   <div id="sess-chat-limit"></div>
-  <div id="sess-chat-hold" style="display:none">
-    <p class="sess-hold-note">The payment is held. Release it when you are happy with the conversation.</p>
-    <button type="button" class="sess-confirm-btn" id="sess-chat-confirm-btn" onclick="confirmChatRelease()">I'm happy, release payment</button>
-    <div class="sess-confirm-msg" id="sess-chat-confirm-msg" style="display:none"></div>
-  </div>
   <div id="sess-chat-foot">
     <textarea id="sess-chat-input" placeholder="Type your message..." rows="2" onkeydown="sessInputKey(event)"></textarea>
     <button id="sess-chat-send" onclick="sendSessionMessage()">Send</button>
@@ -1594,11 +1585,10 @@ async function submitHbarSession() {
     }
 
     closeHbarModal();
-    _rememberConfirmToken(data && data.confirm_token);
     if (_hbarMode === 'chat') {
       openSessionChat(data.session_id, agent.agent_id, agent.name, data.response, data.max_messages, agent.avatar_url);
     } else {
-      showSessionResult(agent.name, agent.agent_id, data.session_id, data.result, data.escrow_active, data.caller_wallet || '');
+      showSessionResult(agent.name, agent.agent_id, data.session_id, data.result, data.escrow_active, data.caller_wallet || '', data.escrow_released, data.confirm_token || '');
     }
   } catch(e) {
     hideBrewing('hbar');
@@ -1713,11 +1703,10 @@ async function submitUsdcSession() {
     }
 
     closeUsdcModal();
-    _rememberConfirmToken(data && data.confirm_token);
     if (_usdcMode === 'chat') {
       openSessionChat(data.session_id, agent.agent_id, agent.name, data.response, data.max_messages, agent.avatar_url);
     } else {
-      showSessionResult(agent.name, agent.agent_id, data.session_id, data.result, data.escrow_active, data.caller_wallet || '');
+      showSessionResult(agent.name, agent.agent_id, data.session_id, data.result, data.escrow_active, data.caller_wallet || '', data.escrow_released, data.confirm_token || '');
     }
   } catch(e) {
     hideBrewing('usdc');
@@ -2401,37 +2390,7 @@ var _escrowAgentId     = null;
 var _escrowAgentName   = null;
 var _escrowActive      = false;
 var _sessCallerWallet  = '';
-// Hire confirm token lives in this page only. Never written to storage.
-var _confirmToken      = '';
-
-function _rememberConfirmToken(token) {
-  _confirmToken = (typeof token === 'string' && token) ? token : '';
-}
-
-function _confirmRequestHeaders() {
-  var headers = { 'Content-Type': 'application/json' };
-  if (_confirmToken) headers['X-Confirm-Token'] = _confirmToken;
-  return headers;
-}
-
-function _resetHoldControls() {
-  var hold = document.getElementById('sess-hold-row');
-  var btn  = document.getElementById('sess-confirm-btn');
-  var msg  = document.getElementById('sess-confirm-msg');
-  var note = hold ? hold.querySelector('.sess-hold-note') : null;
-  if (hold) hold.style.display = 'none';
-  if (note) note.textContent = 'The payment is held. Read the result, then release it when you are happy.';
-  if (btn) {
-    btn.disabled = false;
-    btn.style.display = '';
-    btn.textContent = "I'm happy, release payment";
-  }
-  if (msg) { msg.style.display = 'none'; msg.textContent = ''; }
-  var reasonEl = document.getElementById('sess-dispute-reason');
-  if (reasonEl) reasonEl.disabled = false;
-  var dBtn = document.querySelector('#sess-dispute-form .dispute-submit-btn');
-  if (dBtn) dBtn.disabled = false;
-}
+var _sessConfirmToken  = '';
 
 function _setHistoryLink(wallet) {
   var el = document.getElementById('sess-history-link');
@@ -2466,7 +2425,7 @@ function _openResultModal(agentName, agentId, sessionId, resultText) {
   _sessResultText    = resultText || '';
   _sessResultId      = sessionId  || '';
   _sessResultAgentId = agentId    || '';
-  document.getElementById('sess-result-agent').textContent = agentName + ' \u2014 Result';
+  document.getElementById('sess-result-agent').textContent = agentName + ': Result';
   document.getElementById('sess-result-body').textContent  = _sessResultText;
   document.getElementById('sess-result-id').textContent    = 'Session: ' + sessionId;
   var stars = document.querySelectorAll('.sess-star');
@@ -2477,19 +2436,42 @@ function _openResultModal(agentName, agentId, sessionId, resultText) {
   document.getElementById('sess-result-overlay').classList.add('visible');
 }
 
-function showSessionResult(agentName, agentId, sessionId, resultText, escrowActive, callerWallet) {
+function _showConfirmRow(show) {
+  var row = document.getElementById('sess-confirm-row');
+  if (!row) return;
+  row.style.display = show ? 'block' : 'none';
+  var btn = document.getElementById('sess-confirm-btn');
+  var msg = document.getElementById('sess-confirm-msg');
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = "I'm happy, release payment";
+  }
+  if (msg) {
+    msg.style.display = 'none';
+    msg.textContent = '';
+  }
+}
+
+function _buyerHeaders() {
+  var headers = {'Content-Type': 'application/json'};
+  if (_sessConfirmToken) headers['X-Confirm-Token'] = _sessConfirmToken;
+  return headers;
+}
+
+function showSessionResult(agentName, agentId, sessionId, resultText, escrowActive, callerWallet, escrowReleased, confirmToken) {
   _escrowAgentId    = agentId;
   _escrowAgentName  = agentName;
   _escrowSessionId  = sessionId;
   _escrowActive     = !!escrowActive;
   _sessCallerWallet = callerWallet || '';
+  if (typeof confirmToken !== 'undefined') _sessConfirmToken = confirmToken || '';
 
-  // Reset dispute form and the buyer-confirm row
+  // Reset dispute form
   document.getElementById('sess-dispute-form').style.display = 'none';
   document.getElementById('sess-dispute-msg').style.display  = 'none';
-  _resetHoldControls();
   var rBtn = document.getElementById('sess-report-btn');
   if (rBtn) rBtn.style.display = 'none';
+  _showConfirmRow(false);
 
   if (!escrowActive) {
     // Free session -- show result immediately, no escrow steps
@@ -2502,27 +2484,28 @@ function showSessionResult(agentName, agentId, sessionId, resultText, escrowActi
   // Paid session with escrow -- always show the step indicator
   document.getElementById('sess-escrow-steps').style.display = '';
 
-  if (resultText && _confirmToken) {
-    // Work is in. Funds stay held until the buyer releases them.
+  if (resultText && !escrowReleased) {
     _setEscrowStep(1, 'done', 'Payment secured in escrow', null);
-    _setEscrowStep(2, 'done', 'Agent delivered the result', null);
-    _setEscrowStep(3, 'active', 'Payment held', null);
-    _showHeldResult(agentName, agentId, sessionId, resultText);
+    _setEscrowStep(2, 'done', 'Agent delivered result', null);
+    _setEscrowStep(3, 'active', 'Waiting for you to release payment', null);
+    _openResultModal(agentName, agentId, sessionId, resultText);
+    document.getElementById('sess-complete-row').style.display = 'none';
+    _showConfirmRow(true);
+    if (rBtn) rBtn.style.display = '';
     return;
   }
 
-  if (resultText) {
-    // Older sessions released in the same request, with no confirm token.
+  if (resultText && escrowReleased) {
     _setEscrowStep(1, 'done', 'Payment secured in escrow', null);
     _setEscrowStep(2, 'done', 'Agent delivered result', null);
-    _setEscrowStep(3, 'done', 'Funds released on-chain', null);
+    _setEscrowStep(3, 'done', 'Seller paid', null);
     _openResultModal(agentName, agentId, sessionId, resultText);
     if (rBtn) rBtn.style.display = '';
     return;
   }
 
   // Escrow active but no result yet -- start polling
-  document.getElementById('sess-result-agent').textContent = agentName + ' \u2014 Verifying on-chain...';
+  document.getElementById('sess-result-agent').textContent = agentName + ': Checking your payment';
   document.getElementById('sess-result-body').textContent  = 'Verifying escrow status...';
   document.getElementById('sess-complete-row').style.display = 'none';
   document.getElementById('sess-result-id').textContent    = 'Session: ' + sessionId;
@@ -2551,20 +2534,11 @@ function _pollEscrowStatus() {
     .then(function(r) { return r.json().catch(function() { return {}; }); })
     .then(function(data) {
       var status = data.status || '';
-      if (data.confirm_token) _rememberConfirmToken(data.confirm_token);
-      var awaitingBuyer = status === 'delivered' || status === 'held' || status === 'funded' || status === 'awaiting_confirm' || status === 'pending_confirm';
-      if (_confirmToken && awaitingBuyer && (data.result || status === 'delivered' || status === 'awaiting_confirm' || status === 'pending_confirm')) {
-        _setEscrowStep(2, 'done', 'Agent delivered the result', null);
-        _setEscrowStep(3, 'active', 'Payment held', null);
-        _showHeldResult(_escrowAgentName, _escrowAgentId, _escrowSessionId, data.result || '');
-        return;
-      }
-      if (status === 'released' || status === 'confirmed' || status === 'settled') {
-        // Escrow released -- show result
+      if (status === 'released') {
         _setEscrowStep(2, 'done', 'Agent delivered result', null);
-        _setEscrowStep(3, 'done', 'Funds released', null);
+        _setEscrowStep(3, 'done', 'Seller paid', null);
         var resultText = data.result || '';
-        document.getElementById('sess-result-agent').textContent = _escrowAgentName + ' \u2014 Result';
+        document.getElementById('sess-result-agent').textContent = _escrowAgentName + ': Result';
         _sessResultText    = resultText;
         _sessResultId      = _escrowSessionId;
         _sessResultAgentId = _escrowAgentId;
@@ -2574,19 +2548,40 @@ function _pollEscrowStatus() {
         for (var i = 0; i < stars.length; i++) { stars[i].className = 'sess-star'; }
         document.getElementById('sess-rated-msg').style.display    = 'none';
         document.getElementById('sess-complete-row').style.display = '';
+        _showConfirmRow(false);
         _setHistoryLink(_sessCallerWallet);
         var rBtn = document.getElementById('sess-report-btn');
         if (rBtn) rBtn.style.display = '';
+      } else if (status === 'escrow' || data.awaiting_confirm) {
+        _setEscrowStep(2, 'done', 'Agent delivered result', null);
+        _setEscrowStep(3, 'active', 'Waiting for you to release payment', null);
+        var heldText = data.result || '';
+        document.getElementById('sess-result-agent').textContent = _escrowAgentName + ': Result';
+        _sessResultText    = heldText;
+        _sessResultId      = _escrowSessionId;
+        _sessResultAgentId = _escrowAgentId;
+        document.getElementById('sess-result-body').textContent = heldText;
+        document.getElementById('sess-result-id').textContent   = 'Session: ' + _escrowSessionId;
+        document.getElementById('sess-complete-row').style.display = 'none';
+        _showConfirmRow(true);
+        var heldBtn = document.getElementById('sess-report-btn');
+        if (heldBtn) heldBtn.style.display = '';
+      } else if (status === 'disputed') {
+        _setEscrowStep(3, 'active', 'Release paused', null);
+        _showConfirmRow(false);
+        document.getElementById('sess-result-body').textContent =
+          data.result || 'Release is paused while this session is disputed.';
+        document.getElementById('sess-complete-row').style.display = 'none';
       } else if (status === 'refunded' || status === 'failed') {
-        // Something went wrong -- refunded
         _setEscrowStep(2, 'failed', 'Agent encountered an issue', null);
-        _setEscrowStep(3, 'done', 'HBAR refunded to your wallet', null);
-        document.getElementById('sess-result-agent').textContent = _escrowAgentName + ' \u2014 Refunded';
+        _setEscrowStep(3, 'done', 'Payment refunded to your wallet', null);
+        document.getElementById('sess-result-agent').textContent = _escrowAgentName + ': Refunded';
         document.getElementById('sess-result-body').textContent  =
-          'Something went wrong with this session. Your HBAR has been refunded.\n\n' +
+          'Something went wrong with this session. Your payment has been refunded.\n\n' +
           'Session ID: ' + _escrowSessionId + '\n' +
           'Check HashScan: https://hashscan.io/mainnet/account/0.0.10358210';
         document.getElementById('sess-complete-row').style.display = 'none';
+        _showConfirmRow(false);
       } else {
         // Still processing -- poll again
         _escrowPollTimer = setTimeout(_pollEscrowStatus, 3000);
@@ -2598,116 +2593,86 @@ function _pollEscrowStatus() {
     });
 }
 
-function _showHeldResult(agentName, agentId, sessionId, resultText) {
-  _sessResultText    = resultText || '';
-  _sessResultId      = sessionId  || '';
-  _sessResultAgentId = agentId    || '';
-  document.getElementById('sess-result-agent').textContent = 'Result from ' + (agentName || 'your agent');
-  document.getElementById('sess-result-body').textContent  = _sessResultText;
-  document.getElementById('sess-result-id').textContent    = 'Session: ' + (sessionId || '');
+function closeSessionResult() {
+  if (_escrowPollTimer) { clearTimeout(_escrowPollTimer); _escrowPollTimer = null; }
+  _escrowSessionId = null;
+  document.getElementById('sess-result-overlay').classList.remove('visible');
   document.getElementById('sess-complete-row').style.display = 'none';
-  var hold = document.getElementById('sess-hold-row');
-  if (hold) hold.style.display = '';
-  _setHistoryLink(_sessCallerWallet);
-  var rBtn = document.getElementById('sess-report-btn');
-  if (rBtn) rBtn.style.display = '';
-  document.getElementById('sess-result-overlay').classList.add('visible');
+  document.getElementById('sess-escrow-steps').style.display = 'none';
+  document.getElementById('sess-dispute-form').style.display = 'none';
+  _showConfirmRow(false);
 }
 
-function _confirmFailMessage(data) {
-  var apiMsg = data && (data.error || data.detail);
-  if (typeof apiMsg === 'string' && apiMsg && apiMsg.length < 180) return apiMsg;
-  return 'That did not go through. Please try again.';
-}
-
-function _postConfirm(agentId, sessionId, btnId, msgId, onOk) {
-  var btn = document.getElementById(btnId);
-  var msg = document.getElementById(msgId);
-  if (!_confirmToken || !agentId || !sessionId) {
+function confirmRelease() {
+  if (!_escrowAgentId || !_escrowSessionId) return;
+  var btn = document.getElementById('sess-confirm-btn');
+  var msg = document.getElementById('sess-confirm-msg');
+  if (!_sessConfirmToken) {
     if (msg) {
+      msg.textContent = 'This page does not have the confirm code from your hire. That code is returned only once, when the session starts.';
       msg.style.display = '';
       msg.style.color = '#e05252';
-      msg.textContent = 'That did not go through. Please try again.';
     }
     return;
   }
   if (btn) {
     btn.disabled = true;
-    btn.textContent = 'Releasing payment...';
+    btn.textContent = 'Releasing...';
   }
-  if (msg) msg.style.display = 'none';
-  fetch(API_BASE + '/api/agents/' + encodeURIComponent(agentId) + '/session/' + encodeURIComponent(sessionId) + '/confirm', {
+  fetch(API_BASE + '/api/agents/' + _escrowAgentId + '/session/' + _escrowSessionId + '/confirm', {
     method: 'POST',
-    headers: _confirmRequestHeaders(),
+    headers: _buyerHeaders(),
     body: '{}',
   }).then(function(r) {
     return r.json().catch(function() { return {}; }).then(function(d) {
-      return { ok: r.ok, data: d || {} };
+      return {ok: r.ok, status: r.status, body: d};
     });
   }).then(function(res) {
-    var d = res.data || {};
-    var good = res.ok || d.ok || d.status === 'confirmed' || d.status === 'released' || d.status === 'settled';
-    if (!good) {
+    var d = res.body || {};
+    if (res.ok && (d.status === 'released' || d.already)) {
+      _setEscrowStep(3, 'done', 'Seller paid', null);
+      _showConfirmRow(false);
+      document.getElementById('sess-complete-row').style.display = '';
+      if (msg) msg.style.display = 'none';
+      return;
+    }
+    if (res.ok && d.retry_safe) {
       if (btn) {
         btn.disabled = false;
         btn.textContent = "I'm happy, release payment";
       }
       if (msg) {
+        msg.textContent = 'Release is in progress. You can press the button again. It will not pay the seller twice.';
         msg.style.display = '';
-        msg.style.color = '#e05252';
-        msg.textContent = _confirmFailMessage(d);
+        msg.style.color = 'var(--cream)';
       }
       return;
     }
-    if (btn) btn.style.display = 'none';
-    if (onOk) onOk();
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "I'm happy, release payment";
+    }
+    if (msg) {
+      msg.textContent = d.error || 'Release did not finish. You can try again.';
+      msg.style.display = '';
+      msg.style.color = '#e05252';
+    }
   }).catch(function() {
     if (btn) {
       btn.disabled = false;
       btn.textContent = "I'm happy, release payment";
     }
     if (msg) {
+      msg.textContent = 'Network error. Please try again.';
       msg.style.display = '';
       msg.style.color = '#e05252';
-      msg.textContent = 'That did not go through. Please try again.';
     }
   });
 }
 
-function confirmRelease() {
-  _postConfirm(_sessResultAgentId, _sessResultId, 'sess-confirm-btn', 'sess-confirm-msg', function() {
-    _setEscrowStep(3, 'done', 'Payment released', null);
-    var note = document.querySelector('#sess-hold-row .sess-hold-note');
-    if (note) note.textContent = 'Payment released. Thank you.';
-    var msg = document.getElementById('sess-confirm-msg');
-    if (msg) msg.style.display = 'none';
-    document.getElementById('sess-complete-row').style.display = '';
-  });
-}
-
-function confirmChatRelease() {
-  _postConfirm(_sessChatAgentId, _sessChatSessionId, 'sess-chat-confirm-btn', 'sess-chat-confirm-msg', function() {
-    var note = document.querySelector('#sess-chat-hold .sess-hold-note');
-    if (note) note.textContent = 'Payment released. Thank you.';
-    var msg = document.getElementById('sess-chat-confirm-msg');
-    if (msg) msg.style.display = 'none';
-  });
-}
-
-function closeSessionResult() {
-  if (_escrowPollTimer) { clearTimeout(_escrowPollTimer); _escrowPollTimer = null; }
-  _escrowSessionId = null;
-  _confirmToken = '';
-  document.getElementById('sess-result-overlay').classList.remove('visible');
-  document.getElementById('sess-complete-row').style.display = 'none';
-  document.getElementById('sess-escrow-steps').style.display = 'none';
-  document.getElementById('sess-dispute-form').style.display = 'none';
-  _resetHoldControls();
-}
-
 // Dispute form helpers
 function openDispute() {
-  document.getElementById('sess-dispute-form').style.display = '';
+  document.getElementById('sess-dispute-form').style.display = 'block';
   document.getElementById('sess-dispute-reason').value = '';
   document.getElementById('sess-dispute-msg').style.display = 'none';
 }
@@ -2721,26 +2686,30 @@ function submitDispute() {
     return;
   }
   if (!_sessResultAgentId || !_sessResultId) return;
+  if (!_sessConfirmToken) {
+    showToast('This page does not have the confirm code from your hire. That code is returned only once, when the session starts.');
+    return;
+  }
   fetch(API_BASE + '/api/agents/' + _sessResultAgentId + '/session/' + _sessResultId + '/dispute', {
     method:  'POST',
-    headers: _confirmRequestHeaders(),
+    headers: _buyerHeaders(),
     body:    JSON.stringify({reason: reason}),
   }).then(function(r) { return r.json().catch(function() { return {}; }); })
     .then(function(d) {
       var msgEl = document.getElementById('sess-dispute-msg');
-      if (d.ok || d.status === 'disputed') {
-        msgEl.textContent    = 'Report submitted. We will follow up within 24 hours.';
+      if (d.ok || d.status === 'disputed' || d.status === 'refunded') {
+        msgEl.textContent = d.refunded
+          ? 'Report received. Release is paused, and your payment is on its way back.'
+          : (d.message || 'Report received. Release is paused.');
         msgEl.style.display  = '';
         msgEl.style.color    = '#6abf7b';
         document.getElementById('sess-dispute-form').querySelector('textarea').disabled = true;
-        document.querySelector('#sess-dispute-form .dispute-submit-btn').disabled = true;
-        var cbtn = document.getElementById('sess-confirm-btn');
-        var hold = document.getElementById('sess-hold-row');
-        var note = hold ? hold.querySelector('.sess-hold-note') : null;
-        var stillHeld = cbtn && cbtn.style.display !== 'none';
-        if (cbtn) cbtn.style.display = 'none';
-        if (note && hold && hold.style.display !== 'none' && stillHeld) {
-          note.textContent = 'Report received. The payment stays held while we look into this.';
+        document.querySelector('.dispute-submit-btn').disabled = true;
+        _showConfirmRow(false);
+        if (d.refunded) {
+          _setEscrowStep(3, 'done', 'Payment refunded', null);
+        } else {
+          _setEscrowStep(3, 'active', 'Release paused', null);
         }
       } else {
         msgEl.textContent   = d.error || 'Submission failed. Please try again.';
@@ -2773,7 +2742,7 @@ function copySessionResult() {
   navigator.clipboard.writeText(_sessResultText).then(function() {
     showToast('Result copied.');
   }).catch(function() {
-    showToast('Copy failed — select manually.');
+    showToast('Copy failed. Select the text and copy it yourself.');
   });
 }
 
@@ -2810,19 +2779,6 @@ function openSessionChat(sessionId, agentId, agentName, firstResponse, maxMsgs, 
   _sessAppendMsg('agent', firstResponse || '');
   _sessUpdateLimit();
 
-  var chatHold = document.getElementById('sess-chat-hold');
-  var chatBtn  = document.getElementById('sess-chat-confirm-btn');
-  var chatMsg  = document.getElementById('sess-chat-confirm-msg');
-  var chatNote = chatHold ? chatHold.querySelector('.sess-hold-note') : null;
-  if (chatNote) chatNote.textContent = 'The payment is held. Release it when you are happy with the conversation.';
-  if (chatBtn) {
-    chatBtn.disabled = false;
-    chatBtn.style.display = '';
-    chatBtn.textContent = "I'm happy, release payment";
-  }
-  if (chatMsg) { chatMsg.style.display = 'none'; chatMsg.textContent = ''; }
-  if (chatHold) chatHold.style.display = _confirmToken ? '' : 'none';
-
   document.getElementById('sess-scrim').classList.add('open');
   document.getElementById('sess-chat-panel').classList.add('open');
 
@@ -2834,10 +2790,6 @@ function closeSessionChat() {
   document.getElementById('sess-chat-panel').classList.remove('open');
   document.getElementById('sess-scrim').classList.remove('open');
   _sessChatSessionId = null;
-  var chatHold = document.getElementById('sess-chat-hold');
-  if (chatHold) chatHold.style.display = 'none';
-  var overlay = document.getElementById('sess-result-overlay');
-  if (!overlay || !overlay.classList.contains('visible')) _confirmToken = '';
 }
 
 function _sessAppendMsg(role, text) {
