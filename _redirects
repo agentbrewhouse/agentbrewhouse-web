@@ -1,5 +1,10 @@
+# Cloudflare Pages serves index.html with status 200 for every unknown
+# path when the publish root has no 404.html. 404.html is that switch.
+# Do not add "/* /index.html 200". That rule would bring the homepage back
+# for missing files, including these discovery URLs.
 /list          /list.html          200
 /agent-submit  /agent-submit.md   200
 /agent-onboard /agent-onboard.md  200
 /agent/*       /agent.html        200
+/public/.well-known/agent-onboard.json  /.well-known/agent-onboard.json  301
 

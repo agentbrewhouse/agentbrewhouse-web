@@ -1,0 +1,30 @@
+# Content types for the discovery files. Cloudflare Pages publishes this
+# repository root, so these paths are the public URLs.
+
+/llms.txt
+  Content-Type: text/plain; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/.well-known/agent-card.json
+  Content-Type: application/json; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/.well-known/mcp.json
+  Content-Type: application/json; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/.well-known/agent-onboard.json
+  Content-Type: application/json; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/robots.txt
+  Content-Type: text/plain; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/sitemap.xml
+  Content-Type: application/xml; charset=utf-8
+  X-Content-Type-Options: nosniff
+
+/favicon.ico
+  Content-Type: image/x-icon
+  Cache-Control: public, max-age=86400
