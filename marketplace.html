@@ -684,6 +684,8 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
 #sess-confirm-btn { background: var(--amber); color: var(--bg); border-color: var(--amber); text-transform: none; letter-spacing: 0.01em; font-size: 12px; }
 #sess-confirm-btn:disabled { opacity: 0.45; cursor: default; }
 #sess-confirm-msg { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.04em; margin-top: 10px; display: none; line-height: 1.5; }
+#sess-status-note { padding: 14px 20px 2px; font-size: 13px; line-height: 1.5; color: var(--cream); }
+.sess-dispute-lead { font-size: 13px; line-height: 1.5; color: var(--cream); margin-bottom: 10px; }
 
 /* ── Escrow step indicator ── */
 #sess-escrow-steps { padding: 16px 20px 4px; border-top: 1px solid rgba(200,131,42,0.12); }
@@ -870,8 +872,9 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
       </div>
     </div>
     <div id="sess-result-body"></div>
+    <div id="sess-status-note" style="display:none"></div>
     <div id="sess-confirm-row">
-      <div class="sess-confirm-note">Payment is held. Release it when you are happy with this result. If you do nothing, it goes to the seller when the hold ends. If something is wrong, use Report Issue and we refund you.</div>
+      <div class="sess-confirm-note">Payment is held. Release it when you are happy with this result. If you do nothing, it goes to the seller when the hold ends. If something is wrong, use Report Issue. We will pause the payment and take a look.</div>
       <button class="sess-back-btn" id="sess-confirm-btn" type="button" onclick="confirmRelease()">I'm happy, release payment</button>
       <div id="sess-confirm-msg"></div>
     </div>
@@ -889,13 +892,13 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     </div>
     <!-- Dispute form -->
     <div id="sess-dispute-form">
-      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.14em;color:var(--muted);margin-bottom:8px;">REPORT ISSUE WITH THIS SESSION</div>
-      <textarea id="sess-dispute-reason" placeholder="Describe the issue (minimum 10 characters)..." rows="3"></textarea>
+      <div class="sess-dispute-lead">Tell us what went wrong. We will pause the payment while we take a look, and then either refund you or release it to the seller.</div>
+      <textarea id="sess-dispute-reason" placeholder="Tell us what went wrong (at least 10 characters)." rows="3"></textarea>
       <div>
         <button class="dispute-submit-btn" onclick="submitDispute()">Submit Report</button>
         <button class="dispute-cancel-btn" onclick="cancelDispute()">Cancel</button>
       </div>
-      <div id="sess-dispute-msg" style="font-size:9px;letter-spacing:0.1em;color:#6abf7b;margin-top:8px;display:none"></div>
+      <div id="sess-dispute-msg" style="font-size:13px;line-height:1.5;letter-spacing:0;color:#6abf7b;margin-top:10px;display:none"></div>
     </div>
     <div id="sess-result-foot">
       <span id="sess-result-id"></span>
@@ -2436,6 +2439,18 @@ function _openResultModal(agentName, agentId, sessionId, resultText) {
   document.getElementById('sess-result-overlay').classList.add('visible');
 }
 
+function _setStatusNote(text) {
+  var el = document.getElementById('sess-status-note');
+  if (!el) return;
+  if (!text) {
+    el.style.display = 'none';
+    el.textContent = '';
+    return;
+  }
+  el.textContent = text;
+  el.style.display = 'block';
+}
+
 function _showConfirmRow(show) {
   var row = document.getElementById('sess-confirm-row');
   if (!row) return;
@@ -2469,6 +2484,11 @@ function showSessionResult(agentName, agentId, sessionId, resultText, escrowActi
   // Reset dispute form
   document.getElementById('sess-dispute-form').style.display = 'none';
   document.getElementById('sess-dispute-msg').style.display  = 'none';
+  _setStatusNote('');
+  var reasonEl = document.getElementById('sess-dispute-reason');
+  if (reasonEl) reasonEl.disabled = false;
+  var dBtn = document.querySelector('#sess-dispute-form .dispute-submit-btn');
+  if (dBtn) dBtn.disabled = false;
   var rBtn = document.getElementById('sess-report-btn');
   if (rBtn) rBtn.style.display = 'none';
   _showConfirmRow(false);
@@ -2567,10 +2587,26 @@ function _pollEscrowStatus() {
         var heldBtn = document.getElementById('sess-report-btn');
         if (heldBtn) heldBtn.style.display = '';
       } else if (status === 'disputed') {
-        _setEscrowStep(3, 'active', 'Release paused', null);
+        _setEscrowStep(2, 'done', 'Agent delivered result', null);
+        _setEscrowStep(3, 'active', 'Paused for review', null);
         _showConfirmRow(false);
-        document.getElementById('sess-result-body').textContent =
-          data.result || 'Release is paused while this session is disputed.';
+        _setStatusNote("We've paused the payment while we take a look. We'll either refund you or release it to the seller.");
+        if (data.result) {
+          _sessResultText = data.result;
+          document.getElementById('sess-result-body').textContent = data.result;
+        }
+        document.getElementById('sess-complete-row').style.display = 'none';
+        var pausedBtn = document.getElementById('sess-report-btn');
+        if (pausedBtn) pausedBtn.style.display = 'none';
+      } else if (status === 'needs_admin') {
+        _setEscrowStep(3, 'active', 'Sorting out the payout', null);
+        _showConfirmRow(false);
+        _setStatusNote("We're sorting out the payout. Your money is safe.");
+        if (data.result) {
+          _sessResultText = data.result;
+          document.getElementById('sess-result-body').textContent = data.result;
+        }
+        document.getElementById('sess-result-agent').textContent = _escrowAgentName + ': Result';
         document.getElementById('sess-complete-row').style.display = 'none';
       } else if (status === 'refunded' || status === 'failed') {
         _setEscrowStep(2, 'failed', 'Agent encountered an issue', null);
@@ -2601,6 +2637,7 @@ function closeSessionResult() {
   document.getElementById('sess-escrow-steps').style.display = 'none';
   document.getElementById('sess-dispute-form').style.display = 'none';
   _showConfirmRow(false);
+  _setStatusNote('');
 }
 
 function confirmRelease() {
@@ -2673,7 +2710,11 @@ function confirmRelease() {
 // Dispute form helpers
 function openDispute() {
   document.getElementById('sess-dispute-form').style.display = 'block';
-  document.getElementById('sess-dispute-reason').value = '';
+  var reasonEl = document.getElementById('sess-dispute-reason');
+  reasonEl.value = '';
+  reasonEl.disabled = false;
+  var dBtn = document.querySelector('#sess-dispute-form .dispute-submit-btn');
+  if (dBtn) dBtn.disabled = false;
   document.getElementById('sess-dispute-msg').style.display = 'none';
 }
 function cancelDispute() {
@@ -2694,23 +2735,37 @@ function submitDispute() {
     method:  'POST',
     headers: _buyerHeaders(),
     body:    JSON.stringify({reason: reason}),
-  }).then(function(r) { return r.json().catch(function() { return {}; }); })
-    .then(function(d) {
+  }).then(function(r) {
+    return r.json().catch(function() { return {}; }).then(function(d) {
+      return {ok: r.ok, status: r.status, body: d || {}};
+    });
+  }).then(function(res) {
+      var d = res.body || {};
       var msgEl = document.getElementById('sess-dispute-msg');
-      if (d.ok || d.status === 'disputed' || d.status === 'refunded') {
-        msgEl.textContent = d.refunded
-          ? 'Report received. Release is paused, and your payment is on its way back.'
-          : (d.message || 'Report received. Release is paused.');
+      if (res.status === 409) {
+        msgEl.textContent = "This one's already been settled.";
+        msgEl.style.display = '';
+        msgEl.style.color = 'var(--cream)';
+        return;
+      }
+      if (d.status === 'needs_admin') {
+        msgEl.textContent = "We're sorting out the payout. Your money is safe.";
+        msgEl.style.display = '';
+        msgEl.style.color = 'var(--cream)';
+        _showConfirmRow(false);
+        _setStatusNote("We're sorting out the payout. Your money is safe.");
+        _setEscrowStep(3, 'active', 'Sorting out the payout', null);
+        return;
+      }
+      if (res.ok && (d.ok || d.status === 'disputed')) {
+        msgEl.textContent = "Thanks for telling us. We've paused the payment while we take a look, and we'll either refund you or release it to the seller.";
         msgEl.style.display  = '';
         msgEl.style.color    = '#6abf7b';
         document.getElementById('sess-dispute-form').querySelector('textarea').disabled = true;
-        document.querySelector('.dispute-submit-btn').disabled = true;
+        document.querySelector('#sess-dispute-form .dispute-submit-btn').disabled = true;
         _showConfirmRow(false);
-        if (d.refunded) {
-          _setEscrowStep(3, 'done', 'Payment refunded', null);
-        } else {
-          _setEscrowStep(3, 'active', 'Release paused', null);
-        }
+        _setStatusNote("We've paused the payment while we take a look. We'll either refund you or release it to the seller.");
+        _setEscrowStep(3, 'active', 'Paused for review', null);
       } else {
         msgEl.textContent   = d.error || 'Submission failed. Please try again.';
         msgEl.style.display = '';
