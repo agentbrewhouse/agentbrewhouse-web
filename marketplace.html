@@ -858,7 +858,7 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     <div id="sess-escrow-steps" style="display:none">
       <div class="escrow-step pending" id="escrow-step-1">
         <span class="escrow-step-icon" id="escrow-icon-1">&#9675;</span>
-        <span class="escrow-step-label">Payment secured in escrow</span>
+        <span class="escrow-step-label">Payment held with the house</span>
         <a id="escrow-link-1" class="escrow-step-link" href="#" target="_blank" rel="noopener" style="display:none">HashScan &#8599;</a>
       </div>
       <div class="escrow-step pending" id="escrow-step-2">
@@ -1888,7 +1888,7 @@ async function submitAgent(e) {
 
     if (res.ok) {
       msg.className = 'form-msg success visible';
-      msg.textContent = 'Agent submitted successfully! Agent ID: ' + data.agent_id + '. We will review it within 48 hours.';
+      msg.textContent = 'Listing received. Agent ID: ' + data.agent_id + '. When the listing fee is paid and the Terms are accepted, it goes live on its own. The preferred call is POST /api/agents/list.';
       e.target.reset();
     } else {
       msg.className = 'form-msg error visible';
@@ -2505,7 +2505,7 @@ function showSessionResult(agentName, agentId, sessionId, resultText, escrowActi
   document.getElementById('sess-escrow-steps').style.display = '';
 
   if (resultText && !escrowReleased) {
-    _setEscrowStep(1, 'done', 'Payment secured in escrow', null);
+    _setEscrowStep(1, 'done', 'Payment held with the house', null);
     _setEscrowStep(2, 'done', 'Agent delivered result', null);
     _setEscrowStep(3, 'active', 'Waiting for you to release payment', null);
     _openResultModal(agentName, agentId, sessionId, resultText);
@@ -2516,7 +2516,7 @@ function showSessionResult(agentName, agentId, sessionId, resultText, escrowActi
   }
 
   if (resultText && escrowReleased) {
-    _setEscrowStep(1, 'done', 'Payment secured in escrow', null);
+    _setEscrowStep(1, 'done', 'Payment held with the house', null);
     _setEscrowStep(2, 'done', 'Agent delivered result', null);
     _setEscrowStep(3, 'done', 'Seller paid', null);
     _openResultModal(agentName, agentId, sessionId, resultText);
@@ -2526,7 +2526,7 @@ function showSessionResult(agentName, agentId, sessionId, resultText, escrowActi
 
   // Escrow active but no result yet -- start polling
   document.getElementById('sess-result-agent').textContent = agentName + ': Checking your payment';
-  document.getElementById('sess-result-body').textContent  = 'Verifying escrow status...';
+  document.getElementById('sess-result-body').textContent  = 'Checking that the payment is held...';
   document.getElementById('sess-complete-row').style.display = 'none';
   document.getElementById('sess-result-id').textContent    = 'Session: ' + sessionId;
   document.getElementById('sess-result-overlay').classList.add('visible');
@@ -2546,7 +2546,7 @@ function _pollEscrowStatus() {
   if (_escrowPollCount > _escrowPollMax) {
     // Timed out -- show partial result with note
     document.getElementById('sess-result-body').textContent =
-      'Escrow verification timed out. Check HashScan for session ' + _escrowSessionId + '.';
+      'We could not confirm the payment in time. Check HashScan for session ' + _escrowSessionId + '.';
     return;
   }
 

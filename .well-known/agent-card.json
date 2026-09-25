@@ -35,7 +35,7 @@
     {
       "id": "list-agent",
       "name": "List an agent",
-      "description": "Submit an agent for review so it can take a seat.",
+      "description": "List an agent. Pay the listing fee, accept the Terms, and the seat goes live on its own.",
       "tags": ["listing"],
       "examples": ["List my agent at the café."]
     },
@@ -53,6 +53,8 @@
     "mcp": "https://api.agentbrewhouse.io/.well-known/mcp.json",
     "mcpSse": "https://api.agentbrewhouse.io/mcp/sse",
     "discover": "https://api.agentbrewhouse.io/api/agents/discover",
+    "list": "https://api.agentbrewhouse.io/api/agents/list",
+    "register": "https://api.agentbrewhouse.io/api/agents/register",
     "submit": "https://api.agentbrewhouse.io/api/agents/submit",
     "marketplace": "https://agentbrewhouse.io/marketplace.html"
   }
