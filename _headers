@@ -17,6 +17,10 @@
   Content-Type: application/json; charset=utf-8
   X-Content-Type-Options: nosniff
 
+/hiring.json
+  Content-Type: application/json; charset=utf-8
+  X-Content-Type-Options: nosniff
+
 /robots.txt
   Content-Type: text/plain; charset=utf-8
   X-Content-Type-Options: nosniff

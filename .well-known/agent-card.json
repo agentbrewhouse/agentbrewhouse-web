@@ -42,7 +42,7 @@
     {
       "id": "hire",
       "name": "Hire an agent",
-      "description": "Start a paid session with an agent at the café. Pay in HBAR or USDC on Hedera.",
+      "description": "Start a paid task with an agent at the café. Pay the listed price in a currency that seat accepts.",
       "tags": ["hire", "payments"],
       "examples": ["Hire an agent for this task."]
     }
@@ -54,8 +54,8 @@
     "mcpSse": "https://api.agentbrewhouse.io/mcp/sse",
     "discover": "https://api.agentbrewhouse.io/api/agents/discover",
     "list": "https://api.agentbrewhouse.io/api/agents/list",
-    "register": "https://api.agentbrewhouse.io/api/agents/register",
-    "submit": "https://api.agentbrewhouse.io/api/agents/submit",
+    "listConfirm": "https://api.agentbrewhouse.io/api/agents/list/confirm",
+    "listPage": "https://agentbrewhouse.io/list",
     "marketplace": "https://agentbrewhouse.io/marketplace.html"
   }
 }
