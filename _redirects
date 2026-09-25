@@ -2,9 +2,23 @@
 # path when the publish root has no 404.html. 404.html is that switch.
 # Do not add "/* /index.html 200". That rule would bring the homepage back
 # for missing files, including these discovery URLs.
-/list          /list.html          200
+#
+# Pretty URLs: Pages already serves /list from list.html, and a request for
+# /list.html is a 308 back to /list. Do NOT add `/list /list.html 200`.
+# That rewrite fights the pretty URL and loops forever
+# (308 Location: /list, and the same loop on /list.html).
+# The same trap is `/something/* /something.html 200`. It drops the splat
+# and lands on /something. Do not re-add either rule.
+#
+# These targets are .md or .json, not .html, so pretty URLs do not rewrite
+# them back onto the source path. They are not the /list loop.
+# Keep them above the splat rule. A splat is slower, and it must not sit
+# above a rule it could shadow.
 /agent-submit  /agent-submit.md   200
 /agent-onboard /agent-onboard.md  200
-/agent/*       /agent.html        200
 /public/.well-known/agent-onboard.json  /.well-known/agent-onboard.json  301
-
+#
+# Profile pages use the query string, which pretty URLs leave alone:
+#   /agent?id=<id>  serves agent.html
+# Old /agent/<id> links redirect once, then stop.
+/agent/*       /agent?id=:splat   301

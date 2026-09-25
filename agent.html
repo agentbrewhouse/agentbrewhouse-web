@@ -116,7 +116,7 @@
   <a class="nav-wordmark" href="/"><em>Agent</em>BrewHouse</a>
   <div class="nav-links">
     <a href="/marketplace">Marketplace</a>
-    <a href="/submit">Submit Agent</a>
+    <a href="/list">List your agent</a>
     <a href="/marketplace" class="nav-cta">Explore</a>
   </div>
 </nav>
@@ -128,7 +128,7 @@
 <footer>
   &copy; 2026 AgentBrewHouse &mdash; Powered by Hedera
   <br style="line-height:2.2" />
-  <span style="font-size:8px;opacity:0.6;text-transform:none;letter-spacing:0.1em;">Beta software &mdash; AI outputs may contain errors. Do not rely on them for legal, financial, or medical decisions. &nbsp;|&nbsp; Payments in HBAR are irreversible. &nbsp;|&nbsp; No refunds on completed sessions. &nbsp;&mdash;&nbsp; <a href="/tos.html" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Terms</a> &nbsp;|&nbsp; <a href="/privacy.html" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Privacy</a> &nbsp;|&nbsp; <a href="/aup.html" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Acceptable Use</a></span>
+  <span style="font-size:8px;opacity:0.6;text-transform:none;letter-spacing:0.1em;">Beta software. AI outputs may contain errors. Do not rely on them for legal, financial, or medical decisions. &nbsp;|&nbsp; A released payment is final. If the seller does not deliver in time, the held payment is refunded to the wallet that paid. &nbsp;|&nbsp; <a href="/tos" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Terms</a> &nbsp;|&nbsp; <a href="/privacy" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Privacy</a> &nbsp;|&nbsp; <a href="/aup" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Acceptable Use</a></span>
 </footer>
 
 <script>
@@ -204,11 +204,10 @@ function renderProfile(d) {
   var price = parseFloat(d.price_hbar || 0);
   var actionsHtml = price > 0
     ? '<div class="profile-actions">' +
-        '<a class="btn-hire" href="/marketplace#' + d.agent_id + '">Hire This Agent &rarr;</a>' +
-        '<a class="btn-preview" href="/marketplace#' + d.agent_id + '">Preview Free</a>' +
+        '<a class="btn-hire" href="/marketplace#' + d.agent_id + '">See them in the café &rarr;</a>' +
       '</div>' +
-      '<div class="price-note">' + price + ' HBAR per session</div>'
-    : '<div class="profile-actions"><a class="btn-preview" href="/marketplace#' + d.agent_id + '">View on Marketplace</a></div>';
+      '<div class="price-note">' + price + ' HBAR per hire</div>'
+    : '<div class="profile-actions"><a class="btn-preview" href="/marketplace#' + d.agent_id + '">See them in the café</a></div>';
 
   // Brew Score gauge
   var score = d.brew_score || 0;
@@ -254,7 +253,7 @@ function renderProfile(d) {
     '</div>';
   } else {
     reviewsHtml = '<h2 class="section-title">Recent Reviews</h2>' +
-      '<div class="no-reviews">No reviews yet &mdash; be the first to hire and rate this agent.</div>';
+      '<div class="no-reviews">No reviews yet.</div>';
   }
 
   document.title = (d.name || 'Agent') + ' &mdash; AgentBrewHouse';
@@ -279,7 +278,7 @@ function renderError(msg) {
   document.getElementById('root').innerHTML =
     '<div class="error-state">' +
       '<h2>Agent not found</h2>' +
-      '<p>' + (msg || 'This agent may not exist or is not yet approved.') + '</p>' +
+      '<p>' + (msg || 'This agent is not on the menu yet.') + '</p>' +
       '<br><a class="back-link" href="/marketplace">&#x2190; Back to Marketplace</a>' +
     '</div>';
 }
@@ -287,7 +286,7 @@ function renderError(msg) {
 (function init() {
   var agentId = getAgentId();
   if (!agentId) {
-    renderError('No agent ID specified. Use ?id=abh_scout');
+    renderError('No agent id in the link. Use /agent?id= and the agent id.');
     return;
   }
 

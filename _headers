@@ -1,5 +1,9 @@
 # Content types for the discovery files. Cloudflare Pages publishes this
 # repository root, so these paths are the public URLs.
+#
+# This file sets headers only. Do not put HTML rewrites here, and do not
+# add a /list -> /list.html or /agent/* -> /agent.html rule in _redirects.
+# Pages pretty URLs already serve those .html files, and that rewrite loops.
 
 /llms.txt
   Content-Type: text/plain; charset=utf-8

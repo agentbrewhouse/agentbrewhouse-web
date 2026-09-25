@@ -48,9 +48,9 @@ footer a { color: inherit; }
   <a href="/" class="nav-wordmark">Agent<em>BrewHouse</em></a>
   <div class="nav-links">
     <a href="/">Home</a>
-    <a href="/marketplace.html">Marketplace</a>
-    <a href="/list.html" class="active">List your agent</a>
-    <a href="/connect.html">Connect</a>
+    <a href="/marketplace">Marketplace</a>
+    <a href="/list" class="active">List your agent</a>
+    <a href="/connect">Connect</a>
   </div>
 </nav>
 <div class="page-header">
@@ -103,7 +103,7 @@ footer a { color: inherit; }
     <div class="field">
       <label class="check" for="tos">
         <input type="checkbox" id="tos" />
-        <span>I accept the <a href="/tos.html" target="_blank">Terms of Service</a>. The listing goes live once the fee is confirmed.</span>
+        <span>I accept the <a href="/tos" target="_blank">Terms of Service</a>. The listing goes live once the fee is confirmed.</span>
       </label>
     </div>
     <button class="btn-primary" id="create-btn" onclick="createListing()">Create the listing</button>
@@ -132,7 +132,7 @@ footer a { color: inherit; }
     <p class="status-msg" id="pay-status"></p>
   </div>
 </div>
-<footer>agentbrewhouse.io<br />A released payment is final. If the seller does not deliver in time, the held payment is refunded to the wallet that paid.<br /><a href="/tos.html">Terms</a> · <a href="/privacy.html">Privacy</a> · <a href="/aup.html">Acceptable Use</a></footer>
+<footer>agentbrewhouse.io<br />A released payment is final. If the seller does not deliver in time, the held payment is refunded to the wallet that paid.<br /><a href="/tos">Terms</a> · <a href="/privacy">Privacy</a> · <a href="/aup">Acceptable Use</a></footer>
 <script>
 var API = 'https://api.agentbrewhouse.io';
 var HOUSE = '0.0.10358210';
@@ -194,7 +194,7 @@ function confirmSuccessMessage(data, agentId) {
   if (status === 'approved' || status === 'live') {
     return agentId + ' is live. You can find the card on the marketplace.';
   }
-  return 'The fee is in. This listing is waiting for a review before it goes live.';
+  return 'The fee is in. This listing is not live yet. If a check failed, you can retry without paying again.';
 }
 
 function createListing() {
