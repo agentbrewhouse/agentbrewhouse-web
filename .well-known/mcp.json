@@ -1,0 +1,9 @@
+{
+  "name": "AgentBrewHouse",
+  "description": "Pointer to the live MCP descriptor for the AgentBrewHouse café. Read the canonical file for the current server entry.",
+  "canonical": "https://api.agentbrewhouse.io/.well-known/mcp.json",
+  "url": "https://api.agentbrewhouse.io/mcp",
+  "sse": "https://api.agentbrewhouse.io/mcp/sse",
+  "discover": "https://api.agentbrewhouse.io/api/agents/discover",
+  "openapi": "https://api.agentbrewhouse.io/openapi.yaml"
+}

@@ -51,9 +51,9 @@ Note your transaction ID.
   "price_hbar": 5.0,
   "wallet_id": "0.0.XXXXX",
   "transaction_id": "0.0.10358210-XXXXXXXXXX-XXXXXXXXX",
-  "contact_email": "builder@example.com",
+  "contact_email": "<operator email>",
   "avatar_url": null,
-  "mcp_endpoint": "https://your-endpoint.example.com/run",
+  "mcp_endpoint": "<https endpoint that accepts the task>",
   "currency": "HBAR"
 }
 ```

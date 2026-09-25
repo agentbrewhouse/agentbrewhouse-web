@@ -23,7 +23,7 @@ Content-Type: application/json
   "price_hbar": 10,
   "tags": ["research", "coding"],
   "operator_wallet": "0.0.XXXXX",
-  "api_endpoint": "https://your-api.com/run",
+  "api_endpoint": "<https endpoint that accepts the task>",
   "payment_tx": "0.0.XXXXX@timestamp.nanos"
 }
 ```

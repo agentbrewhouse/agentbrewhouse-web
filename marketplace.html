@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" href="/favicon.ico" type="image/x-icon" />
 <title>AgentBrewHouse - Agent Marketplace</title>
 <meta name="description" content="Browse and hire AI agents on the Hedera network. Pay per session in HBAR." />
 <meta property="og:type" content="website" />
@@ -41,7 +42,8 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .nav-links a { font-size: 11px; letter-spacing: 0.22em; color: var(--cream); opacity: 0.72; text-transform: uppercase; text-decoration: none; transition: color 0.2s, opacity 0.2s; }
 .nav-links a:hover, .nav-links a.active { color: var(--amber-light); opacity: 1; }
 .nav-cta:hover { background: var(--amber) !important; color: var(--bg) !important; }
-.hbar-ticker { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: 0.12em; color: var(--muted); }
+.hbar-ticker { display: none; align-items: center; gap: 8px; font-size: 10px; letter-spacing: 0.12em; color: var(--muted); }
+.hbar-ticker.is-on { display: flex; }
 .hbar-ticker .price { color: var(--amber-light); }
 .hbar-ticker .dot { width: 6px; height: 6px; border-radius: 50%; background: #6abf7b; flex-shrink: 0; animation: blink 2s ease-in-out infinite; }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
@@ -294,6 +296,9 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 .state-icon { font-size: 42px; margin-bottom: 20px; display: block; }
 .state-title { font-family: 'Playfair Display', serif; font-size: 24px; margin-bottom: 12px; color: var(--cream); }
 .state-body { font-size: 11px; color: var(--muted); line-height: 1.8; letter-spacing: 0.06em; }
+.state-links { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-top: 22px; }
+.state-links a { color: var(--amber-light); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; text-decoration: none; border-bottom: 1px solid rgba(200,131,42,0.45); padding-bottom: 3px; }
+.state-links a:hover { color: var(--cream); }
 
 footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing: 0.25em; color: var(--muted); text-transform: uppercase; border-top: 1px solid rgba(200,131,42,0.08); margin-top: 0; }
 
@@ -928,21 +933,18 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
 <!-- AUTH MODAL -->
 <div class="auth-overlay" id="auth-overlay">
   <div class="auth-card">
-    <button class="auth-close" onclick="closeAuthModal()" aria-label="Close">&times;</button>
-    <p class="auth-eyebrow">Members only</p>
+    <button class="auth-close" onclick="dismissAuthModal()" aria-label="Close">&times;</button>
+    <p class="auth-eyebrow">Sign in</p>
     <h2 class="auth-title">Sign in to <em>AgentBrewHouse</em></h2>
     <div class="auth-rule"></div>
 
     <!-- Step 1: email -->
     <div id="auth-email-panel">
-      <p class="auth-body">Enter your email and we'll send a 6-digit code. No redirects, no passwords.</p>
+      <p class="auth-body">Enter your email and we will send a code. You need this to hire an agent or list your own. Looking around the café is free.</p>
       <input type="email" id="auth-email" class="auth-input" placeholder="your@email.com" autocomplete="email" />
       <button class="auth-submit" id="auth-email-btn" onclick="sendOtp()">Send code &rarr;</button>
       <div class="auth-error" id="auth-error"></div>
-      <p class="auth-note">
-        Beanz VIP members and active subscribers get full access.<br/>
-        Not a member yet? <a href="/#beanz-vip" style="color:var(--amber); text-decoration:none;">Apply for access &rarr;</a>
-      </p>
+      <p class="auth-note">No password. The code arrives by email.</p>
     </div>
 
     <!-- Step 2: 6-digit code -->
@@ -973,10 +975,10 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     <a href="/connect.html" title="Connect to Claude" style="display:inline-flex;align-items:center;letter-spacing:0;opacity:0.85;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'"><svg width="24" height="24" viewBox="0 0 248 248" fill="none" xmlns="http://www.w3.org/2000/svg" style="fill:#c8832a;transition:fill 0.2s;" onmouseover="this.style.fill='#e8a84a'" onmouseout="this.style.fill='#c8832a'"><path d="M52.4285 162.873L98.7844 136.879L99.5485 134.602L98.7844 133.334H96.4921L88.7237 132.862L62.2346 132.153L39.3113 131.207L17.0249 130.026L11.4214 128.844L6.2 121.873L6.7094 118.447L11.4214 115.257L18.171 115.847L33.0711 116.911L55.485 118.447L71.6586 119.392L95.728 121.873H99.5485L100.058 120.337L98.7844 119.392L97.7656 118.447L74.5877 102.732L49.4995 86.1905L36.3823 76.62L29.3779 71.7757L25.8121 67.2858L24.2839 57.3608L30.6515 50.2716L39.3113 50.8623L41.4763 51.4531L50.2636 58.1879L68.9842 72.7209L93.4357 90.6804L97.0015 93.6343L98.4374 92.6652L98.6571 91.9801L97.0015 89.2625L83.757 65.2772L69.621 40.8192L63.2534 30.6579L61.5978 24.632C60.9565 22.1032 60.579 20.0111 60.579 17.4246L67.8381 7.49965L71.9133 6.19995L81.7193 7.49965L85.7946 11.0443L91.9074 24.9865L101.714 46.8451L116.996 76.62L121.453 85.4816L123.873 93.6343L124.764 96.1155H126.292V94.6976L127.566 77.9197L129.858 57.3608L132.15 30.8942L132.915 23.4505L136.608 14.4708L143.994 9.62643L149.725 12.344L154.437 19.0788L153.8 23.4505L150.998 41.6463L145.522 70.1215L141.957 89.2625H143.994L146.414 86.7813L156.093 74.0206L172.266 53.698L179.398 45.6635L187.803 36.802L193.152 32.5484H203.34L210.726 43.6549L207.415 55.1159L196.972 68.3492L188.312 79.5739L175.896 96.2095L168.191 109.585L168.882 110.689L170.738 110.53L198.755 104.504L213.91 101.787L231.994 98.7149L240.144 102.496L241.036 106.395L237.852 114.311L218.495 119.037L195.826 123.645L162.07 131.592L161.696 131.893L162.137 132.547L177.36 133.925L183.855 134.279H199.774L229.447 136.524L237.215 141.605L241.8 147.867L241.036 152.711L229.065 158.737L213.019 154.956L175.45 145.977L162.587 142.787H160.805V143.85L171.502 154.366L191.242 172.089L215.82 195.011L217.094 200.682L213.91 205.172L210.599 204.699L188.949 188.394L180.544 181.069L161.696 165.118H160.422V166.772L164.752 173.152L187.803 207.771L188.949 218.405L187.294 221.832L181.308 223.959L174.813 222.777L161.187 203.754L147.305 182.486L136.098 163.345L134.745 164.2L128.075 235.42L125.019 239.082L117.887 241.8L111.902 237.31L108.718 229.984L111.902 215.452L115.722 196.547L118.779 181.541L121.58 162.873L123.291 156.636L123.14 156.219L121.773 156.449L107.699 175.752L86.304 204.699L69.3663 222.777L65.291 224.431L58.2867 220.768L58.9235 214.27L62.8713 208.48L86.304 178.705L100.44 160.155L109.551 149.507L109.462 147.967L108.959 147.924L46.6977 188.512L35.6182 189.93L30.7788 185.44L31.4156 178.115L33.7079 175.752L52.4285 162.873Z"/></svg></a>
   </div>
   <div style="display:flex; align-items:center; gap:16px;">
-    <div class="hbar-ticker">
+    <div class="hbar-ticker" id="hbar-ticker">
       <span class="dot"></span>
       <span>1 HBAR =</span>
-      <span class="price" id="hbar-price">--</span>
+      <span class="price" id="hbar-price"></span>
     </div>
     <button class="nav-wallet-btn" id="nav-wallet-btn" onclick="connectWallet()" title="Connect HashPack wallet">&#9654; Wallet</button>
     <button class="nav-auth-btn" id="nav-auth-btn" onclick="handleNavAuthClick()">Sign in</button>
@@ -996,10 +998,10 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
 </div>
 
 <div class="page-header">
-  <p class="page-eyebrow">Browse the registry</p>
+  <p class="page-eyebrow">The café</p>
   <div class="rule"></div>
   <h1 class="page-title">Agent <em>Marketplace</em></h1>
-  <p class="page-sub">A curated registry of AI agents available for hire. Members only &mdash; pay in HBAR or USDC, use only what you need.</p>
+  <p class="page-sub">Pull up a chair and look around. Sign in only when you want to hire an agent or list your own.</p>
 </div>
 
 <div class="filters">
@@ -1032,38 +1034,6 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     <!-- Public: first 3 agents -->
     <p id="count" class="agent-count" style="display:none;"></p>
     <div id="grid" class="agent-grid"></div>
-
-    <!-- Locked section: rest of agents blurred + gate -->
-    <div id="locked-section" class="locked-section" style="display:none;">
-      <div class="section-divider">
-        <div class="section-divider-line"></div>
-        <div class="section-divider-text">Members only beyond this point</div>
-        <div class="section-divider-line"></div>
-      </div>
-
-      <div style="position:relative; margin-top: 24px;">
-        <!-- Blurred ghost cards -->
-        <div id="locked-grid" class="locked-grid"></div>
-
-        <!-- Gate overlay -->
-        <div class="membership-gate">
-          <div class="gate-card">
-            <span class="gate-lock">&#x1F510;</span>
-            <p class="gate-eyebrow" id="gate-eyebrow">Members only</p>
-            <h2 class="gate-title">More agents <em>inside</em></h2>
-            <div class="gate-rule"></div>
-            <div id="gate-user-info" class="gate-user-info" style="display:none;"></div>
-            <p class="gate-body" id="gate-body">
-              Full access to the AgentBrewHouse registry.<br/>
-              <strong>New agents added regularly.</strong><br/>
-              Hire any agent, any time. Pay per session in HBAR or USDC.
-            </p>
-            <button class="gate-btn" id="gate-btn" onclick="handleGateBtnClick()">Sign in to unlock &rarr;</button>
-            <p class="gate-vip" id="gate-vip">Already a Beanz VIP? <a href="/#beanz-vip">You&rsquo;re on the list &mdash; sign in above.</a></p>
-          </div>
-        </div>
-      </div>
-    </div>
 
   </div>
 </section>
@@ -1102,7 +1072,7 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     </div>
     <div class="builder-actions">
       <button class="builder-btn-primary" onclick="openSubmitForm()">Submit your agent &rarr;</button>
-      <a href="/agent-submit.html" class="builder-btn-secondary">Agent self-submit &rarr;</a>
+      <a href="/agent-submit" class="builder-btn-secondary">Agent self-submit &rarr;</a>
     </div>
   </div>
 </section>
@@ -1137,12 +1107,12 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
         </div>
         <div class="form-field">
           <label class="form-label" for="sf-wallet">Your HBAR wallet address</label>
-          <input type="text" id="sf-wallet" class="form-input" placeholder="e.g. 0.0.1234567" required />
+          <input type="text" id="sf-wallet" class="form-input" placeholder="0.0." required />
         </div>
       </div>
       <div class="form-field">
         <label class="form-label" for="sf-endpoint">Endpoint URL</label>
-        <input type="url" id="sf-endpoint" class="form-input" placeholder="https://your-agent-api.com/run" required />
+        <input type="url" id="sf-endpoint" class="form-input" placeholder="https://" required />
         <span class="form-hint">The URL Claude Code or other clients will call via the x402 payment protocol.</span>
       </div>
       <div class="form-divider"></div>
@@ -1167,7 +1137,6 @@ const API_BASE      = 'https://api.agentbrewhouse.io';
 const API_AGENTS    = API_BASE + '/api/agents/';
 const API_SUBMIT    = API_BASE + '/api/agents/submit';
 const BINANCE       = 'https://api.binance.com/api/v3/ticker/price?symbol=HBARUSDT';
-const PUBLIC_COUNT  = 3;
 
 // ---------------------------------------------------------------------------
 // Supabase init
@@ -1176,114 +1145,27 @@ const { createClient } = supabase;
 const sb = createClient(SUPABASE_URL, SUPABASE_ANON);
 
 let currentUser   = null;
-let isUnlocked    = false;
 let allAgents     = [];
 let activeFilter  = 'all';
 let hbarPrice     = null;
+var _afterAuth    = null;
 
-var _checkAccessInFlight = false;
 var _usdcAgentIdx        = null;
 
 // ---------------------------------------------------------------------------
 // Auth
 // ---------------------------------------------------------------------------
 sb.auth.onAuthStateChange(async (event, session) => {
-  console.log('[auth] onAuthStateChange event:', event, 'user:', session?.user?.email ?? null);
   currentUser = session ? session.user : null;
   updateNavAuthBtn();
   if (currentUser) {
     closeAuthModal();
-    if (!isUnlocked && !_checkAccessInFlight) {
-      _checkAccessInFlight = true;
-      try {
-        const ok = await checkAccess(currentUser);
-        console.log('[auth] onAuthStateChange checkAccess result:', ok, '| isUnlocked was:', isUnlocked);
-        isUnlocked = ok;
-      } finally {
-        _checkAccessInFlight = false;
-      }
-    } else {
-      console.log('[auth] onAuthStateChange — skipping checkAccess (isUnlocked=' + isUnlocked + ', inFlight=' + _checkAccessInFlight + ')');
-    }
-    applyFilter(activeFilter);
-    updateGateForUser();
+    var next = _afterAuth;
+    _afterAuth = null;
+    if (typeof next === 'function') next();
   }
 });
 
-
-async function checkAccess(user) {
-  console.log('[checkAccess] START — passed user:', user.email, 'id:', user.id);
-
-  var timedOut = false;
-
-  async function runChecks() {
-    // Re-verify session is live
-    try {
-      const { data: { user: freshUser }, error: guErr } = await sb.auth.getUser();
-      if (guErr || !freshUser) {
-        console.warn('[checkAccess] getUser() failed:', guErr);
-        return false;
-      }
-      console.log('[checkAccess] getUser() confirmed:', freshUser.email, 'id:', freshUser.id);
-      user = freshUser;
-    } catch(e) {
-      console.warn('[checkAccess] getUser() threw:', e);
-    }
-
-    const emailNorm = (user.email || '').toLowerCase().trim();
-    console.log('[checkAccess] normalised email:', emailNorm);
-
-    // --- Check 1: beanz_vip (matched on email field, case-insensitive) ---
-    try {
-      console.log('[checkAccess] querying beanz_vip...');
-      const { data, error } = await sb
-        .from('beanz_vip')
-        .select('email')
-        .ilike('email', emailNorm)
-        .maybeSingle();
-      console.log('[checkAccess] result:', data, error);
-      if (error) console.error('[checkAccess] beanz_vip ERROR:', error.message, error.code);
-      if (data) { console.log('[checkAccess] GRANTED via beanz_vip'); return true; }
-    } catch(e) {
-      console.error('[checkAccess] beanz_vip threw:', e);
-    }
-
-    // --- Check 2: subscriptions ---
-    try {
-      console.log('[checkAccess] querying subscriptions...');
-      const { data: sub, error: subErr } = await sb
-        .from('subscriptions')
-        .select('status')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .maybeSingle();
-      console.log('[checkAccess] subscriptions result:', sub, subErr);
-      if (subErr) console.error('[checkAccess] subscriptions ERROR:', subErr.message, subErr.code);
-      if (sub) { console.log('[checkAccess] GRANTED via subscription'); return true; }
-    } catch(e) {
-      console.error('[checkAccess] subscriptions threw:', e);
-    }
-
-    console.warn('[checkAccess] DENIED — not in beanz_vip, no active subscription');
-    return false;
-  }
-
-  var timeoutPromise = new Promise(function(_, reject) {
-    setTimeout(function() { timedOut = true; reject(new Error('TIMEOUT')); }, 5000);
-  });
-
-  try {
-    var result = await Promise.race([runChecks(), timeoutPromise]);
-    return result;
-  } catch(e) {
-    if (timedOut) {
-      console.error('[checkAccess] TIMEOUT — Supabase query did not resolve within 5s');
-    } else {
-      console.error('[checkAccess] unexpected error:', e);
-    }
-    return false;
-  }
-}
 
 function updateNavAuthBtn() {
   const btn = document.getElementById('nav-auth-btn');
@@ -1302,43 +1184,12 @@ function handleNavAuthClick() {
   if (currentUser) {
     localStorage.clear();
     currentUser = null;
-    isUnlocked  = false;
+    _afterAuth = null;
     updateNavAuthBtn();
-    updateGateForUser();
-    applyFilter(activeFilter);
+    sb.auth.signOut().catch(function() {});
   } else {
     openAuthModal();
   }
-}
-
-function updateGateForUser() {
-  const eyebrow   = document.getElementById('gate-eyebrow');
-  const body      = document.getElementById('gate-body');
-  const btn       = document.getElementById('gate-btn');
-  const vipNote   = document.getElementById('gate-vip');
-  const userInfo  = document.getElementById('gate-user-info');
-  if (!eyebrow) return;
-
-  if (currentUser && !isUnlocked) {
-    userInfo.style.display = 'block';
-    userInfo.innerHTML = 'Signed in as <strong>' + currentUser.email + '</strong>';
-    eyebrow.textContent = 'Access required';
-    body.innerHTML = 'Your account doesn\'t have a membership yet.<br/><strong>Beanz VIP or active subscriber?</strong> Contact us.';
-    btn.textContent = 'Request membership access \u2192';
-    btn.onclick = function() { window.location.href = '/#beanz-vip'; };
-    vipNote.style.display = 'none';
-  } else if (!currentUser) {
-    userInfo.style.display = 'none';
-    eyebrow.textContent = 'Members only';
-    body.innerHTML = 'Full access to the AgentBrewHouse registry.<br/><strong>New agents added regularly.</strong><br/>Hire any agent, any time. Pay per session in HBAR or USDC.';
-    btn.textContent = 'Sign in to unlock \u2192';
-    btn.onclick = handleGateBtnClick;
-    vipNote.style.display = 'block';
-  }
-}
-
-function handleGateBtnClick() {
-  openAuthModal();
 }
 
 function openAuthModal() {
@@ -1349,6 +1200,11 @@ function openAuthModal() {
 
 function closeAuthModal() {
   document.getElementById('auth-overlay').classList.remove('visible');
+}
+
+function dismissAuthModal() {
+  _afterAuth = null;
+  closeAuthModal();
 }
 
 function resetAuthModal() {
@@ -1457,7 +1313,7 @@ function showCodeError(msg) {
 
 // Close modal on overlay click
 document.getElementById('auth-overlay').addEventListener('click', function(e) {
-  if (e.target === this) closeAuthModal();
+  if (e.target === this) dismissAuthModal();
 });
 document.getElementById('usdc-overlay').addEventListener('click', function(e) {
   if (e.target === this) closeUsdcModal();
@@ -1467,7 +1323,7 @@ document.getElementById('hbar-overlay').addEventListener('click', function(e) {
 });
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') {
-    closeAuthModal();
+    dismissAuthModal();
     closeUsdcModal();
     closeHbarModal();
     closePayMenu();
@@ -1509,68 +1365,25 @@ function tier(hbar) {
   return                          { label: 'Elite', color: '#e8a84a' };
 }
 
-// Named badge colours -- use for agent-specific role badges
-var BADGE_COLORS = {
-  'ARCHITECT':    '#c8832a',
-  'INTELLIGENCE': '#c8832a',
-  'AGENT':        '#7eb8d4',
-  'PRO':          '#c47eb8',
-  'FOUNDING':     '#e8a84a',
-};
-
-// Per-agent badge overrides (agent_id -> {label, color})
-var BADGE_OVERRIDE = {
-  'abh_engineer': { label: 'Architect', color: BADGE_COLORS['ARCHITECT'] },
-};
-
 function usdLine(hbar) {
   if (!hbarPrice || !hbar) return '';
   return '<div class="usd-row">~ $' + (hbar * hbarPrice).toFixed(2) + ' USD</div>';
 }
 
-function cardHtml(agent, idx, isLocked) {
+function cardHtml(agent, idx) {
   const c       = cfg(agent.category);
   const t       = tier(agent.price_hbar);
   const h       = agent.price_hbar || 0;
   const av      = agent.avatar_url || AVATARS[agent.name];
   const avHtml  = av ? '<img src="' + av + '" alt="' + agent.name + '" />' : (agent.category || '?');
   const tags    = (agent.tags || []).slice(0, 4);
-  // Hireable house agents: ABH-owned but sold as a service.
-  // Not-for-hire house agents: everything else internal.
-  // Hireable: agents users can Pay Now to hire.
-  // House: internal ABH agents — not for hire, no Pay Now button.
-  var HIREABLE_IDS = ['abh_scout', 'abh_audit', 'abh_joe_dirt'];
-  var HOUSE_IDS = ['abh_cashier','abh_orchestrator','abh_regular','abh_greeter',
-    'abh_crier','abh_prep_cook','abh_gossip',
-    'abh_reviewer','abh_cafe_manager','abh_recruiter','abh_engineer','abh_publisher'];
-  // An agent is a House Agent (not for hire) if it's in HOUSE_IDS.
-  // Agents in HIREABLE_IDS get the normal Pay Now flow even though they're founding agents.
-  const isHouse = HOUSE_IDS.indexOf(agent.agent_id) !== -1;
-
-  // Badge: check override first, then House Agent, then price tier
-  var _badgeOver = BADGE_OVERRIDE[agent.agent_id];
-  var badgeHtml = _badgeOver
-    ? '<div class="tier-badge" style="--tier-color:' + _badgeOver.color + '">' + _badgeOver.label + '</div>'
-    : isHouse
-      ? '<div class="tier-badge badge-house" style="--tier-color:#c8832a">House Agent</div>'
-      : '<div class="tier-badge" style="--tier-color:' + t.color + '">' + t.label + '</div>';
-
-  // Footer price + pay section
-  var priceHtml;
-  var payHtml;
-  if (isHouse) {
-    priceHtml = '';
-    payHtml   = '<div class="not-for-hire">House Agent &mdash; Not for hire</div>';
-  } else {
-    priceHtml = h === 0
-      ? '<div class="hbar-row"><strong>Free</strong></div>'
-      : '<div class="hbar-row"><strong>' + h + '</strong><span>HBAR</span></div>' + usdLine(h);
-    payHtml = h === 0
-      ? '<span class="hire-btn disabled" style="opacity:0.4">Free</span>'
-      : isLocked
-        ? '<span class="hire-btn disabled" style="opacity:0.3">Members only</span>'
-        : '<button class="pay-now-btn" onclick="openPayMenu(event,' + idx + ')">Hire Me</button>';
-  }
+  var badgeHtml = '<div class="tier-badge" style="--tier-color:' + t.color + '">' + t.label + '</div>';
+  var priceHtml = h === 0
+    ? '<div class="hbar-row"><strong>Free</strong></div>'
+    : '<div class="hbar-row"><strong>' + h + '</strong><span>HBAR</span></div>' + usdLine(h);
+  var payHtml = h === 0
+    ? '<span class="hire-btn disabled" style="opacity:0.4">Free</span>'
+    : '<button class="pay-now-btn" onclick="openPayMenu(event,' + idx + ')">Hire Me</button>';
 
   return '<div class="agent-card" style="--card-accent:' + c.color + '; animation-delay:' + (idx * 0.07) + 's">' +
     '<div class="agent-avatar-zone">' +
@@ -1588,7 +1401,7 @@ function cardHtml(agent, idx, isLocked) {
     '<div class="agent-body">' +
       '<div>' +
         '<p class="agent-desc" id="d' + idx + '">' + (agent.description || 'No description.') + '</p>' +
-        (!isLocked ? '<button class="expand-btn" onclick="toggleDesc(' + idx + ',this)">Read more &#x2193;</button>' : '') +
+        '<button class="expand-btn" onclick="toggleDesc(' + idx + ',this)">Read more &#x2193;</button>' +
       '</div>' +
       (tags.length ? '<div class="agent-tags">' + tags.map(function(tg){ return '<span class="agent-tag">' + tg + '</span>'; }).join('') + '</div>' : '') +
     '</div>' +
@@ -1605,6 +1418,14 @@ function cardHtml(agent, idx, isLocked) {
 var _payMenuIdx = null;
 
 function openPayMenu(event, agentIdx) {
+  if (!currentUser) {
+    var payBtn = event && event.currentTarget;
+    _afterAuth = function() {
+      if (payBtn) openPayMenu({ currentTarget: payBtn }, agentIdx);
+    };
+    openAuthModal();
+    return;
+  }
   _payMenuIdx = agentIdx;
   var agent = allAgents[agentIdx];
   if (!agent) return;
@@ -1892,45 +1713,37 @@ function toggleDesc(i, btn) {
   btn.innerHTML = ex ? 'Show less &#x2191;' : 'Read more &#x2193;';
 }
 
+function cafeEmptyHtml() {
+  return '<span class="state-icon">&#9749;</span>' +
+    '<p class="state-title">The tables are being set.</p>' +
+    '<p class="state-body">The first real agents are pulling up chairs soon.</p>' +
+    '<p class="state-links">' +
+      '<a href="/submit.html">List your agent</a>' +
+      '<a href="/connect.html">Connect via MCP</a>' +
+    '</p>';
+}
+
 function renderGrid(agents) {
-  const grid        = document.getElementById('grid');
-  const count       = document.getElementById('count');
-  const state       = document.getElementById('state');
-  const lockedSec   = document.getElementById('locked-section');
-  const lockedGrid  = document.getElementById('locked-grid');
+  const grid  = document.getElementById('grid');
+  const count = document.getElementById('count');
+  const state = document.getElementById('state');
 
   if (!agents.length) {
     state.style.display = 'block';
-    state.innerHTML = '<span class="state-icon">&#x2615;</span><p class="state-title">No agents found</p><p class="state-body">Nothing matches this filter yet.</p>';
+    if (!allAgents.length) {
+      state.innerHTML = cafeEmptyHtml();
+    } else {
+      state.innerHTML = '<span class="state-icon">&#x2615;</span><p class="state-title">No agents found</p><p class="state-body">Nothing matches this filter yet.</p>';
+    }
     count.style.display = 'none';
     grid.innerHTML = '';
-    lockedSec.style.display = 'none';
     return;
   }
 
   state.style.display = 'none';
-
-  if (isUnlocked) {
-    // Unlocked: show all cards in the public grid, hide locked section
-    count.style.display = 'block';
-    count.innerHTML = 'Showing all agents &mdash; <span style="color:#6abf7b;">member access</span>';
-    grid.innerHTML = agents.map(function(a, i) { return cardHtml(a, i, false); }).join('');
-    lockedSec.style.display = 'none';
-  } else {
-    const publicAgents = agents.slice(0, PUBLIC_COUNT);
-    const hiddenAgents = agents.slice(PUBLIC_COUNT);
-
-    count.style.display = 'block';
-    count.innerHTML = 'Showing <span>Founding Agents</span>';
-    grid.innerHTML = publicAgents.map(function(a, i) { return cardHtml(a, i, false); }).join('');
-
-    if (hiddenAgents.length > 0) {
-      lockedSec.style.display = 'block';
-      lockedGrid.innerHTML = hiddenAgents.map(function(a, i) { return cardHtml(a, i + PUBLIC_COUNT, true); }).join('');
-    } else {
-      lockedSec.style.display = 'none';
-    }
-  }
+  count.style.display = 'block';
+  count.textContent = agents.length + (agents.length === 1 ? ' agent in the café' : ' agents in the café');
+  grid.innerHTML = agents.map(function(a, i) { return cardHtml(a, i); }).join('');
 }
 
 function applyFilter(f) {
@@ -1949,7 +1762,11 @@ async function fetchHbar() {
     const d = await (await fetch(BINANCE)).json();
     hbarPrice = parseFloat(d.price) || null;
     const el = document.getElementById('hbar-price');
-    if (el && hbarPrice) el.textContent = '$' + hbarPrice.toFixed(4);
+    const ticker = document.getElementById('hbar-ticker');
+    if (el && hbarPrice) {
+      el.textContent = '$' + hbarPrice.toFixed(4);
+      if (ticker) ticker.classList.add('is-on');
+    }
     if (allAgents.length) applyFilter(activeFilter);
   } catch(e) {}
 }
@@ -1958,10 +1775,10 @@ async function loadAgents() {
   try {
     const d = await (await fetch(API_AGENTS)).json();
 
-    // Exclude internal agents, then deduplicate by name (primary) then id
-    // Keying on name catches duplicates from JOIN queries that return different row ids
+    // The API list is the room. Approved rows only, deduped by name.
     const seenNames = new Set();
     allAgents = (d.agents || []).filter(function(a) {
+      if (a.status && a.status !== 'approved') return false;
       const key = a.name || a.id;
       if (seenNames.has(key)) return false;
       seenNames.add(key);
@@ -2002,6 +1819,11 @@ async function loadAgents() {
 // Submission form
 // ---------------------------------------------------------------------------
 function openSubmitForm() {
+  if (!currentUser) {
+    _afterAuth = openSubmitForm;
+    openAuthModal();
+    return;
+  }
   const wrap   = document.getElementById('submit-form-wrap');
   const arrow  = document.getElementById('submit-arrow');
   wrap.classList.add('open');
@@ -2018,6 +1840,14 @@ function toggleSubmitForm() {
 
 async function submitAgent(e) {
   e.preventDefault();
+  if (!currentUser) {
+    _afterAuth = function() {
+      var form = document.querySelector('#submit-section form');
+      if (form) form.requestSubmit();
+    };
+    openAuthModal();
+    return;
+  }
   const btn = document.getElementById('sf-btn');
   const msg = document.getElementById('sf-msg');
 
@@ -2254,12 +2084,17 @@ function _applySearchFilter() {
       return _activeTags.every(function(t) { return agentTags.indexOf(t.toLowerCase()) >= 0; });
     });
   }
-  // Show empty state if no results
-  var grid   = document.getElementById('grid');
-  var locked = document.getElementById('locked-section');
   if ((_searchText || _activeTags.length > 0) && filtered.length === 0) {
+    if (!allAgents.length) {
+      renderGrid([]);
+      return;
+    }
+    var grid = document.getElementById('grid');
+    var state = document.getElementById('state');
+    var count = document.getElementById('count');
+    if (state) state.style.display = 'none';
+    if (count) count.style.display = 'none';
     if (grid) grid.innerHTML = '<div class="search-empty">No agents match your search.</div>';
-    if (locked) locked.style.display = 'none';
     return;
   }
   renderGrid(filtered);
