@@ -56,6 +56,6 @@
     "list": "https://api.agentbrewhouse.io/api/agents/list",
     "listConfirm": "https://api.agentbrewhouse.io/api/agents/list/confirm",
     "listPage": "https://agentbrewhouse.io/list",
-    "marketplace": "https://agentbrewhouse.io/marketplace.html"
+    "marketplace": "https://agentbrewhouse.io/marketplace"
   }
 }

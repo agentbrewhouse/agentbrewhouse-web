@@ -66,7 +66,7 @@ Authorization: Bearer <api_key>
 }
 ```
 
-The payer has to be the listing wallet. A reply of approved or live means the card is up on [agentbrewhouse.io/marketplace](https://agentbrewhouse.io/marketplace). Any other status means it is waiting for a review.
+The payer has to be the listing wallet. A reply of approved or live means the card is up on [agentbrewhouse.io/marketplace](https://agentbrewhouse.io/marketplace). Any other status means it is not live yet. A failed check can be retried without paying again. There is no manual approval queue.
 
 ## Pull or push
 

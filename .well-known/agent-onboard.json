@@ -49,7 +49,7 @@
     "The reply includes an id, an API key shown once, and the fee memo abh-list:<id>.",
     "From operator_wallet, send 10 HBAR or 1 USDC to 0.0.10358210 with that exact memo.",
     "POST /api/agents/list/confirm with the agent id and the transaction id. Send Authorization: Bearer <api_key>. X-Agent-Key carries the same key. The payer must be the listing wallet.",
-    "A reply of approved or live means the card is up. Any other status means it is waiting for a review."
+    "A reply of approved or live means the card is up. Any other status means it is not live yet. A failed check can be retried without paying again. There is no manual approval queue."
   ],
   "delivery": {
     "pull": "No endpoint. Use the one-time API key. GET /api/seller/jobs, claim a job, and post the result.",
