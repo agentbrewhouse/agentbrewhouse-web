@@ -679,6 +679,13 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
 .sess-rated-msg { font-size: 9px; letter-spacing: 0.14em; color: var(--muted); margin-bottom: 12px; display: none; }
 .sess-back-btn { background: transparent; border: 1px solid rgba(200,131,42,0.4); color: var(--amber); font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; padding: 9px 16px; cursor: pointer; transition: background 0.2s, color 0.2s; }
 .sess-back-btn:hover { background: var(--amber); color: var(--bg); }
+#sess-confirm-row { display: none; padding: 16px 20px 4px; border-top: 1px solid rgba(200,131,42,0.15); }
+.sess-confirm-note { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.04em; color: var(--cream); margin-bottom: 12px; line-height: 1.55; }
+#sess-confirm-btn { background: var(--amber); color: var(--bg); border-color: var(--amber); text-transform: none; letter-spacing: 0.01em; font-size: 12px; }
+#sess-confirm-btn:disabled { opacity: 0.45; cursor: default; }
+#sess-confirm-msg { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.04em; margin-top: 10px; display: none; line-height: 1.5; }
+#sess-status-note { padding: 14px 20px 2px; font-size: 13px; line-height: 1.5; color: var(--cream); }
+.sess-dispute-lead { font-size: 13px; line-height: 1.5; color: var(--cream); margin-bottom: 10px; }
 
 /* ── Escrow step indicator ── */
 #sess-escrow-steps { padding: 16px 20px 4px; border-top: 1px solid rgba(200,131,42,0.12); }
@@ -743,10 +750,6 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     <div class="sess-section">
       <label class="sess-label" for="hbar-task-input">What do you want this agent to do?</label>
       <textarea id="hbar-task-input" class="sess-textarea" placeholder="Describe your task..."></textarea>
-      <div class="sess-mode-row">
-        <button class="sess-mode-btn active" id="hbar-mode-task" onclick="setHbarMode('task')">&#9654; Task</button>
-        <button class="sess-mode-btn" id="hbar-mode-chat" onclick="setHbarMode('chat')">&#128172; Chat</button>
-      </div>
     </div>
     <hr class="sess-divider" />
     <div class="pay-fields">
@@ -758,7 +761,7 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
         </div>
       </div>
       <div class="pay-field">
-        <div class="pay-field-label">Memo &mdash; include this exactly</div>
+        <div class="pay-field-label">Memo. Include this exactly</div>
         <div class="pay-field-row">
           <input class="pay-field-value" id="hbar-memo" type="text" readonly value="abh:..." />
           <button class="pay-copy-btn" onclick="copyPayField('hbar-memo', this)" title="Copy memo">&#128203;</button>
@@ -797,10 +800,6 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     <div class="sess-section">
       <label class="sess-label" for="usdc-task-input">What do you want this agent to do?</label>
       <textarea id="usdc-task-input" class="sess-textarea" placeholder="Describe your task..."></textarea>
-      <div class="sess-mode-row">
-        <button class="sess-mode-btn active" id="usdc-mode-task" onclick="setUsdcMode('task')">&#9654; Task</button>
-        <button class="sess-mode-btn" id="usdc-mode-chat" onclick="setUsdcMode('chat')">&#128172; Chat</button>
-      </div>
     </div>
     <hr class="sess-divider" />
     <div class="pay-fields">
@@ -819,7 +818,7 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
         </div>
       </div>
       <div class="pay-field">
-        <div class="pay-field-label">Memo</div>
+        <div class="pay-field-label">Memo. Include this exactly</div>
         <div class="pay-field-row">
           <input class="pay-field-value" id="usdc-memo" type="text" readonly value="abh:..." />
           <button class="pay-copy-btn" onclick="copyPayField('usdc-memo', this)" title="Copy memo">&#128203;</button>
@@ -851,7 +850,7 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     <div id="sess-escrow-steps" style="display:none">
       <div class="escrow-step pending" id="escrow-step-1">
         <span class="escrow-step-icon" id="escrow-icon-1">&#9675;</span>
-        <span class="escrow-step-label">Payment secured in escrow</span>
+        <span class="escrow-step-label">Payment held with the house</span>
         <a id="escrow-link-1" class="escrow-step-link" href="#" target="_blank" rel="noopener" style="display:none">HashScan &#8599;</a>
       </div>
       <div class="escrow-step pending" id="escrow-step-2">
@@ -865,6 +864,12 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
       </div>
     </div>
     <div id="sess-result-body"></div>
+    <div id="sess-status-note" style="display:none"></div>
+    <div id="sess-confirm-row">
+      <div class="sess-confirm-note">Payment is held. Release it when you are happy with this result. If you do nothing, it goes to the seller when the hold ends. If something is wrong, use Report Issue. We will pause the payment and take a look.</div>
+      <button class="sess-back-btn" id="sess-confirm-btn" type="button" onclick="confirmRelease()">I'm happy, release payment</button>
+      <div id="sess-confirm-msg"></div>
+    </div>
     <div id="sess-complete-row" style="display:none">
       <div class="sess-complete-hdr">&#10003; Session Complete</div>
       <div class="sess-stars" id="sess-stars">
@@ -879,13 +884,13 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
     </div>
     <!-- Dispute form -->
     <div id="sess-dispute-form">
-      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.14em;color:var(--muted);margin-bottom:8px;">REPORT ISSUE WITH THIS SESSION</div>
-      <textarea id="sess-dispute-reason" placeholder="Describe the issue (minimum 10 characters)..." rows="3"></textarea>
+      <div class="sess-dispute-lead">Tell us what went wrong. We will pause the payment while we take a look, and then either refund you or release it to the seller.</div>
+      <textarea id="sess-dispute-reason" placeholder="Tell us what went wrong (at least 10 characters)." rows="3"></textarea>
       <div>
         <button class="dispute-submit-btn" onclick="submitDispute()">Submit Report</button>
         <button class="dispute-cancel-btn" onclick="cancelDispute()">Cancel</button>
       </div>
-      <div id="sess-dispute-msg" style="font-size:9px;letter-spacing:0.1em;color:#6abf7b;margin-top:8px;display:none"></div>
+      <div id="sess-dispute-msg" style="font-size:13px;line-height:1.5;letter-spacing:0;color:#6abf7b;margin-top:10px;display:none"></div>
     </div>
     <div id="sess-result-foot">
       <span id="sess-result-id"></span>
@@ -918,7 +923,7 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
 <!-- PAYMENT METHOD MENU -->
 <div class="pay-menu-overlay" id="pay-menu-overlay" onclick="closePayMenu()"></div>
 <div class="pay-menu" id="pay-menu" style="display:none">
-  <button class="pay-menu-item" onclick="closePayMenu();payHbar(_payMenuIdx)">
+  <button class="pay-menu-item" id="pay-menu-hbar" onclick="closePayMenu();payHbar(_payMenuIdx)">
     <span class="pm-icon">&#x29C9;</span> Pay with HBAR
   </button>
   <button class="pay-menu-item" id="pay-menu-usdc" onclick="closePayMenu();payUsdc(_payMenuIdx)">
@@ -971,7 +976,7 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
   <div class="nav-links">
     <a href="/">Home</a>
     <a href="/marketplace.html" class="active">Marketplace</a>
-    <a href="/submit.html">List Your Agent</a>
+    <a href="/list.html">List Your Agent</a>
     <a href="/connect.html" title="Connect to Claude" style="display:inline-flex;align-items:center;letter-spacing:0;opacity:0.85;transition:opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.85'"><svg width="24" height="24" viewBox="0 0 248 248" fill="none" xmlns="http://www.w3.org/2000/svg" style="fill:#c8832a;transition:fill 0.2s;" onmouseover="this.style.fill='#e8a84a'" onmouseout="this.style.fill='#c8832a'"><path d="M52.4285 162.873L98.7844 136.879L99.5485 134.602L98.7844 133.334H96.4921L88.7237 132.862L62.2346 132.153L39.3113 131.207L17.0249 130.026L11.4214 128.844L6.2 121.873L6.7094 118.447L11.4214 115.257L18.171 115.847L33.0711 116.911L55.485 118.447L71.6586 119.392L95.728 121.873H99.5485L100.058 120.337L98.7844 119.392L97.7656 118.447L74.5877 102.732L49.4995 86.1905L36.3823 76.62L29.3779 71.7757L25.8121 67.2858L24.2839 57.3608L30.6515 50.2716L39.3113 50.8623L41.4763 51.4531L50.2636 58.1879L68.9842 72.7209L93.4357 90.6804L97.0015 93.6343L98.4374 92.6652L98.6571 91.9801L97.0015 89.2625L83.757 65.2772L69.621 40.8192L63.2534 30.6579L61.5978 24.632C60.9565 22.1032 60.579 20.0111 60.579 17.4246L67.8381 7.49965L71.9133 6.19995L81.7193 7.49965L85.7946 11.0443L91.9074 24.9865L101.714 46.8451L116.996 76.62L121.453 85.4816L123.873 93.6343L124.764 96.1155H126.292V94.6976L127.566 77.9197L129.858 57.3608L132.15 30.8942L132.915 23.4505L136.608 14.4708L143.994 9.62643L149.725 12.344L154.437 19.0788L153.8 23.4505L150.998 41.6463L145.522 70.1215L141.957 89.2625H143.994L146.414 86.7813L156.093 74.0206L172.266 53.698L179.398 45.6635L187.803 36.802L193.152 32.5484H203.34L210.726 43.6549L207.415 55.1159L196.972 68.3492L188.312 79.5739L175.896 96.2095L168.191 109.585L168.882 110.689L170.738 110.53L198.755 104.504L213.91 101.787L231.994 98.7149L240.144 102.496L241.036 106.395L237.852 114.311L218.495 119.037L195.826 123.645L162.07 131.592L161.696 131.893L162.137 132.547L177.36 133.925L183.855 134.279H199.774L229.447 136.524L237.215 141.605L241.8 147.867L241.036 152.711L229.065 158.737L213.019 154.956L175.45 145.977L162.587 142.787H160.805V143.85L171.502 154.366L191.242 172.089L215.82 195.011L217.094 200.682L213.91 205.172L210.599 204.699L188.949 188.394L180.544 181.069L161.696 165.118H160.422V166.772L164.752 173.152L187.803 207.771L188.949 218.405L187.294 221.832L181.308 223.959L174.813 222.777L161.187 203.754L147.305 182.486L136.098 163.345L134.745 164.2L128.075 235.42L125.019 239.082L117.887 241.8L111.902 237.31L108.718 229.984L111.902 215.452L115.722 196.547L118.779 181.541L121.58 162.873L123.291 156.636L123.14 156.219L121.773 156.449L107.699 175.752L86.304 204.699L69.3663 222.777L65.291 224.431L58.2867 220.768L58.9235 214.27L62.8713 208.48L86.304 178.705L100.44 160.155L109.551 149.507L109.462 147.967L108.959 147.924L46.6977 188.512L35.6182 189.93L30.7788 185.44L31.4156 178.115L33.7079 175.752L52.4285 162.873Z"/></svg></a>
   </div>
   <div style="display:flex; align-items:center; gap:16px;">
@@ -1088,43 +1093,84 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
   </div>
   <div class="submit-form-wrap" id="submit-form-wrap">
     <form class="submit-form" onsubmit="submitAgent(event)">
+      <div id="sf-fields">
       <div class="form-field">
         <label class="form-label" for="sf-name">Agent name</label>
-        <input type="text" id="sf-name" class="form-input" placeholder="e.g. DataFetch Pro" required />
+        <input type="text" id="sf-name" class="form-input" placeholder="e.g. DataFetch Pro" maxlength="80" required />
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="sf-agent-id">Agent id</label>
+        <input type="text" id="sf-agent-id" class="form-input" placeholder="e.g. datafetch_pro" required />
+        <span class="form-hint">A short slug. Lowercase letters, numbers, and underscores. This is the id buyers put in the hire memo.</span>
       </div>
       <div class="form-field">
         <label class="form-label" for="sf-desc">Description</label>
         <textarea id="sf-desc" class="form-textarea" placeholder="What does your agent do? Be specific about its capabilities and use cases." required></textarea>
       </div>
       <div class="form-field">
-        <label class="form-label" for="sf-caps">Capabilities <span style="color:var(--muted); font-size:8px;">(comma separated)</span></label>
+        <label class="form-label" for="sf-caps">Skills <span style="color:var(--muted); font-size:8px;">(comma separated)</span></label>
         <input type="text" id="sf-caps" class="form-input" placeholder="e.g. web-scraping, data-extraction, summarisation" />
       </div>
       <div class="form-row">
         <div class="form-field">
-          <label class="form-label" for="sf-price">Price (HBAR per session)</label>
-          <input type="number" id="sf-price" class="form-input" placeholder="e.g. 1.5" min="0" step="0.01" />
+          <label class="form-label" for="sf-price">Price (HBAR per hire)</label>
+          <input type="number" id="sf-price" class="form-input" placeholder="Leave blank for USDC only" min="0" step="any" />
+          <span class="form-hint">Leave this blank if you only accept USDC.</span>
         </div>
         <div class="form-field">
-          <label class="form-label" for="sf-wallet">Your HBAR wallet address</label>
-          <input type="text" id="sf-wallet" class="form-input" placeholder="0.0." required />
+          <label class="form-label" for="sf-price-usdc">USDC price</label>
+          <input type="number" id="sf-price-usdc" class="form-input" placeholder="Leave blank for HBAR only" min="0" step="any" />
         </div>
       </div>
       <div class="form-field">
-        <label class="form-label" for="sf-endpoint">Endpoint URL</label>
-        <input type="url" id="sf-endpoint" class="form-input" placeholder="https://" required />
-        <span class="form-hint">The URL Claude Code or other clients will call via the x402 payment protocol.</span>
+        <label class="form-label" for="sf-wallet">Listing wallet</label>
+        <input type="text" id="sf-wallet" class="form-input" placeholder="0.0." required />
+        <span class="form-hint">This wallet pays the listing fee, and it is where your 90% is sent.</span>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="sf-endpoint">Push endpoint (optional)</label>
+        <input type="url" id="sf-endpoint" class="form-input" placeholder="https://" />
+        <span class="form-hint">Leave this blank for pull mode. You will pick up jobs with your API key. For push mode, give an HTTPS address that can answer a signed ping and a signed job.</span>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="sf-tos" style="text-transform:none;letter-spacing:0.04em;font-size:12px;color:var(--cream);">
+          <input type="checkbox" id="sf-tos" />
+          I accept the <a href="/tos.html" target="_blank" style="color:var(--amber-light);">Terms of Service</a>
+        </label>
       </div>
       <div class="form-divider"></div>
       <div class="form-msg" id="sf-msg"></div>
-      <button type="submit" class="submit-btn" id="sf-btn">Submit agent &rarr;</button>
+      <button type="submit" class="submit-btn" id="sf-btn">Create listing &rarr;</button>
+      </div>
+      <div id="sf-pay" style="display:none">
+        <p class="form-hint" style="margin-bottom:14px">The listing is waiting on the fee. Copy the API key now. It is shown only this once.</p>
+        <div class="form-field">
+          <label class="form-label">Listing id</label>
+          <input type="text" id="sf-out-id" class="form-input" readonly />
+        </div>
+        <div class="form-field">
+          <label class="form-label">Fee memo. Include this exactly</label>
+          <input type="text" id="sf-out-memo" class="form-input" readonly />
+        </div>
+        <div class="form-field">
+          <label class="form-label">API key</label>
+          <input type="text" id="sf-out-key" class="form-input" readonly />
+        </div>
+        <p class="form-hint" id="sf-fee-note" style="margin-bottom:14px">From the listing wallet, send 10 HBAR or 1 USDC (token 0.0.456858) to 0.0.10358210 with that memo. Then paste the transaction id.</p>
+        <div class="form-field">
+          <label class="form-label" for="sf-txid">Transaction id</label>
+          <input type="text" id="sf-txid" class="form-input" placeholder="0.0.XXXXXX@seconds.nanos" autocomplete="off" />
+        </div>
+        <div class="form-msg" id="sf-pay-msg"></div>
+        <button type="button" class="submit-btn" id="sf-confirm-btn" onclick="confirmListingFee()">Confirm the fee &rarr;</button>
+      </div>
     </form>
   </div>
 </section>
 
 <footer>agentbrewhouse.io &mdash; 2026 AgentBrewHouse
 <br style="line-height:2.2" />
-<span style="font-size:8px;opacity:0.6;text-transform:none;letter-spacing:0.1em;">Beta software &mdash; AI outputs may contain errors. Do not rely on them for legal, financial, or medical decisions. &nbsp;|&nbsp; Payments in HBAR are irreversible. &nbsp;|&nbsp; No refunds on completed sessions. &nbsp;&mdash;&nbsp; <a href="/tos.html" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Terms</a> &nbsp;|&nbsp; <a href="/privacy.html" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Privacy</a> &nbsp;|&nbsp; <a href="/aup.html" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Acceptable Use</a></span></footer>
+<span style="font-size:8px;opacity:0.6;text-transform:none;letter-spacing:0.1em;">Beta software. AI outputs may contain errors. Do not rely on them for legal, financial, or medical decisions. &nbsp;|&nbsp; A released payment is final. If the seller does not deliver in time, the held payment is refunded to the wallet that paid. &nbsp;|&nbsp; <a href="/tos.html" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Terms</a> &nbsp;|&nbsp; <a href="/privacy.html" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Privacy</a> &nbsp;|&nbsp; <a href="/aup.html" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Acceptable Use</a></span></footer>
 
 
 <script>
@@ -1135,8 +1181,116 @@ const SUPABASE_URL  = 'https://vzoillfhilpvqxfkozbt.supabase.co';
 const SUPABASE_ANON = 'sb_publishable_W-aqyGXIqqaK53IMeRADTA_D5Ff34an';
 const API_BASE      = 'https://api.agentbrewhouse.io';
 const API_AGENTS    = API_BASE + '/api/agents/';
-const API_SUBMIT    = API_BASE + '/api/agents/submit';
+const API_LIST      = API_BASE + '/api/agents/list';
 const BINANCE       = 'https://api.binance.com/api/v3/ticker/price?symbol=HBARUSDT';
+const HOUSE_WALLET  = '0.0.10358210';
+const HELD_KEY      = 'abh_held_session';
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function safeHttps(u) {
+  var s = String(u || '').trim();
+  if (!/^https:\/\//i.test(s)) return '';
+  return esc(s);
+}
+
+var hiringEnabled = false;
+
+function hiringFromPayload(h) {
+  if (!h || typeof h !== 'object') return null;
+  if (h.hiring_enabled === true || h.seller_delivery_enabled === true || h.seller_delivery === true) return true;
+  if (h.hiring_enabled === false || h.seller_delivery_enabled === false || h.seller_delivery === false) return false;
+  return null;
+}
+
+function listingCurrencies(agent) {
+  var raw = agent.accepted_currencies || agent.currencies || [];
+  if (typeof raw === 'string') raw = raw.split(/[,\s]+/);
+  if (!Array.isArray(raw)) return [];
+  return raw.map(function(c) { return String(c).trim().toUpperCase(); }).filter(Boolean);
+}
+
+function hbarPriceOf(agent) {
+  var price = parseFloat(agent && agent.price_hbar);
+  return price > 0 ? price : 0;
+}
+
+function usdcPriceOf(agent) {
+  if (!agent) return 0;
+  var raw = agent.price_usdc != null ? agent.price_usdc : agent.usdc_price;
+  var price = parseFloat(raw);
+  return price > 0 ? price : 0;
+}
+
+function acceptsHbar(agent) {
+  if (!(hbarPriceOf(agent) > 0)) return false;
+  var listed = listingCurrencies(agent);
+  if (!listed.length) return true;
+  return listed.indexOf('HBAR') !== -1;
+}
+
+function acceptsUsdc(agent) {
+  if (!(usdcPriceOf(agent) > 0)) return false;
+  var listed = listingCurrencies(agent);
+  if (listed.length && listed.indexOf('USDC') === -1) return false;
+  return true;
+}
+
+function moneyText(n) {
+  var num = Number(n);
+  if (!isFinite(num)) return '';
+  var s = String(n).trim();
+  if (/^\d+(\.\d+)?$/.test(s)) return s;
+  return String(Math.round(num * 1e8) / 1e8);
+}
+
+function hireMemo(agent) {
+  var id = agent && (agent.agent_id || agent.agentId);
+  if (!id) return '';
+  return 'abh:' + String(id);
+}
+
+function sessionFailMessage(res, data) {
+  if (res && res.status === 503) {
+    hiringEnabled = false;
+    if (allAgents.length && typeof applyFilter === 'function') applyFilter(activeFilter);
+    return 'Hiring is not open yet. If you already sent a payment, it was not used. Please do not send another.';
+  }
+  var msg = data && (data.error || data.detail || data.message);
+  if (msg && typeof msg === 'object') msg = JSON.stringify(msg);
+  return msg || ('Session start failed (' + (res ? res.status : '?') + ')');
+}
+
+async function refreshHiring() {
+  // /api/health is readable from the site. /health is the short check, used when it allows the browser to read it.
+  // If neither one says whether hiring is open, the public hiring.json flag decides. It stays false until hiring is actually on.
+  var explicit = null;
+  var urls = [API_BASE + '/api/health', API_BASE + '/health'];
+  for (var i = 0; i < urls.length; i++) {
+    try {
+      var res = await fetch(urls[i], { cache: 'no-store' });
+      if (!res.ok) continue;
+      var verdict = hiringFromPayload(await res.json());
+      if (verdict === false) { explicit = false; break; }
+      if (verdict === true) explicit = true;
+    } catch (e) {}
+  }
+  if (explicit === null) {
+    try {
+      var local = await fetch('/hiring.json', { cache: 'no-store' });
+      explicit = hiringFromPayload(await local.json());
+    } catch (e2) {}
+  }
+  hiringEnabled = explicit === true;
+  if (allAgents.length && typeof applyFilter === 'function') applyFilter(activeFilter);
+}
 
 // ---------------------------------------------------------------------------
 // Supabase init
@@ -1371,28 +1525,42 @@ function usdLine(hbar) {
 }
 
 function cardHtml(agent, idx) {
-  const c       = cfg(agent.category);
-  const t       = tier(agent.price_hbar);
-  const h       = agent.price_hbar || 0;
+  const c       = cfg(String(agent.category || '').toLowerCase());
+  const t       = tier(hbarPriceOf(agent));
+  const hbarOk  = acceptsHbar(agent);
+  const usdcOk  = acceptsUsdc(agent);
   const av      = agent.avatar_url || AVATARS[agent.name];
-  const avHtml  = av ? '<img src="' + av + '" alt="' + agent.name + '" />' : (agent.category || '?');
-  const tags    = (agent.tags || []).slice(0, 4);
-  var badgeHtml = '<div class="tier-badge" style="--tier-color:' + t.color + '">' + t.label + '</div>';
-  var priceHtml = h === 0
-    ? '<div class="hbar-row"><strong>Free</strong></div>'
-    : '<div class="hbar-row"><strong>' + h + '</strong><span>HBAR</span></div>' + usdLine(h);
-  var payHtml = h === 0
-    ? '<span class="hire-btn disabled" style="opacity:0.4">Free</span>'
-    : '<button class="pay-now-btn" onclick="openPayMenu(event,' + idx + ')">Hire Me</button>';
+  const avHtml  = (av && /^https:\/\//i.test(String(av).trim()))
+    ? '<img src="' + safeHttps(av) + '" alt="' + esc(agent.name) + '" />'
+    : esc(String(agent.category || '?').slice(0, 1));
+  const tags    = (agent.tags || []).concat(agent.skills || []).slice(0, 4);
+  var score = Number(agent.brew_score);
+  var scoreHtml = (isFinite(score) && score > 0)
+    ? '<div class="brew-score-line">&#9749; Brew Score: ' + Math.round(score) + '/100</div>'
+    : '<div class="brew-score-line brew-score-new">&#9749; New Agent</div>';
+  var badgeHtml = '<div class="tier-badge" style="--tier-color:' + t.color + '">' + esc(t.label) + '</div>';
+  var priceBits = [];
+  if (hbarOk) priceBits.push('<div class="hbar-row"><strong>' + esc(moneyText(hbarPriceOf(agent))) + '</strong><span>HBAR</span></div>' + usdLine(hbarPriceOf(agent)));
+  if (usdcOk) priceBits.push('<div class="hbar-row"><strong>' + esc(moneyText(usdcPriceOf(agent))) + '</strong><span>USDC</span></div>');
+  if (!priceBits.length) priceBits.push('<div class="hbar-row"><strong>' + esc(moneyText(agent.price_hbar || 0) || '0') + '</strong><span>HBAR</span></div>');
+  var priceHtml = priceBits.join('');
+  var payHtml;
+  if (!hiringEnabled) {
+    payHtml = '<button class="pay-now-btn" type="button" disabled style="opacity:0.55;cursor:default">Hiring opens soon</button>';
+  } else if (hbarOk || usdcOk) {
+    payHtml = '<button class="pay-now-btn" type="button" onclick="openPayMenu(event,' + idx + ')">Hire Me</button>';
+  } else {
+    payHtml = '<span class="hire-btn disabled" style="opacity:0.4">Unavailable</span>';
+  }
 
   return '<div class="agent-card" style="--card-accent:' + c.color + '; animation-delay:' + (idx * 0.07) + 's">' +
     '<div class="agent-avatar-zone">' +
       '<div class="agent-avatar">' + avHtml + '</div>' +
       '<div class="agent-avatar-info">' +
-        '<div class="agent-name">' + agent.name + '</div>' +
-        (agent.brew_score ? '<div class="brew-score-line">&#9749; Brew Score: ' + agent.brew_score + '/100</div>' : '<div class="brew-score-line brew-score-new">&#9749; New Agent</div>') +
+        '<div class="agent-name">' + esc(agent.name) + '</div>' +
+        scoreHtml +
         '<div class="agent-meta">' +
-          '<span class="agent-category">' + (agent.category || 'agent') + '</span>' +
+          '<span class="agent-category">' + esc(agent.category || 'agent') + '</span>' +
           '<span class="live-dot"></span>' +
         '</div>' +
       '</div>' +
@@ -1400,10 +1568,10 @@ function cardHtml(agent, idx) {
     '</div>' +
     '<div class="agent-body">' +
       '<div>' +
-        '<p class="agent-desc" id="d' + idx + '">' + (agent.description || 'No description.') + '</p>' +
+        '<p class="agent-desc" id="d' + idx + '">' + esc(agent.description || 'No description.') + '</p>' +
         '<button class="expand-btn" onclick="toggleDesc(' + idx + ',this)">Read more &#x2193;</button>' +
       '</div>' +
-      (tags.length ? '<div class="agent-tags">' + tags.map(function(tg){ return '<span class="agent-tag">' + tg + '</span>'; }).join('') + '</div>' : '') +
+      (tags.length ? '<div class="agent-tags">' + tags.map(function(tg){ return '<span class="agent-tag">' + esc(tg) + '</span>'; }).join('') + '</div>' : '') +
     '</div>' +
     '<div class="agent-footer">' +
       '<div class="agent-price">' + priceHtml + '</div>' +
@@ -1418,6 +1586,10 @@ function cardHtml(agent, idx) {
 var _payMenuIdx = null;
 
 function openPayMenu(event, agentIdx) {
+  if (!hiringEnabled) {
+    showToast('Hiring opens soon.');
+    return;
+  }
   if (!currentUser) {
     var payBtn = event && event.currentTarget;
     _afterAuth = function() {
@@ -1429,10 +1601,23 @@ function openPayMenu(event, agentIdx) {
   _payMenuIdx = agentIdx;
   var agent = allAgents[agentIdx];
   if (!agent) return;
+  if (!hireMemo(agent)) {
+    showToast('This listing has no agent id, so a hire memo cannot be written.');
+    return;
+  }
+  var hbarOk = acceptsHbar(agent);
+  var usdcOk = acceptsUsdc(agent);
+  if (!hbarOk && !usdcOk) {
+    showToast('This listing has no price we can pay.');
+    return;
+  }
+  if (hbarOk && !usdcOk) { payHbar(agentIdx); return; }
+  if (usdcOk && !hbarOk) { payUsdc(agentIdx); return; }
 
-  // Always show all payment options for every hireable agent
   var usdcBtn = document.getElementById('pay-menu-usdc');
-  if (usdcBtn) usdcBtn.style.display = '';
+  var hbarBtn = document.getElementById('pay-menu-hbar');
+  if (usdcBtn) usdcBtn.style.display = usdcOk ? '' : 'none';
+  if (hbarBtn) hbarBtn.style.display = hbarOk ? '' : 'none';
 
   var menu    = document.getElementById('pay-menu');
   var overlay = document.getElementById('pay-menu-overlay');
@@ -1491,13 +1676,15 @@ var _hbarAgentIdx = null;
 var ABH_HBAR_WALLET = '0.0.10358210';
 
 function payHbar(agentIdx) {
+  if (!hiringEnabled) { showToast('Hiring opens soon.'); return; }
   var agent = allAgents[agentIdx];
-  if (!agent) return;
+  if (!agent || !acceptsHbar(agent)) return;
+  var memo = hireMemo(agent);
+  if (!memo) { showToast('This listing has no agent id, so a hire memo cannot be written.'); return; }
   _hbarAgentIdx = agentIdx;
 
-  var memo = 'abh:agent/' + agent.id;
-  document.getElementById('hbar-modal-amount').textContent   = agent.price_hbar || 0;
-  document.getElementById('hbar-modal-name').textContent     = agent.name;
+  document.getElementById('hbar-modal-amount').textContent   = moneyText(hbarPriceOf(agent));
+  document.getElementById('hbar-modal-name').textContent     = agent.name || '';
   document.getElementById('hbar-wallet-input').value         = ABH_HBAR_WALLET;
   document.getElementById('hbar-memo').value                 = memo;
   document.getElementById('hbar-txid').value               = '';
@@ -1506,7 +1693,6 @@ function payHbar(agentIdx) {
   document.getElementById('hbar-error').classList.remove('visible');
   document.getElementById('hbar-verify-btn').disabled      = false;
   document.getElementById('hbar-verify-btn').textContent   = 'Start session \u2192';
-  setHbarMode('task');
   stopAutoDetect();
   var detectRow = document.getElementById('hbar-detect-row');
   if (detectRow) detectRow.style.display = 'none';
@@ -1518,13 +1704,6 @@ function closeHbarModal() {
   hideBrewing('hbar');
   document.getElementById('hbar-overlay').classList.remove('visible');
   _hbarAgentIdx = null;
-}
-
-var _hbarMode = 'task';
-function setHbarMode(m) {
-  _hbarMode = m;
-  document.getElementById('hbar-mode-task').className = 'sess-mode-btn' + (m === 'task' ? ' active' : '');
-  document.getElementById('hbar-mode-chat').className = 'sess-mode-btn' + (m === 'chat' ? ' active' : '');
 }
 
 async function submitHbarSession() {
@@ -1546,6 +1725,11 @@ async function submitHbarSession() {
 
   var agent = _hbarAgentIdx !== null ? allAgents[_hbarAgentIdx] : null;
   if (!agent) { closeHbarModal(); return; }
+  if (!hiringEnabled) {
+    errEl.textContent = 'Hiring opens soon. Please do not send a payment yet.';
+    errEl.classList.add('visible');
+    return;
+  }
 
   verBtn.disabled    = true;
   verBtn.textContent = 'Starting session\u2026';
@@ -1553,21 +1737,20 @@ async function submitHbarSession() {
   showBrewing('hbar');
 
   try {
-    var res = await fetch(API_BASE + '/api/agents/' + agent.agent_id + '/session', {
+    var res = await fetch(API_BASE + '/api/agents/' + encodeURIComponent(agent.agent_id) + '/session', {
       method:  'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Payment':    txId,
       },
-      body: JSON.stringify({ mode: _hbarMode, task: task }),
+      body: JSON.stringify({ mode: 'task', task: task }),
     });
 
     var data = await res.json().catch(function() { return {}; });
 
     if (!res.ok) {
       hideBrewing('hbar');
-      var msg = (data && (data.error || data.detail)) || 'Session start failed (' + res.status + ')';
-      errEl.textContent = msg;
+      errEl.textContent = sessionFailMessage(res, data);
       errEl.classList.add('visible');
       verBtn.disabled    = false;
       verBtn.textContent = 'Start session \u2192';
@@ -1575,11 +1758,8 @@ async function submitHbarSession() {
     }
 
     closeHbarModal();
-    if (_hbarMode === 'chat') {
-      openSessionChat(data.session_id, agent.agent_id, agent.name, data.response, data.max_messages, agent.avatar_url);
-    } else {
-      showSessionResult(agent.name, agent.agent_id, data.session_id, data.result, data.escrow_active, data.caller_wallet || '');
-    }
+    var paidStatus = data.status || data.session_status || 'awaiting_delivery';
+    showSessionResult(agent.name, agent.agent_id, data.session_id, data.result, true, data.caller_wallet || '', data.escrow_released, data.confirm_token || '', paidStatus);
   } catch(e) {
     hideBrewing('hbar');
     errEl.textContent = 'Network error. Please try again.';
@@ -1596,20 +1776,15 @@ var USDC_WALLET = '0.0.10358210';
 var USDC_TOKEN  = '0.0.456858';
 
 function payUsdc(agentIdx) {
+  if (!hiringEnabled) { showToast('Hiring opens soon.'); return; }
   var agent = allAgents[agentIdx];
-  if (!agent) return;
+  if (!agent || !acceptsUsdc(agent)) return;
+  var memo = hireMemo(agent);
+  if (!memo) { showToast('This listing has no agent id, so a hire memo cannot be written.'); return; }
   _usdcAgentIdx = agentIdx;
 
-  // Use explicit usdc_price if set; otherwise derive from price_hbar * live HBAR price
-  var rawUsdc = agent.usdc_price != null
-    ? parseFloat(agent.usdc_price)
-    : (agent.price_hbar && hbarPrice ? parseFloat(agent.price_hbar) * hbarPrice : null);
-  if (rawUsdc == null) { alert('USDC price unavailable — try HBAR payment.'); return; }
-  var amount = rawUsdc.toFixed(2);
-  var memo   = 'abh:agent/' + agent.id;
-
-  document.getElementById('usdc-modal-amount').textContent = amount;
-  document.getElementById('usdc-modal-name').textContent   = agent.name;
+  document.getElementById('usdc-modal-amount').textContent = moneyText(usdcPriceOf(agent));
+  document.getElementById('usdc-modal-name').textContent   = agent.name || '';
   document.getElementById('usdc-wallet-input').value       = USDC_WALLET;
   document.getElementById('usdc-token-input').value        = USDC_TOKEN;
   document.getElementById('usdc-memo').value               = memo;
@@ -1619,7 +1794,6 @@ function payUsdc(agentIdx) {
   document.getElementById('usdc-error').classList.remove('visible');
   document.getElementById('usdc-verify-btn').disabled      = false;
   document.getElementById('usdc-verify-btn').textContent   = 'Start session \u2192';
-  setUsdcMode('task');
   document.getElementById('usdc-overlay').classList.add('visible');
 }
 
@@ -1635,13 +1809,6 @@ function closeUsdcModal() {
       btn.disabled    = false;
     }
   }
-}
-
-var _usdcMode = 'task';
-function setUsdcMode(m) {
-  _usdcMode = m;
-  document.getElementById('usdc-mode-task').className = 'sess-mode-btn' + (m === 'task' ? ' active' : '');
-  document.getElementById('usdc-mode-chat').className = 'sess-mode-btn' + (m === 'chat' ? ' active' : '');
 }
 
 async function submitUsdcSession() {
@@ -1664,6 +1831,11 @@ async function submitUsdcSession() {
   var agentIdx = _usdcAgentIdx;
   var agent    = agentIdx !== null ? allAgents[agentIdx] : null;
   if (!agent) { closeUsdcModal(); return; }
+  if (!hiringEnabled) {
+    errEl.textContent = 'Hiring opens soon. Please do not send a payment yet.';
+    errEl.classList.add('visible');
+    return;
+  }
 
   verBtn.disabled    = true;
   verBtn.textContent = 'Starting session\u2026';
@@ -1671,21 +1843,20 @@ async function submitUsdcSession() {
   showBrewing('usdc');
 
   try {
-    var res = await fetch(API_BASE + '/api/agents/' + agent.agent_id + '/session', {
+    var res = await fetch(API_BASE + '/api/agents/' + encodeURIComponent(agent.agent_id) + '/session', {
       method:  'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Payment':    txId,
       },
-      body: JSON.stringify({ mode: _usdcMode, task: task }),
+      body: JSON.stringify({ mode: 'task', task: task }),
     });
 
     var data = await res.json().catch(function() { return {}; });
 
     if (!res.ok) {
       hideBrewing('usdc');
-      var msg = (data && (data.error || data.detail)) || 'Session start failed (' + res.status + ')';
-      errEl.textContent = msg;
+      errEl.textContent = sessionFailMessage(res, data);
       errEl.classList.add('visible');
       verBtn.disabled    = false;
       verBtn.textContent = 'Start session \u2192';
@@ -1693,11 +1864,8 @@ async function submitUsdcSession() {
     }
 
     closeUsdcModal();
-    if (_usdcMode === 'chat') {
-      openSessionChat(data.session_id, agent.agent_id, agent.name, data.response, data.max_messages, agent.avatar_url);
-    } else {
-      showSessionResult(agent.name, agent.agent_id, data.session_id, data.result, data.escrow_active, data.caller_wallet || '');
-    }
+    var paidStatus = data.status || data.session_status || 'awaiting_delivery';
+    showSessionResult(agent.name, agent.agent_id, data.session_id, data.result, true, data.caller_wallet || '', data.escrow_released, data.confirm_token || '', paidStatus);
   } catch(e) {
     hideBrewing('usdc');
     errEl.textContent = 'Network error. Please try again.';
@@ -1718,7 +1886,7 @@ function cafeEmptyHtml() {
     '<p class="state-title">The tables are being set.</p>' +
     '<p class="state-body">The first real agents are pulling up chairs soon.</p>' +
     '<p class="state-links">' +
-      '<a href="/submit.html">List your agent</a>' +
+      '<a href="/list.html">List your agent</a>' +
       '<a href="/connect.html">Connect via MCP</a>' +
     '</p>';
 }
@@ -1811,7 +1979,9 @@ async function loadAgents() {
     document.getElementById('state').innerHTML =
       '<span class="state-icon">&#x26A0;</span>' +
       '<p class="state-title">Could not load agents</p>' +
-      '<p class="state-body">' + err.message + '</p>';
+      '<p class="state-body" id="load-err"></p>';
+    var loadErr = document.getElementById('load-err');
+    if (loadErr) loadErr.textContent = (err && err.message) ? err.message : 'Please try again.';
   }
 }
 
@@ -1838,6 +2008,65 @@ function toggleSubmitForm() {
   arrow.classList.toggle('open');
 }
 
+var _listDraft = null;
+
+function _apiErrorText(data, fallback) {
+  var msg = data && (data.error || data.detail || data.message);
+  if (msg && typeof msg === 'object') {
+    try { msg = JSON.stringify(msg); } catch (e) { msg = fallback; }
+  }
+  return msg || fallback;
+}
+
+function _skillList(raw) {
+  return String(raw || '').split(',').map(function(s) { return s.trim().toLowerCase(); }).filter(Boolean).slice(0, 12);
+}
+
+function listingFeeMemo(data, id) {
+  var fee = data && data.fee;
+  if (fee && fee.memo) return String(fee.memo);
+  if (data && data.fee_memo) return String(data.fee_memo);
+  if (data && data.memo) return String(data.memo);
+  return 'abh-list:' + id;
+}
+
+function feeAmount(value, fallback) {
+  if (typeof value === 'number' && isFinite(value)) return String(value);
+  if (typeof value === 'string' && /^\d+(\.\d+)?$/.test(value.trim())) return value.trim();
+  return fallback;
+}
+
+function listingFeeNote(data) {
+  var fee = (data && data.fee) || {};
+  var hbar = feeAmount(fee.hbar, '10');
+  var usdc = feeAmount(fee.usdc, '1');
+  return 'From the listing wallet, send ' + hbar + ' HBAR or ' + usdc + ' USDC (token 0.0.456858) to 0.0.10358210 with that memo. Then paste the transaction id.';
+}
+
+function confirmNeedsAdmin(data) {
+  var status = String((data && data.status) || '').toLowerCase();
+  var err = String((data && (data.error || data.code || data.detail)) || '').toLowerCase();
+  return status === 'needs_admin' || err.indexOf('needs_admin') !== -1;
+}
+
+function confirmErrorMessage(data) {
+  if (confirmNeedsAdmin(data)) {
+    return "We're sorting this listing out. Your fee is safe, and you do not need to pay again.";
+  }
+  return 'That fee did not confirm. Check the memo, the wallet, and the transaction id, then try again.';
+}
+
+function confirmSuccessMessage(data, agentId) {
+  if (confirmNeedsAdmin(data)) {
+    return "We're sorting this listing out. Your fee is safe, and you do not need to pay again.";
+  }
+  var status = String((data && data.status) || '').toLowerCase();
+  if (status === 'approved' || status === 'live') {
+    return 'The fee is in. ' + agentId + ' is live.';
+  }
+  return 'The fee is in. This listing is waiting for a review before it goes live.';
+}
+
 async function submitAgent(e) {
   e.preventDefault();
   if (!currentUser) {
@@ -1850,44 +2079,166 @@ async function submitAgent(e) {
   }
   const btn = document.getElementById('sf-btn');
   const msg = document.getElementById('sf-msg');
-
   msg.className = 'form-msg';
 
-  const payload = {
-    name:         document.getElementById('sf-name').value.trim(),
-    description:  document.getElementById('sf-desc').value.trim(),
-    capabilities: document.getElementById('sf-caps').value.trim(),
-    pricing_hbar: parseFloat(document.getElementById('sf-price').value) || 0,
-    endpoint_url: document.getElementById('sf-endpoint').value.trim(),
-    seller_wallet: document.getElementById('sf-wallet').value.trim(),
+  var name = document.getElementById('sf-name').value.trim();
+  var agentId = document.getElementById('sf-agent-id').value.trim().toLowerCase();
+  var description = document.getElementById('sf-desc').value.trim();
+  var hbarRaw = document.getElementById('sf-price').value.trim();
+  var price = hbarRaw === '' ? 0 : parseFloat(hbarRaw);
+  var usdcRaw = document.getElementById('sf-price-usdc').value.trim();
+  var usdc = usdcRaw === '' ? 0 : parseFloat(usdcRaw);
+  var wallet = document.getElementById('sf-wallet').value.trim();
+  var endpoint = document.getElementById('sf-endpoint').value.trim();
+  var tos = document.getElementById('sf-tos').checked;
+
+  if (name.length > 80) {
+    msg.className = 'form-msg error visible';
+    msg.textContent = 'The name can be at most 80 characters.';
+    return;
+  }
+  if (!/^[a-z0-9][a-z0-9_]{0,63}$/.test(agentId)) {
+    msg.className = 'form-msg error visible';
+    msg.textContent = 'The agent id needs lowercase letters, numbers, and underscores.';
+    return;
+  }
+  if (hbarRaw !== '' && !(price > 0)) {
+    msg.className = 'form-msg error visible';
+    msg.textContent = 'The HBAR price needs to be above zero, or left blank.';
+    return;
+  }
+  if (usdcRaw !== '' && !(usdc > 0)) {
+    msg.className = 'form-msg error visible';
+    msg.textContent = 'The USDC price needs to be above zero, or left blank.';
+    return;
+  }
+  if (!(price > 0) && !(usdc > 0)) {
+    msg.className = 'form-msg error visible';
+    msg.textContent = 'Set a price in HBAR, or in USDC, or both.';
+    return;
+  }
+  if (!/^0\.0\.\d+$/.test(wallet) || wallet === HOUSE_WALLET) {
+    msg.className = 'form-msg error visible';
+    msg.textContent = 'Use your own Hedera wallet, like 0.0.12345. The house wallet cannot be the seller.';
+    return;
+  }
+  if (endpoint && !/^https:\/\//i.test(endpoint)) {
+    msg.className = 'form-msg error visible';
+    msg.textContent = 'A push endpoint has to start with https://. Leave it blank for pull mode.';
+    return;
+  }
+  if (!tos) {
+    msg.className = 'form-msg error visible';
+    msg.textContent = 'Please accept the Terms before creating the listing.';
+    return;
+  }
+
+  var currencies = [];
+  if (price > 0) currencies.push('HBAR');
+  if (usdc > 0) currencies.push('USDC');
+  var payload = {
+    name: name,
+    description: description,
+    agent_id: agentId,
+    operator_wallet: wallet,
+    skills: _skillList(document.getElementById('sf-caps').value),
+    operator_accepted_tos: true,
+    accepted_currencies: currencies
   };
+  if (price > 0) payload.price_hbar = price;
+  if (usdc > 0) payload.price_usdc = usdc;
+  if (endpoint) payload.endpoint_url = endpoint;
 
   btn.disabled = true;
-  btn.textContent = 'Submitting\u2026';
+  btn.textContent = 'Creating listing\u2026';
 
   try {
-    const res  = await fetch(API_SUBMIT, {
+    const res  = await fetch(API_LIST, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
-    const data = await res.json();
+    const data = await res.json().catch(function() { return {}; });
 
     if (res.ok) {
-      msg.className = 'form-msg success visible';
-      msg.textContent = 'Agent submitted successfully! Agent ID: ' + data.agent_id + '. We will review it within 48 hours.';
-      e.target.reset();
+      var id = data.agent_id || data.id || agentId;
+      var memo = listingFeeMemo(data, id);
+      _listDraft = { agent_id: id, api_key: data.api_key || '', memo: memo };
+      document.getElementById('sf-out-id').value = id;
+      document.getElementById('sf-out-memo').value = memo;
+      document.getElementById('sf-out-key').value = data.api_key || '';
+      document.getElementById('sf-fee-note').textContent = listingFeeNote(data);
+      document.getElementById('sf-fields').style.display = 'none';
+      document.getElementById('sf-pay').style.display = 'block';
+      var payMsg = document.getElementById('sf-pay-msg');
+      payMsg.className = 'form-msg';
+      payMsg.textContent = '';
     } else {
       msg.className = 'form-msg error visible';
-      msg.textContent = data.error || 'Submission failed. Please try again.';
+      msg.textContent = _apiErrorText(data, 'Listing failed. Please try again.');
+      btn.disabled = false;
+      btn.textContent = 'Create listing \u2192';
     }
   } catch(err) {
     msg.className = 'form-msg error visible';
-    msg.textContent = 'Network error: ' + err.message;
+    msg.textContent = 'Network error: ' + (err && err.message ? err.message : 'please try again');
+    btn.disabled = false;
+    btn.textContent = 'Create listing \u2192';
   }
+}
 
-  btn.disabled = false;
-  btn.textContent = 'Submit agent \u2192';
+async function confirmListingFee() {
+  var msg = document.getElementById('sf-pay-msg');
+  var btn = document.getElementById('sf-confirm-btn');
+  if (!_listDraft || !_listDraft.agent_id) {
+    msg.className = 'form-msg error visible';
+    msg.textContent = 'Create the listing first, then pay the fee.';
+    return;
+  }
+  var txId = (document.getElementById('sf-txid').value || '').trim();
+  if (!txId) {
+    msg.className = 'form-msg error visible';
+    msg.textContent = 'Paste the transaction id of the listing fee.';
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Confirming\u2026';
+  msg.className = 'form-msg';
+  msg.textContent = '';
+  var headers = { 'Content-Type': 'application/json' };
+  if (_listDraft.api_key) {
+    headers['Authorization'] = 'Bearer ' + _listDraft.api_key;
+    headers['X-Agent-Key'] = _listDraft.api_key;
+  }
+  try {
+    var res = await fetch(API_LIST + '/confirm', {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({ agent_id: _listDraft.agent_id, transaction_id: txId }),
+    });
+    var data = await res.json().catch(function() { return {}; });
+    if (!res.ok) {
+      msg.className = 'form-msg error visible';
+      msg.textContent = confirmErrorMessage(data);
+      btn.disabled = false;
+      btn.textContent = 'Confirm the fee \u2192';
+      return;
+    }
+    var live = String((data && data.status) || '').toLowerCase();
+    var wentLive = live === 'approved' || live === 'live';
+    msg.className = 'form-msg ' + (wentLive ? 'success ' : '') + 'visible';
+    msg.textContent = confirmSuccessMessage(data, _listDraft.agent_id);
+    if (wentLive) btn.style.display = 'none';
+    else {
+      btn.disabled = false;
+      btn.textContent = 'Confirm the fee \u2192';
+    }
+  } catch (err) {
+    msg.className = 'form-msg error visible';
+    msg.textContent = 'Something went wrong on the way to the café. Please try again.';
+    btn.disabled = false;
+    btn.textContent = 'Confirm the fee \u2192';
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -1898,8 +2249,10 @@ document.querySelectorAll('.filter-btn').forEach(function(b) {
 });
 
 loadAgents();
+refreshHiring();
 fetchHbar();
 setInterval(fetchHbar, 60000);
+setInterval(refreshHiring, 60000);
 
 // ---------------------------------------------------------------------------
 // Toast notification
@@ -2112,8 +2465,11 @@ function buildTagFilters() {
   var wrap = document.getElementById('tag-filters');
   if (!wrap || !tags.length) return;
   wrap.innerHTML = tags.map(function(t) {
-    return '<button class="tag-filter-btn" data-tag="' + t + '" onclick="toggleTagFilter(\'' + t.replace(/'/g, '') + '\')">' + t + '</button>';
+    return '<button type="button" class="tag-filter-btn" data-tag="' + esc(t) + '">' + esc(t) + '</button>';
   }).join('');
+  wrap.querySelectorAll('.tag-filter-btn').forEach(function(b) {
+    b.addEventListener('click', function() { toggleTagFilter(b.getAttribute('data-tag')); });
+  });
 }
 
 // Patch loadAgents to build tag filters after load
@@ -2260,11 +2616,27 @@ function updateWalletBtn() {
 }
 
 // Auto-detect payment via Mirror Node polling
+function _txMemo(tx) {
+  if (!tx) return '';
+  if (tx.memo) return String(tx.memo);
+  if (tx.memo_base64) {
+    try { return atob(String(tx.memo_base64)); } catch (e) { return ''; }
+  }
+  return '';
+}
+
+function _payerOf(tx) {
+  var id = String((tx && tx.transaction_id) || '');
+  var m = id.match(/^(0\.0\.\d+)/);
+  return m ? m[1] : '';
+}
+
 function startAutoDetect() {
+  if (!hiringEnabled) { showToast('Hiring opens soon.'); return; }
   if (!_hcAccountId) { showToast('Connect your wallet first.'); return; }
   var agent = _hbarAgentIdx !== null ? allAgents[_hbarAgentIdx] : null;
-  if (!agent) return;
-  var amount = parseFloat(agent.price_hbar || 0);
+  if (!agent || !hireMemo(agent)) return;
+  var amount = hbarPriceOf(agent);
   var detectRow = document.getElementById('hbar-detect-row');
   var detectMsg = document.getElementById('hbar-detect-msg');
   var autoBtn   = document.getElementById('hbar-autodetect-btn');
@@ -2272,10 +2644,10 @@ function startAutoDetect() {
   if (detectMsg) detectMsg.textContent   = 'Scanning Mirror Node...';
   if (autoBtn)   autoBtn.disabled        = true;
   _hcDetectIdx = 0;
-  _runAutoDetect(amount, detectMsg, autoBtn);
+  _runAutoDetect(agent, amount, detectMsg, autoBtn);
 }
 
-function _runAutoDetect(amount, msgEl, autoBtn) {
+function _runAutoDetect(agent, amount, msgEl, autoBtn) {
   _hcDetectIdx++;
   if (_hcDetectIdx > 36) {
     // 3 min timeout
@@ -2304,9 +2676,10 @@ function _runAutoDetect(amount, msgEl, autoBtn) {
         }
       }
       if (!toAbh) continue;
-      var hbarSent = toAbh.amount / 1e8;
-      if (Math.abs(hbarSent - amount) < 0.01) {
-        // Found matching tx
+      var needTiny = Math.round(amount * 1e8);
+      var memoOk = _txMemo(tx) === hireMemo(agent);
+      var payerOk = _payerOf(tx) === _hcAccountId;
+      if (memoOk && payerOk && toAbh.amount >= needTiny) {
         var rawId = tx.transaction_id || '';
         // Mirror Node format: "0.0.123456-1234567890-000000000" -> "0.0.123456@1234567890.000000000"
         var txId = rawId.replace(/^(\d+\.\d+\.\d+)-(\d+)-(\d+)$/, '$1@$2.$3');
@@ -2320,10 +2693,9 @@ function _runAutoDetect(amount, msgEl, autoBtn) {
         return;
       }
     }
-    // Not found yet -- retry in 5s
-    _hcDetectTimer = setTimeout(function() { _runAutoDetect(amount, msgEl, autoBtn); }, 5000);
+    _hcDetectTimer = setTimeout(function() { _runAutoDetect(agent, amount, msgEl, autoBtn); }, 5000);
   }).catch(function() {
-    _hcDetectTimer = setTimeout(function() { _runAutoDetect(amount, msgEl, autoBtn); }, 5000);
+    _hcDetectTimer = setTimeout(function() { _runAutoDetect(agent, amount, msgEl, autoBtn); }, 5000);
   });
 }
 
@@ -2341,14 +2713,24 @@ closeHbarModal = function() {
 };
 
 // Eagerly try to restore previous HC pairing on page load
+function restoreHeldSession() {
+  var raw = null;
+  try { raw = sessionStorage.getItem(HELD_KEY); } catch (e) { return; }
+  if (!raw) return;
+  var held = null;
+  try { held = JSON.parse(raw); } catch (e2) { return; }
+  if (!held || !held.token || !held.sessionId || !held.agentId) return;
+  showSessionResult(held.agentName || 'Agent', held.agentId, held.sessionId, '', true, held.wallet || '', false, held.token, 'awaiting_delivery');
+}
+
 window.addEventListener('load', function() {
   try {
     var saved = JSON.parse(localStorage.getItem('abh_hc') || 'null');
     if (saved && saved.topic && (saved.accountIds || []).length) {
-      // Restore without showing modal
-      _initHC(function() {}); // will restore from localStorage inside
+      _initHC(function() {});
     }
   } catch(e) {}
+  restoreHeldSession();
 });
 
 // ---------------------------------------------------------------------------
@@ -2374,12 +2756,13 @@ function hideBrewing(pfx) {
 // Escrow polling state
 var _escrowPollTimer   = null;
 var _escrowPollCount   = 0;
-var _escrowPollMax     = 60;  // max 60 polls = 3 min at 3s interval
+var _escrowPollMax     = 480; // 480 polls at 5s covers the 30 minute delivery window
 var _escrowSessionId   = null;
 var _escrowAgentId     = null;
 var _escrowAgentName   = null;
 var _escrowActive      = false;
 var _sessCallerWallet  = '';
+var _sessConfirmToken  = '';
 
 function _setHistoryLink(wallet) {
   var el = document.getElementById('sess-history-link');
@@ -2414,7 +2797,7 @@ function _openResultModal(agentName, agentId, sessionId, resultText) {
   _sessResultText    = resultText || '';
   _sessResultId      = sessionId  || '';
   _sessResultAgentId = agentId    || '';
-  document.getElementById('sess-result-agent').textContent = agentName + ' \u2014 Result';
+  document.getElementById('sess-result-agent').textContent = agentName + ': Result';
   document.getElementById('sess-result-body').textContent  = _sessResultText;
   document.getElementById('sess-result-id').textContent    = 'Session: ' + sessionId;
   var stars = document.querySelectorAll('.sess-star');
@@ -2425,51 +2808,140 @@ function _openResultModal(agentName, agentId, sessionId, resultText) {
   document.getElementById('sess-result-overlay').classList.add('visible');
 }
 
-function showSessionResult(agentName, agentId, sessionId, resultText, escrowActive, callerWallet) {
+function _setStatusNote(text) {
+  var el = document.getElementById('sess-status-note');
+  if (!el) return;
+  if (!text) {
+    el.style.display = 'none';
+    el.textContent = '';
+    return;
+  }
+  el.textContent = text;
+  el.style.display = 'block';
+}
+
+function _showConfirmRow(show) {
+  var row = document.getElementById('sess-confirm-row');
+  if (!row) return;
+  row.style.display = show ? 'block' : 'none';
+  var btn = document.getElementById('sess-confirm-btn');
+  var msg = document.getElementById('sess-confirm-msg');
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = "I'm happy, release payment";
+  }
+  if (msg) {
+    msg.style.display = 'none';
+    msg.textContent = '';
+  }
+}
+
+function _buyerHeaders() {
+  var headers = {'Content-Type': 'application/json'};
+  if (_sessConfirmToken) headers['X-Confirm-Token'] = _sessConfirmToken;
+  return headers;
+}
+
+function _saveHeld() {
+  if (!_sessConfirmToken || !_escrowSessionId || !_escrowAgentId) return;
+  try {
+    sessionStorage.setItem(HELD_KEY, JSON.stringify({
+      token: _sessConfirmToken,
+      sessionId: _escrowSessionId,
+      agentId: _escrowAgentId,
+      agentName: _escrowAgentName || '',
+      wallet: _sessCallerWallet || ''
+    }));
+  } catch (e) {}
+}
+
+function _clearHeld() {
+  _sessConfirmToken = '';
+  try { sessionStorage.removeItem(HELD_KEY); } catch (e) {}
+}
+
+function _paidSession(status, escrowActive, confirmToken) {
+  var paid = {
+    awaiting_delivery: 1, working: 1, processing: 1, escrow: 1, delivered: 1,
+    awaiting_confirm: 1, released: 1, confirmed: 1, settled: 1,
+    disputed: 1, needs_admin: 1, refunded: 1, failed: 1
+  };
+  if (status && paid[status]) return true;
+  if (escrowActive) return true;
+  if (confirmToken) return true;
+  return false;
+}
+
+function showSessionResult(agentName, agentId, sessionId, resultText, escrowActive, callerWallet, escrowReleased, confirmToken, status) {
   _escrowAgentId    = agentId;
   _escrowAgentName  = agentName;
   _escrowSessionId  = sessionId;
   _escrowActive     = !!escrowActive;
   _sessCallerWallet = callerWallet || '';
+  if (typeof confirmToken !== 'undefined' && confirmToken) _sessConfirmToken = confirmToken;
+  status = status || '';
 
   // Reset dispute form
   document.getElementById('sess-dispute-form').style.display = 'none';
   document.getElementById('sess-dispute-msg').style.display  = 'none';
+  _setStatusNote('');
+  var reasonEl = document.getElementById('sess-dispute-reason');
+  if (reasonEl) reasonEl.disabled = false;
+  var dBtn = document.querySelector('#sess-dispute-form .dispute-submit-btn');
+  if (dBtn) dBtn.disabled = false;
   var rBtn = document.getElementById('sess-report-btn');
   if (rBtn) rBtn.style.display = 'none';
+  _showConfirmRow(false);
 
-  if (!escrowActive) {
-    // Free session -- show result immediately, no escrow steps
+  if (!_paidSession(status, escrowActive, _sessConfirmToken)) {
     document.getElementById('sess-escrow-steps').style.display = 'none';
     _openResultModal(agentName, agentId, sessionId, resultText);
     if (rBtn) rBtn.style.display = '';
     return;
   }
 
+  _saveHeld();
+
   // Paid session with escrow -- always show the step indicator
   document.getElementById('sess-escrow-steps').style.display = '';
 
-  if (resultText) {
-    // Escrow completed synchronously (create + release in same request).
-    // Show all three steps as done, then reveal the result.
-    _setEscrowStep(1, 'done', 'Payment secured in escrow', null);
+  var stillWaiting = {
+    awaiting_delivery: 1, working: 1, processing: 1,
+    disputed: 1, needs_admin: 1, refunded: 1, failed: 1,
+    released: 1, confirmed: 1, settled: 1
+  };
+  if (resultText && !escrowReleased && !stillWaiting[status]) {
+    _setEscrowStep(1, 'done', 'Payment held with the house', null);
     _setEscrowStep(2, 'done', 'Agent delivered result', null);
-    _setEscrowStep(3, 'done', 'Funds released on-chain', null);
+    _setEscrowStep(3, 'active', 'Waiting for you to release payment', null);
+    _openResultModal(agentName, agentId, sessionId, resultText);
+    document.getElementById('sess-complete-row').style.display = 'none';
+    _showConfirmRow(true);
+    if (rBtn) rBtn.style.display = '';
+    return;
+  }
+
+  if (resultText && (escrowReleased || status === 'released' || status === 'confirmed' || status === 'settled')) {
+    _clearHeld();
+    _setEscrowStep(1, 'done', 'Payment held with the house', null);
+    _setEscrowStep(2, 'done', 'Agent delivered result', null);
+    _setEscrowStep(3, 'done', 'Seller paid', null);
     _openResultModal(agentName, agentId, sessionId, resultText);
     if (rBtn) rBtn.style.display = '';
     return;
   }
 
   // Escrow active but no result yet -- start polling
-  document.getElementById('sess-result-agent').textContent = agentName + ' \u2014 Verifying on-chain...';
-  document.getElementById('sess-result-body').textContent  = 'Verifying escrow status...';
+  document.getElementById('sess-result-agent').textContent = agentName + ': Checking your payment';
+  document.getElementById('sess-result-body').textContent  = 'Checking that the payment is held...';
   document.getElementById('sess-complete-row').style.display = 'none';
   document.getElementById('sess-result-id').textContent    = 'Session: ' + sessionId;
   document.getElementById('sess-result-overlay').classList.add('visible');
 
   _setEscrowStep(1, 'done', null, null);
-  _setEscrowStep(2, 'active', 'Agent working...', null);
-  _setEscrowStep(3, 'pending', 'Finalizing...', null);
+  _setEscrowStep(2, 'active', 'The seller is working', null);
+  _setEscrowStep(3, 'pending', 'Waiting for you to release payment', null);
+  document.getElementById('sess-result-body').textContent = 'The job is with the seller. This page will show the result when it arrives, and then you can release the payment.';
 
   // Start polling
   _escrowPollCount = 0;
@@ -2480,22 +2952,21 @@ function _pollEscrowStatus() {
   if (!_escrowSessionId) return;
   _escrowPollCount++;
   if (_escrowPollCount > _escrowPollMax) {
-    // Timed out -- show partial result with note
     document.getElementById('sess-result-body').textContent =
-      'Escrow verification timed out. Check HashScan for session ' + _escrowSessionId + '.';
+      'This is taking longer than this page will wait. The seller may still be working. If they do not deliver in time, the payment is refunded to the wallet that paid. Refresh this page to check again.';
     return;
   }
 
   fetch(API_BASE + '/api/agents/status/' + _escrowSessionId)
     .then(function(r) { return r.json().catch(function() { return {}; }); })
     .then(function(data) {
-      var status = data.status || '';
-      if (status === 'released') {
-        // Escrow released -- show result
+      var status = data.status || data.session_status || '';
+      if (status === 'released' || status === 'confirmed' || status === 'settled') {
+        _clearHeld();
         _setEscrowStep(2, 'done', 'Agent delivered result', null);
-        _setEscrowStep(3, 'done', 'Funds released', null);
+        _setEscrowStep(3, 'done', 'Seller paid', null);
         var resultText = data.result || '';
-        document.getElementById('sess-result-agent').textContent = _escrowAgentName + ' \u2014 Result';
+        document.getElementById('sess-result-agent').textContent = _escrowAgentName + ': Result';
         _sessResultText    = resultText;
         _sessResultId      = _escrowSessionId;
         _sessResultAgentId = _escrowAgentId;
@@ -2505,27 +2976,69 @@ function _pollEscrowStatus() {
         for (var i = 0; i < stars.length; i++) { stars[i].className = 'sess-star'; }
         document.getElementById('sess-rated-msg').style.display    = 'none';
         document.getElementById('sess-complete-row').style.display = '';
+        _showConfirmRow(false);
         _setHistoryLink(_sessCallerWallet);
         var rBtn = document.getElementById('sess-report-btn');
         if (rBtn) rBtn.style.display = '';
-      } else if (status === 'refunded' || status === 'failed') {
-        // Something went wrong -- refunded
-        _setEscrowStep(2, 'failed', 'Agent encountered an issue', null);
-        _setEscrowStep(3, 'done', 'HBAR refunded to your wallet', null);
-        document.getElementById('sess-result-agent').textContent = _escrowAgentName + ' \u2014 Refunded';
-        document.getElementById('sess-result-body').textContent  =
-          'Something went wrong with this session. Your HBAR has been refunded.\n\n' +
-          'Session ID: ' + _escrowSessionId + '\n' +
-          'Check HashScan: https://hashscan.io/mainnet/account/0.0.10358210';
+      } else if (status === 'escrow' || status === 'delivered' || status === 'awaiting_confirm' || data.awaiting_confirm) {
+        _setEscrowStep(2, 'done', 'Agent delivered result', null);
+        _setEscrowStep(3, 'active', 'Waiting for you to release payment', null);
+        var heldText = data.result || '';
+        document.getElementById('sess-result-agent').textContent = _escrowAgentName + ': Result';
+        _sessResultText    = heldText;
+        _sessResultId      = _escrowSessionId;
+        _sessResultAgentId = _escrowAgentId;
+        document.getElementById('sess-result-body').textContent = heldText;
+        document.getElementById('sess-result-id').textContent   = 'Session: ' + _escrowSessionId;
         document.getElementById('sess-complete-row').style.display = 'none';
+        _showConfirmRow(true);
+        var heldBtn = document.getElementById('sess-report-btn');
+        if (heldBtn) heldBtn.style.display = '';
+      } else if (status === 'disputed') {
+        _setEscrowStep(2, 'done', 'Agent delivered result', null);
+        _setEscrowStep(3, 'active', 'Paused for review', null);
+        _showConfirmRow(false);
+        _setStatusNote("We've paused the payment while we take a look. We'll either refund you or release it to the seller.");
+        if (data.result) {
+          _sessResultText = data.result;
+          document.getElementById('sess-result-body').textContent = data.result;
+        }
+        document.getElementById('sess-complete-row').style.display = 'none';
+        var pausedBtn = document.getElementById('sess-report-btn');
+        if (pausedBtn) pausedBtn.style.display = 'none';
+      } else if (status === 'needs_admin') {
+        _setEscrowStep(3, 'active', 'Sorting out the payout', null);
+        _showConfirmRow(false);
+        _setStatusNote("We're sorting out the payout. Your money is safe.");
+        if (data.result) {
+          _sessResultText = data.result;
+          document.getElementById('sess-result-body').textContent = data.result;
+        }
+        document.getElementById('sess-result-agent').textContent = _escrowAgentName + ': Result';
+        document.getElementById('sess-complete-row').style.display = 'none';
+      } else if (status === 'awaiting_delivery' || status === 'working' || status === 'processing') {
+        _setEscrowStep(1, 'done', 'Payment held with the house', null);
+        _setEscrowStep(2, 'active', 'The seller is working', null);
+        _setEscrowStep(3, 'pending', 'Waiting for you to release payment', null);
+        document.getElementById('sess-result-agent').textContent = _escrowAgentName + ': Waiting on the seller';
+        document.getElementById('sess-result-body').textContent = 'The job is with the seller. This page will show the result when it arrives, and then you can release the payment.';
+        _escrowPollTimer = setTimeout(_pollEscrowStatus, 5000);
+      } else if (status === 'refunded' || status === 'failed') {
+        _clearHeld();
+        _setEscrowStep(2, 'failed', 'The seller did not finish', null);
+        _setEscrowStep(3, 'done', 'Refunded to the wallet that paid', null);
+        document.getElementById('sess-result-agent').textContent = _escrowAgentName + ': Refunded';
+        document.getElementById('sess-result-body').textContent  =
+          'The seller did not finish this one. The payment is refunded to the wallet that paid.\n\n' +
+          'Session ID: ' + _escrowSessionId;
+        document.getElementById('sess-complete-row').style.display = 'none';
+        _showConfirmRow(false);
       } else {
-        // Still processing -- poll again
-        _escrowPollTimer = setTimeout(_pollEscrowStatus, 3000);
+        _escrowPollTimer = setTimeout(_pollEscrowStatus, 5000);
       }
     })
     .catch(function() {
-      // Network error -- retry
-      _escrowPollTimer = setTimeout(_pollEscrowStatus, 3000);
+      _escrowPollTimer = setTimeout(_pollEscrowStatus, 5000);
     });
 }
 
@@ -2536,12 +3049,86 @@ function closeSessionResult() {
   document.getElementById('sess-complete-row').style.display = 'none';
   document.getElementById('sess-escrow-steps').style.display = 'none';
   document.getElementById('sess-dispute-form').style.display = 'none';
+  _showConfirmRow(false);
+  _setStatusNote('');
+}
+
+function confirmRelease() {
+  if (!_escrowAgentId || !_escrowSessionId) return;
+  var btn = document.getElementById('sess-confirm-btn');
+  var msg = document.getElementById('sess-confirm-msg');
+  if (!_sessConfirmToken) {
+    if (msg) {
+      msg.textContent = 'This page does not have the confirm code from your hire. That code is returned only once, when the session starts.';
+      msg.style.display = '';
+      msg.style.color = '#e05252';
+    }
+    return;
+  }
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = 'Releasing...';
+  }
+  fetch(API_BASE + '/api/agents/' + _escrowAgentId + '/session/' + _escrowSessionId + '/confirm', {
+    method: 'POST',
+    headers: _buyerHeaders(),
+    body: '{}',
+  }).then(function(r) {
+    return r.json().catch(function() { return {}; }).then(function(d) {
+      return {ok: r.ok, status: r.status, body: d};
+    });
+  }).then(function(res) {
+    var d = res.body || {};
+    if (res.ok && (d.status === 'released' || d.already)) {
+      _clearHeld();
+      _setEscrowStep(3, 'done', 'Seller paid', null);
+      _showConfirmRow(false);
+      document.getElementById('sess-complete-row').style.display = '';
+      if (msg) msg.style.display = 'none';
+      return;
+    }
+    if (res.ok && d.retry_safe) {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "I'm happy, release payment";
+      }
+      if (msg) {
+        msg.textContent = 'Release is in progress. You can press the button again. It will not pay the seller twice.';
+        msg.style.display = '';
+        msg.style.color = 'var(--cream)';
+      }
+      return;
+    }
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "I'm happy, release payment";
+    }
+    if (msg) {
+      msg.textContent = d.error || 'Release did not finish. You can try again.';
+      msg.style.display = '';
+      msg.style.color = '#e05252';
+    }
+  }).catch(function() {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "I'm happy, release payment";
+    }
+    if (msg) {
+      msg.textContent = 'Network error. Please try again.';
+      msg.style.display = '';
+      msg.style.color = '#e05252';
+    }
+  });
 }
 
 // Dispute form helpers
 function openDispute() {
-  document.getElementById('sess-dispute-form').style.display = '';
-  document.getElementById('sess-dispute-reason').value = '';
+  document.getElementById('sess-dispute-form').style.display = 'block';
+  var reasonEl = document.getElementById('sess-dispute-reason');
+  reasonEl.value = '';
+  reasonEl.disabled = false;
+  var dBtn = document.querySelector('#sess-dispute-form .dispute-submit-btn');
+  if (dBtn) dBtn.disabled = false;
   document.getElementById('sess-dispute-msg').style.display = 'none';
 }
 function cancelDispute() {
@@ -2554,19 +3141,46 @@ function submitDispute() {
     return;
   }
   if (!_sessResultAgentId || !_sessResultId) return;
+  if (!_sessConfirmToken) {
+    showToast('This page does not have the confirm code from your hire. That code is returned only once, when the session starts.');
+    return;
+  }
   fetch(API_BASE + '/api/agents/' + _sessResultAgentId + '/session/' + _sessResultId + '/dispute', {
     method:  'POST',
-    headers: {'Content-Type': 'application/json'},
+    headers: _buyerHeaders(),
     body:    JSON.stringify({reason: reason}),
-  }).then(function(r) { return r.json().catch(function() { return {}; }); })
-    .then(function(d) {
+  }).then(function(r) {
+    return r.json().catch(function() { return {}; }).then(function(d) {
+      return {ok: r.ok, status: r.status, body: d || {}};
+    });
+  }).then(function(res) {
+      var d = res.body || {};
       var msgEl = document.getElementById('sess-dispute-msg');
-      if (d.ok || d.status === 'disputed') {
-        msgEl.textContent    = 'Report submitted. The Reviewer will follow up within 24h.';
+      if (res.status === 409) {
+        _clearHeld();
+        msgEl.textContent = "This one's already been settled.";
+        msgEl.style.display = '';
+        msgEl.style.color = 'var(--cream)';
+        return;
+      }
+      if (d.status === 'needs_admin') {
+        msgEl.textContent = "We're sorting out the payout. Your money is safe.";
+        msgEl.style.display = '';
+        msgEl.style.color = 'var(--cream)';
+        _showConfirmRow(false);
+        _setStatusNote("We're sorting out the payout. Your money is safe.");
+        _setEscrowStep(3, 'active', 'Sorting out the payout', null);
+        return;
+      }
+      if (res.ok && (d.ok || d.status === 'disputed')) {
+        msgEl.textContent = "Thanks for telling us. We've paused the payment while we take a look, and we'll either refund you or release it to the seller.";
         msgEl.style.display  = '';
         msgEl.style.color    = '#6abf7b';
         document.getElementById('sess-dispute-form').querySelector('textarea').disabled = true;
-        document.querySelector('.dispute-submit-btn').disabled = true;
+        document.querySelector('#sess-dispute-form .dispute-submit-btn').disabled = true;
+        _showConfirmRow(false);
+        _setStatusNote("We've paused the payment while we take a look. We'll either refund you or release it to the seller.");
+        _setEscrowStep(3, 'active', 'Paused for review', null);
       } else {
         msgEl.textContent   = d.error || 'Submission failed. Please try again.';
         msgEl.style.display = '';
@@ -2598,7 +3212,7 @@ function copySessionResult() {
   navigator.clipboard.writeText(_sessResultText).then(function() {
     showToast('Result copied.');
   }).catch(function() {
-    showToast('Copy failed — select manually.');
+    showToast('Copy failed. Select the text and copy it yourself.');
   });
 }
 
@@ -2623,10 +3237,14 @@ function openSessionChat(sessionId, agentId, agentName, firstResponse, maxMsgs, 
   metaEl.textContent = 'Session: ' + sessionId;
 
   var avEl = document.getElementById('sess-chat-avatar');
-  if (avatarUrl) {
-    avEl.innerHTML = '<img src="' + avatarUrl + '" alt="' + agentName + '" />';
+  avEl.textContent = '';
+  if (avatarUrl && /^https:\/\//i.test(String(avatarUrl).trim())) {
+    var img = document.createElement('img');
+    img.src = String(avatarUrl).trim();
+    img.alt = agentName || '';
+    avEl.appendChild(img);
   } else {
-    avEl.textContent = '&#9749;';
+    avEl.textContent = '\u2615';
   }
 
   var msgsEl = document.getElementById('sess-chat-msgs');

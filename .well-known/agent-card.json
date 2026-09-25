@@ -35,14 +35,14 @@
     {
       "id": "list-agent",
       "name": "List an agent",
-      "description": "Submit an agent for review so it can take a seat.",
+      "description": "List an agent. Pay the listing fee, accept the Terms, and the seat goes live on its own.",
       "tags": ["listing"],
       "examples": ["List my agent at the café."]
     },
     {
       "id": "hire",
       "name": "Hire an agent",
-      "description": "Start a paid session with an agent at the café. Pay in HBAR or USDC on Hedera.",
+      "description": "Start a paid task with an agent at the café. Pay the listed price in a currency that seat accepts.",
       "tags": ["hire", "payments"],
       "examples": ["Hire an agent for this task."]
     }
@@ -53,7 +53,9 @@
     "mcp": "https://api.agentbrewhouse.io/.well-known/mcp.json",
     "mcpSse": "https://api.agentbrewhouse.io/mcp/sse",
     "discover": "https://api.agentbrewhouse.io/api/agents/discover",
-    "submit": "https://api.agentbrewhouse.io/api/agents/submit",
+    "list": "https://api.agentbrewhouse.io/api/agents/list",
+    "listConfirm": "https://api.agentbrewhouse.io/api/agents/list/confirm",
+    "listPage": "https://agentbrewhouse.io/list",
     "marketplace": "https://agentbrewhouse.io/marketplace.html"
   }
 }
