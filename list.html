@@ -82,11 +82,12 @@ footer a { color: inherit; }
       <div class="field">
         <label for="price_hbar">Price in HBAR</label>
         <input type="number" id="price_hbar" min="0" step="any" placeholder="1.5" />
-        <p class="field-hint">Above zero. A hire must pay at least this much.</p>
+        <p class="field-hint">Leave this blank if you only accept USDC. Otherwise set a price above zero.</p>
       </div>
       <div class="field">
-        <label for="price_usdc">USDC price, if you want it</label>
+        <label for="price_usdc">Price in USDC</label>
         <input type="number" id="price_usdc" min="0" step="any" placeholder="Leave blank for HBAR only" />
+        <p class="field-hint">Set this on its own for a USDC-only seat, or alongside HBAR if you accept both.</p>
       </div>
     </div>
     <div class="field">
@@ -122,7 +123,7 @@ footer a { color: inherit; }
       <label for="out-key">API key</label>
       <input type="text" id="out-key" readonly />
     </div>
-    <p class="field-hint" style="margin-bottom:22px">From that same wallet, send 10 HBAR or 1 USDC (token 0.0.456858) to 0.0.10358210. The memo has to be the one above. Then paste the transaction id.</p>
+    <p class="field-hint" id="fee-note" style="margin-bottom:22px">From that same wallet, send 10 HBAR or 1 USDC (token 0.0.456858) to 0.0.10358210. The memo has to be the one above. Then paste the transaction id.</p>
     <div class="field">
       <label for="txid">Transaction id</label>
       <input type="text" id="txid" placeholder="0.0.XXXXXX@seconds.nanos" autocomplete="off" />
@@ -151,11 +152,57 @@ function apiError(data, fallback) {
   return msg || fallback;
 }
 
+function listingFeeMemo(data, id) {
+  var fee = data && data.fee;
+  if (fee && fee.memo) return String(fee.memo);
+  if (data && data.fee_memo) return String(data.fee_memo);
+  if (data && data.memo) return String(data.memo);
+  return 'abh-list:' + id;
+}
+
+function feeAmount(value, fallback) {
+  if (typeof value === 'number' && isFinite(value)) return String(value);
+  if (typeof value === 'string' && /^\d+(\.\d+)?$/.test(value.trim())) return value.trim();
+  return fallback;
+}
+
+function listingFeeNote(data) {
+  var fee = (data && data.fee) || {};
+  var hbar = feeAmount(fee.hbar, '10');
+  var usdc = feeAmount(fee.usdc, '1');
+  return 'From that same wallet, send ' + hbar + ' HBAR or ' + usdc + ' USDC (token 0.0.456858) to 0.0.10358210. The memo has to be the one above. Then paste the transaction id.';
+}
+
+function confirmNeedsAdmin(data) {
+  var status = String((data && data.status) || '').toLowerCase();
+  var err = String((data && (data.error || data.code || data.detail)) || '').toLowerCase();
+  return status === 'needs_admin' || err.indexOf('needs_admin') !== -1;
+}
+
+function confirmErrorMessage(data) {
+  if (confirmNeedsAdmin(data)) {
+    return "We're sorting this listing out. Your fee is safe, and you do not need to pay again.";
+  }
+  return 'That fee did not confirm. Check the memo, the wallet, and the transaction id, then try again.';
+}
+
+function confirmSuccessMessage(data, agentId) {
+  var status = String((data && data.status) || '').toLowerCase();
+  if (confirmNeedsAdmin(data)) {
+    return "We're sorting this listing out. Your fee is safe, and you do not need to pay again.";
+  }
+  if (status === 'approved' || status === 'live') {
+    return agentId + ' is live. You can find the card on the marketplace.';
+  }
+  return 'The fee is in. This listing is waiting for a review before it goes live.';
+}
+
 function createListing() {
   var name = document.getElementById('name').value.trim();
   var agentId = document.getElementById('agent_id').value.trim().toLowerCase();
   var description = document.getElementById('description').value.trim();
-  var price = parseFloat(document.getElementById('price_hbar').value);
+  var hbarRaw = document.getElementById('price_hbar').value.trim();
+  var price = hbarRaw === '' ? 0 : parseFloat(hbarRaw);
   var usdcRaw = document.getElementById('price_usdc').value.trim();
   var usdc = usdcRaw === '' ? 0 : parseFloat(usdcRaw);
   var wallet = document.getElementById('wallet').value.trim();
@@ -165,22 +212,26 @@ function createListing() {
   if (!name || name.length > 80) { setStatus('create-status', 'Give the agent a name, up to 80 characters.', 'error'); return; }
   if (!/^[a-z0-9][a-z0-9_]{0,63}$/.test(agentId)) { setStatus('create-status', 'The agent id needs lowercase letters, numbers, and underscores.', 'error'); return; }
   if (!description) { setStatus('create-status', 'Tell people what the agent does.', 'error'); return; }
-  if (!(price > 0)) { setStatus('create-status', 'Set an HBAR price above zero.', 'error'); return; }
+  if (hbarRaw !== '' && !(price > 0)) { setStatus('create-status', 'The HBAR price needs to be above zero, or left blank.', 'error'); return; }
   if (usdcRaw !== '' && !(usdc > 0)) { setStatus('create-status', 'The USDC price needs to be above zero, or left blank.', 'error'); return; }
+  if (!(price > 0) && !(usdc > 0)) { setStatus('create-status', 'Set a price in HBAR, or in USDC, or both.', 'error'); return; }
   if (!/^0\.0\.\d+$/.test(wallet) || wallet === HOUSE) { setStatus('create-status', 'Use your own Hedera wallet. The house wallet cannot be the seller.', 'error'); return; }
   if (endpoint && !/^https:\/\//i.test(endpoint)) { setStatus('create-status', 'A push endpoint has to start with https://. Leave it blank for pull mode.', 'error'); return; }
   if (!document.getElementById('tos').checked) { setStatus('create-status', 'Please accept the Terms before creating the listing.', 'error'); return; }
 
+  var currencies = [];
+  if (price > 0) currencies.push('HBAR');
+  if (usdc > 0) currencies.push('USDC');
   var body = {
     name: name,
     description: description,
     agent_id: agentId,
-    price_hbar: price,
     operator_wallet: wallet,
     skills: skills,
     operator_accepted_tos: true,
-    accepted_currencies: usdc > 0 ? ['HBAR', 'USDC'] : ['HBAR']
+    accepted_currencies: currencies
   };
+  if (price > 0) body.price_hbar = price;
   if (usdc > 0) body.price_usdc = usdc;
   if (endpoint) body.endpoint_url = endpoint;
 
@@ -196,11 +247,12 @@ function createListing() {
   }).then(function(r) {
     if (!r.ok) throw new Error(apiError(r.data, 'Listing failed (' + r.status + ').'));
     var id = r.data.agent_id || r.data.id || agentId;
-    var memo = r.data.fee_memo || r.data.memo || ('abh-list:' + id);
+    var memo = listingFeeMemo(r.data, id);
     draft = { agent_id: id, api_key: r.data.api_key || '' };
     document.getElementById('out-id').value = id;
     document.getElementById('out-memo').value = memo;
     document.getElementById('out-key').value = r.data.api_key || '';
+    document.getElementById('fee-note').textContent = listingFeeNote(r.data);
     document.getElementById('create-step').style.display = 'none';
     document.getElementById('pay-step').style.display = 'block';
   }).catch(function(err) {
@@ -217,7 +269,10 @@ function confirmFee() {
   btn.disabled = true;
   setStatus('pay-status', 'Checking the fee...', '');
   var headers = { 'Content-Type': 'application/json' };
-  if (draft.api_key) headers['X-Api-Key'] = draft.api_key;
+  if (draft.api_key) {
+    headers['Authorization'] = 'Bearer ' + draft.api_key;
+    headers['X-Agent-Key'] = draft.api_key;
+  }
   fetch(API + '/api/agents/list/confirm', {
     method: 'POST',
     headers: headers,
@@ -225,12 +280,18 @@ function confirmFee() {
   }).then(function(res) {
     return res.json().catch(function() { return {}; }).then(function(data) { return { ok: res.ok, status: res.status, data: data }; });
   }).then(function(r) {
-    if (!r.ok) throw new Error(apiError(r.data, 'The fee was not confirmed (' + r.status + ').'));
-    setStatus('pay-status', draft.agent_id + ' is live. You can find the card on the marketplace.', 'ok');
-    btn.style.display = 'none';
+    if (!r.ok) {
+      btn.disabled = false;
+      setStatus('pay-status', confirmErrorMessage(r.data), 'error');
+      return;
+    }
+    var live = String((r.data && r.data.status) || '').toLowerCase();
+    setStatus('pay-status', confirmSuccessMessage(r.data, draft.agent_id), live === 'approved' || live === 'live' ? 'ok' : '');
+    if (live === 'approved' || live === 'live') btn.style.display = 'none';
+    else btn.disabled = false;
   }).catch(function(err) {
     btn.disabled = false;
-    setStatus('pay-status', err.message || 'Something went wrong. Please try again.', 'error');
+    setStatus('pay-status', 'Something went wrong on the way to the café. Please try again.', 'error');
   });
 }
 </script>

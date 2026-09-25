@@ -1114,10 +1114,11 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
       <div class="form-row">
         <div class="form-field">
           <label class="form-label" for="sf-price">Price (HBAR per hire)</label>
-          <input type="number" id="sf-price" class="form-input" placeholder="e.g. 1.5" min="0" step="any" required />
+          <input type="number" id="sf-price" class="form-input" placeholder="Leave blank for USDC only" min="0" step="any" />
+          <span class="form-hint">Leave this blank if you only accept USDC.</span>
         </div>
         <div class="form-field">
-          <label class="form-label" for="sf-price-usdc">USDC price (optional)</label>
+          <label class="form-label" for="sf-price-usdc">USDC price</label>
           <input type="number" id="sf-price-usdc" class="form-input" placeholder="Leave blank for HBAR only" min="0" step="any" />
         </div>
       </div>
@@ -1155,7 +1156,7 @@ footer { text-align: center; padding: 28px 20px; font-size: 9px; letter-spacing:
           <label class="form-label">API key</label>
           <input type="text" id="sf-out-key" class="form-input" readonly />
         </div>
-        <p class="form-hint" style="margin-bottom:14px">From the listing wallet, send 10 HBAR or 1 USDC (token 0.0.456858) to 0.0.10358210 with that memo. Then paste the transaction id.</p>
+        <p class="form-hint" id="sf-fee-note" style="margin-bottom:14px">From the listing wallet, send 10 HBAR or 1 USDC (token 0.0.456858) to 0.0.10358210 with that memo. Then paste the transaction id.</p>
         <div class="form-field">
           <label class="form-label" for="sf-txid">Transaction id</label>
           <input type="text" id="sf-txid" class="form-input" placeholder="0.0.XXXXXX@seconds.nanos" autocomplete="off" />
@@ -2021,6 +2022,51 @@ function _skillList(raw) {
   return String(raw || '').split(',').map(function(s) { return s.trim().toLowerCase(); }).filter(Boolean).slice(0, 12);
 }
 
+function listingFeeMemo(data, id) {
+  var fee = data && data.fee;
+  if (fee && fee.memo) return String(fee.memo);
+  if (data && data.fee_memo) return String(data.fee_memo);
+  if (data && data.memo) return String(data.memo);
+  return 'abh-list:' + id;
+}
+
+function feeAmount(value, fallback) {
+  if (typeof value === 'number' && isFinite(value)) return String(value);
+  if (typeof value === 'string' && /^\d+(\.\d+)?$/.test(value.trim())) return value.trim();
+  return fallback;
+}
+
+function listingFeeNote(data) {
+  var fee = (data && data.fee) || {};
+  var hbar = feeAmount(fee.hbar, '10');
+  var usdc = feeAmount(fee.usdc, '1');
+  return 'From the listing wallet, send ' + hbar + ' HBAR or ' + usdc + ' USDC (token 0.0.456858) to 0.0.10358210 with that memo. Then paste the transaction id.';
+}
+
+function confirmNeedsAdmin(data) {
+  var status = String((data && data.status) || '').toLowerCase();
+  var err = String((data && (data.error || data.code || data.detail)) || '').toLowerCase();
+  return status === 'needs_admin' || err.indexOf('needs_admin') !== -1;
+}
+
+function confirmErrorMessage(data) {
+  if (confirmNeedsAdmin(data)) {
+    return "We're sorting this listing out. Your fee is safe, and you do not need to pay again.";
+  }
+  return 'That fee did not confirm. Check the memo, the wallet, and the transaction id, then try again.';
+}
+
+function confirmSuccessMessage(data, agentId) {
+  if (confirmNeedsAdmin(data)) {
+    return "We're sorting this listing out. Your fee is safe, and you do not need to pay again.";
+  }
+  var status = String((data && data.status) || '').toLowerCase();
+  if (status === 'approved' || status === 'live') {
+    return 'The fee is in. ' + agentId + ' is live.';
+  }
+  return 'The fee is in. This listing is waiting for a review before it goes live.';
+}
+
 async function submitAgent(e) {
   e.preventDefault();
   if (!currentUser) {
@@ -2038,7 +2084,8 @@ async function submitAgent(e) {
   var name = document.getElementById('sf-name').value.trim();
   var agentId = document.getElementById('sf-agent-id').value.trim().toLowerCase();
   var description = document.getElementById('sf-desc').value.trim();
-  var price = parseFloat(document.getElementById('sf-price').value);
+  var hbarRaw = document.getElementById('sf-price').value.trim();
+  var price = hbarRaw === '' ? 0 : parseFloat(hbarRaw);
   var usdcRaw = document.getElementById('sf-price-usdc').value.trim();
   var usdc = usdcRaw === '' ? 0 : parseFloat(usdcRaw);
   var wallet = document.getElementById('sf-wallet').value.trim();
@@ -2055,14 +2102,19 @@ async function submitAgent(e) {
     msg.textContent = 'The agent id needs lowercase letters, numbers, and underscores.';
     return;
   }
-  if (!(price > 0)) {
+  if (hbarRaw !== '' && !(price > 0)) {
     msg.className = 'form-msg error visible';
-    msg.textContent = 'Set an HBAR price above zero.';
+    msg.textContent = 'The HBAR price needs to be above zero, or left blank.';
     return;
   }
   if (usdcRaw !== '' && !(usdc > 0)) {
     msg.className = 'form-msg error visible';
     msg.textContent = 'The USDC price needs to be above zero, or left blank.';
+    return;
+  }
+  if (!(price > 0) && !(usdc > 0)) {
+    msg.className = 'form-msg error visible';
+    msg.textContent = 'Set a price in HBAR, or in USDC, or both.';
     return;
   }
   if (!/^0\.0\.\d+$/.test(wallet) || wallet === HOUSE_WALLET) {
@@ -2081,16 +2133,19 @@ async function submitAgent(e) {
     return;
   }
 
+  var currencies = [];
+  if (price > 0) currencies.push('HBAR');
+  if (usdc > 0) currencies.push('USDC');
   var payload = {
     name: name,
     description: description,
     agent_id: agentId,
-    price_hbar: price,
     operator_wallet: wallet,
     skills: _skillList(document.getElementById('sf-caps').value),
     operator_accepted_tos: true,
-    accepted_currencies: usdc > 0 ? ['HBAR', 'USDC'] : ['HBAR']
+    accepted_currencies: currencies
   };
+  if (price > 0) payload.price_hbar = price;
   if (usdc > 0) payload.price_usdc = usdc;
   if (endpoint) payload.endpoint_url = endpoint;
 
@@ -2107,11 +2162,12 @@ async function submitAgent(e) {
 
     if (res.ok) {
       var id = data.agent_id || data.id || agentId;
-      var memo = data.fee_memo || data.memo || ('abh-list:' + id);
+      var memo = listingFeeMemo(data, id);
       _listDraft = { agent_id: id, api_key: data.api_key || '', memo: memo };
       document.getElementById('sf-out-id').value = id;
       document.getElementById('sf-out-memo').value = memo;
       document.getElementById('sf-out-key').value = data.api_key || '';
+      document.getElementById('sf-fee-note').textContent = listingFeeNote(data);
       document.getElementById('sf-fields').style.display = 'none';
       document.getElementById('sf-pay').style.display = 'block';
       var payMsg = document.getElementById('sf-pay-msg');
@@ -2150,7 +2206,10 @@ async function confirmListingFee() {
   msg.className = 'form-msg';
   msg.textContent = '';
   var headers = { 'Content-Type': 'application/json' };
-  if (_listDraft.api_key) headers['X-Api-Key'] = _listDraft.api_key;
+  if (_listDraft.api_key) {
+    headers['Authorization'] = 'Bearer ' + _listDraft.api_key;
+    headers['X-Agent-Key'] = _listDraft.api_key;
+  }
   try {
     var res = await fetch(API_LIST + '/confirm', {
       method: 'POST',
@@ -2160,17 +2219,23 @@ async function confirmListingFee() {
     var data = await res.json().catch(function() { return {}; });
     if (!res.ok) {
       msg.className = 'form-msg error visible';
-      msg.textContent = _apiErrorText(data, 'The fee was not confirmed (' + res.status + ').');
+      msg.textContent = confirmErrorMessage(data);
       btn.disabled = false;
       btn.textContent = 'Confirm the fee \u2192';
       return;
     }
-    msg.className = 'form-msg success visible';
-    msg.textContent = 'The fee is in. ' + (_listDraft.agent_id) + ' goes live on its own.';
-    btn.style.display = 'none';
+    var live = String((data && data.status) || '').toLowerCase();
+    var wentLive = live === 'approved' || live === 'live';
+    msg.className = 'form-msg ' + (wentLive ? 'success ' : '') + 'visible';
+    msg.textContent = confirmSuccessMessage(data, _listDraft.agent_id);
+    if (wentLive) btn.style.display = 'none';
+    else {
+      btn.disabled = false;
+      btn.textContent = 'Confirm the fee \u2192';
+    }
   } catch (err) {
     msg.className = 'form-msg error visible';
-    msg.textContent = 'Network error: ' + (err && err.message ? err.message : 'please try again');
+    msg.textContent = 'Something went wrong on the way to the café. Please try again.';
     btn.disabled = false;
     btn.textContent = 'Confirm the fee \u2192';
   }
