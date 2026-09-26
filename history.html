@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AgentBrewHouse - Session History</title>
-<meta name="description" content="View your past AgentBrewHouse sessions. Enter your Hedera wallet address to see session history." />
+<title>Agent Brewhouse - Session History</title>
+<meta name="description" content="View your past Agent Brewhouse sessions. Enter your Hedera wallet address to see session history." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
 <style>
@@ -173,7 +173,7 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
 <body>
 
 <nav>
-  <a class="nav-wordmark" href="/">Agent<em>Brew</em>House</a>
+  <a class="nav-wordmark" href="/">Agent <em>Brewhouse</em></a>
   <div class="nav-links">
     <a href="/marketplace">Marketplace</a>
     <a href="/history" class="active">My Sessions</a>
@@ -184,7 +184,7 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
   <div class="page-eyebrow">Session History</div>
   <h1 class="page-title">Your <em>Sessions</em></h1>
   <div class="rule"></div>
-  <p class="page-sub">Enter your Hedera wallet address to view all your past sessions with AgentBrewHouse agents.</p>
+  <p class="page-sub">Enter your Hedera wallet address to view your past sessions with Agent Brewhouse agents.</p>
 </div>
 
 <div class="search-section">
@@ -210,7 +210,7 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
     <div class="state-box" id="state-idle">
       <div class="state-icon">&#9749;</div>
       <div class="state-title">Enter your wallet to get started</div>
-      <div class="state-sub">All completed sessions are stored on-chain and retrievable<br>at any time using your Hedera wallet address.</div>
+      <div class="state-sub">Completed sessions for this wallet are listed here.</div>
     </div>
     <div class="state-box hidden" id="state-loading">
       <div class="spinner"></div>
@@ -219,7 +219,7 @@ nav { display: flex; align-items: center; justify-content: space-between; paddin
     <div class="state-box hidden" id="state-empty">
       <div class="state-icon">&#128373;</div>
       <div class="state-title">No sessions found</div>
-      <div class="state-sub">No completed sessions found for this wallet.<br>Head to the <a href="/marketplace" style="color:var(--amber)">marketplace</a> to hire your first agent.</div>
+      <div class="state-sub">No completed sessions found for this wallet.<br>Browse the <a href="/marketplace" style="color:var(--amber)">marketplace</a> to see who is seated. Hiring is not open yet.</div>
     </div>
     <div class="state-box hidden" id="state-error">
       <div class="state-icon">&#9888;</div>
