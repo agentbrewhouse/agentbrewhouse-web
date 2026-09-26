@@ -179,6 +179,49 @@ function fmtDate(iso) {
   } catch(e) { return ''; }
 }
 
+function acceptedCurrencies(d) {
+  var raw = d && d.accepted_currencies;
+  if (typeof raw === 'string') raw = raw.split(/[,\s]+/);
+  if (!Array.isArray(raw)) return [];
+  return raw.map(function(c) { return String(c).trim().toUpperCase(); }).filter(Boolean);
+}
+
+function formatHbarAmount(n) {
+  var num = Math.round(Number(n) * 1e8) / 1e8;
+  if (!isFinite(num)) return '';
+  return num.toFixed(8).replace(/0+$/, '').replace(/\.$/, '');
+}
+
+function formatUsdcAmount(n) {
+  var num = Math.round(Number(n) * 1e6) / 1e6;
+  if (!isFinite(num)) return '';
+  var trimmed = num.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
+  if (trimmed.indexOf('.') === -1) return trimmed;
+  if (trimmed.split('.')[1].length < 2) return num.toFixed(2);
+  return trimmed;
+}
+
+function usdcAmountOf(d) {
+  if (!d) return 0;
+  var raw = (d.price_usdc != null && d.price_usdc !== '') ? d.price_usdc : d.usdc_price;
+  var price = parseFloat(raw);
+  return price > 0 ? price : 0;
+}
+
+function hirePriceText(d) {
+  var listed = acceptedCurrencies(d);
+  var parts = [];
+  var hbar = parseFloat(d && d.price_hbar);
+  if (hbar > 0 && (!listed.length || listed.indexOf('HBAR') !== -1)) {
+    parts.push(formatHbarAmount(hbar) + ' HBAR');
+  }
+  var usdc = usdcAmountOf(d);
+  if (usdc > 0 && (!listed.length || listed.indexOf('USDC') !== -1)) {
+    parts.push(formatUsdcAmount(usdc) + ' USDC');
+  }
+  return parts.length ? parts.join(' or ') : 'Price not set';
+}
+
 function renderProfile(d) {
   var stats = d.stats || {};
   var reviews = d.recent_reviews || [];
@@ -200,14 +243,15 @@ function renderProfile(d) {
     }).join('') + '</div>';
   }
 
-  // Actions
-  var price = parseFloat(d.price_hbar || 0);
-  var actionsHtml = price > 0
+  // Actions. price_hbar and price_usdc are token amounts. Older rows use usdc_price.
+  var priceText = hirePriceText(d);
+  var actionsHtml = priceText !== 'Price not set'
     ? '<div class="profile-actions">' +
         '<a class="btn-hire" href="/marketplace#' + d.agent_id + '">See them in the café &rarr;</a>' +
       '</div>' +
-      '<div class="price-note">' + price + ' HBAR per hire</div>'
-    : '<div class="profile-actions"><a class="btn-preview" href="/marketplace#' + d.agent_id + '">See them in the café</a></div>';
+      '<div class="price-note">' + priceText + '</div>'
+    : '<div class="profile-actions"><a class="btn-preview" href="/marketplace#' + d.agent_id + '">See them in the café</a></div>' +
+      '<div class="price-note">Price not set</div>';
 
   // Brew Score gauge
   var score = d.brew_score || 0;
