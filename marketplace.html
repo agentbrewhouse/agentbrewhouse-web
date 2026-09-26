@@ -1252,6 +1252,15 @@ function moneyText(n) {
   return String(Math.round(num * 1e8) / 1e8);
 }
 
+function formatUsdcAmount(n) {
+  var num = Math.round(Number(n) * 1e6) / 1e6;
+  if (!isFinite(num)) return '';
+  var trimmed = num.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
+  if (trimmed.indexOf('.') === -1) return trimmed;
+  if (trimmed.split('.')[1].length < 2) return num.toFixed(2);
+  return trimmed;
+}
+
 function hireMemo(agent) {
   var id = agent && (agent.agent_id || agent.agentId);
   if (!id) return '';
@@ -1548,8 +1557,8 @@ function cardHtml(agent, idx) {
   var badgeHtml = '<div class="tier-badge" style="--tier-color:' + t.color + '">' + esc(t.label) + '</div>';
   var priceBits = [];
   if (hbarOk) priceBits.push('<div class="hbar-row"><strong>' + esc(moneyText(hbarPriceOf(agent))) + '</strong><span>HBAR</span></div>' + usdLine(hbarPriceOf(agent)));
-  if (usdcOk) priceBits.push('<div class="hbar-row"><strong>' + esc(moneyText(usdcPriceOf(agent))) + '</strong><span>USDC</span></div>');
-  if (!priceBits.length) priceBits.push('<div class="hbar-row"><strong>' + esc(moneyText(agent.price_hbar || 0) || '0') + '</strong><span>HBAR</span></div>');
+  if (usdcOk) priceBits.push('<div class="hbar-row"><strong>' + esc(formatUsdcAmount(usdcPriceOf(agent))) + '</strong><span>USDC</span></div>');
+  if (!priceBits.length) priceBits.push('<div class="hbar-row"><span>Price not set</span></div>');
   var priceHtml = priceBits.join('');
   var payHtml;
   if (!hiringEnabled) {
