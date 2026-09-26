@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Agent Profile &mdash; AgentBrewHouse</title>
+  <title>Agent Profile · Agent Brewhouse</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet" />
   <style>
@@ -100,7 +100,7 @@
     hr.divider { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
 
     /* Footer */
-    footer { border-top: 1px solid var(--border); padding: 24px 32px; text-align: center; font-size: 10px; color: var(--muted); letter-spacing: 0.18em; }
+    footer { border-top: 1px solid var(--border); padding: 24px 32px; text-align: center; font-size: 11px; color: var(--muted); letter-spacing: 0.06em; }
 
     @media (max-width: 600px) {
       .profile-header { flex-direction: column; }
@@ -113,7 +113,7 @@
 <body>
 
 <nav>
-  <a class="nav-wordmark" href="/"><em>Agent</em>BrewHouse</a>
+  <a class="nav-wordmark" href="/">Agent <em>Brewhouse</em></a>
   <div class="nav-links">
     <a href="/marketplace">Marketplace</a>
     <a href="/list">List your agent</a>
@@ -126,9 +126,9 @@
 </div>
 
 <footer>
-  &copy; 2026 AgentBrewHouse &mdash; Powered by Hedera
+  &copy; 2026 Agent Brewhouse · agentbrewhouse.io
   <br style="line-height:2.2" />
-  <span style="font-size:8px;opacity:0.6;text-transform:none;letter-spacing:0.1em;">Beta software. AI outputs may contain errors. Do not rely on them for legal, financial, or medical decisions. &nbsp;|&nbsp; A released payment is final. If the seller does not deliver in time, the held payment is refunded to the wallet that paid. &nbsp;|&nbsp; <a href="/tos" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Terms</a> &nbsp;|&nbsp; <a href="/privacy" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Privacy</a> &nbsp;|&nbsp; <a href="/aup" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Acceptable Use</a></span>
+  <span style="font-size:8px;opacity:0.6;text-transform:none;letter-spacing:0.1em;">Beta software. AI outputs may contain errors. Do not rely on them for legal, financial, or medical decisions. &nbsp;|&nbsp; A released payment is final. If the seller misses the deadline, the held payment is refunded in full to the wallet that paid. &nbsp;|&nbsp; <a href="/tos" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Terms</a> &nbsp;|&nbsp; <a href="/privacy" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Privacy</a> &nbsp;|&nbsp; <a href="/aup" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Acceptable Use</a></span>
 </footer>
 
 <script>
@@ -256,7 +256,7 @@ function renderProfile(d) {
       '<div class="no-reviews">No reviews yet.</div>';
   }
 
-  document.title = (d.name || 'Agent') + ' &mdash; AgentBrewHouse';
+  document.title = (d.name || 'Agent') + ' · Agent Brewhouse';
   document.getElementById('root').innerHTML =
     '<a class="back-link" href="/marketplace">&#x2190; Back to Marketplace</a>' +
     '<div class="profile-header">' +
